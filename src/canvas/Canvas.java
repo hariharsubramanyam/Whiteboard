@@ -8,6 +8,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.event.MouseEvent;
@@ -88,7 +89,7 @@ public class Canvas extends JPanel {
 
 		// hardcoded buttons for now
 		this.buttonText = Arrays.asList("Eraser", "Pencil", "s:Stroke Small",
-				"s:Stroke Med", "s:Stroke Large", "s:Clear board");
+				"s:Stroke Med", "s:Stroke Large", "s:Clear board", "random");
 		this.numOfButtons = buttonText.size();
 		// leave 1 margin on either side
 		this.buttonW = windowW - 2 * margins;
@@ -225,6 +226,15 @@ public class Canvas extends JPanel {
 		// have to notify Swing to repaint this component on the screen.
 		this.repaint();
 	}
+	
+	private void random() {
+		Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
+
+		g.setStroke(new BasicStroke(20, 1, 1));
+		g.setColor(setLineColor(this.lineColor));
+		Point point = new Point(1,1);
+		g.draw((Shape) point);
+	}
 
 	/**
 	 * Set strokeWidth
@@ -349,6 +359,10 @@ public class Canvas extends JPanel {
 			if (action.equals("s:Clear board")) {
 				fillWithWhite();
 			}
+			
+			if (action.equals("random")) {
+				random();
+			}
 
 		}
 
@@ -372,7 +386,7 @@ public class Canvas extends JPanel {
 				JFrame window = new JFrame("Freehand Canvas");
 				window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 				window.setLayout(new BorderLayout());
-				Canvas canvas = new Canvas(800, 1200);
+				Canvas canvas = new Canvas(800, 600);
 				window.add(canvas, BorderLayout.CENTER);
 				window.pack();
 				window.setVisible(true);
