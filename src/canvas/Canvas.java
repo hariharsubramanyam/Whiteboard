@@ -8,7 +8,6 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Point;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.event.MouseEvent;
@@ -40,6 +39,9 @@ public class Canvas extends JPanel {
 	// whiteboard
 	private final int canvasW;
 	private final int canvasH;
+
+	private final int drawableCanvasW;
+	private final int drawableCanvasH;
 
 	// button layout
 	private final float windowStroke;
@@ -87,6 +89,10 @@ public class Canvas extends JPanel {
 		this.windowW = width / 9; // always 1/9th the width of the entire canvas
 		this.windowH = height;
 
+		// set the size of the canvas
+		this.drawableCanvasW = width - 2 * margins - windowW;
+		this.drawableCanvasH = height - 2 * margins;
+
 		// hardcoded buttons for now
 		this.buttonText = Arrays.asList("Eraser", "Pencil", "s:Stroke Small",
 				"s:Stroke Med", "s:Stroke Large", "s:Clear board", "random");
@@ -111,7 +117,7 @@ public class Canvas extends JPanel {
 
 		// colors
 		this.buttonColor = new Color(0, 255, 127, 100); // spring green
-		this.windowBackground = new Color(0, 128, 0); // green
+		this.windowBackground = new Color(0, 128, 0, 255); // green
 		this.textColor = new Color(0); // black
 		this.lineColor = Color.BLACK; // default to black
 		this.boardColor = Color.WHITE; // default to white
@@ -149,8 +155,13 @@ public class Canvas extends JPanel {
 	private void fillWithWhite() {
 		final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
-		g.setColor(boardColor);
+		int amountOfGrey = 130; // between 0 and 255. The closer to 0 the more
+								// black.
+		int alpha = 180; // creates transparent looking colors
+		g.setColor(setColor(amountOfGrey, amountOfGrey, amountOfGrey, alpha));
 		g.fillRect(0, 0, canvasW, canvasH);
+		g.setColor(boardColor);
+		g.fillRect(margins + windowW, margins, drawableCanvasW, drawableCanvasH);
 		createButtonLayout();
 
 		// IMPORTANT! every time we draw on the internal drawing buffer, we
@@ -179,8 +190,8 @@ public class Canvas extends JPanel {
 			int adjustedButtonH = buttonH - 2 * margins;
 
 			g.setColor(buttonColor);
-			Shape button = new RoundRectangle2D.Float(margins, yPos1, buttonW-margins,
-					adjustedButtonH, buttonArc, buttonArc);
+			Shape button = new RoundRectangle2D.Float(margins, yPos1, buttonW
+					- margins, adjustedButtonH, buttonArc, buttonArc);
 			g.fill(button);
 			g.draw(button);
 			g.setColor(textColor);
@@ -219,21 +230,23 @@ public class Canvas extends JPanel {
 		Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
 		g.setStroke(new BasicStroke(this.lineStroke, 1, 1));
-		g.setColor(setLineColor(this.lineColor));
+		g.setColor(this.lineColor);
 		g.drawLine(x1, y1, x2, y2);
 
 		// IMPORTANT! every time we draw on the internal drawing buffer, we
 		// have to notify Swing to repaint this component on the screen.
 		this.repaint();
 	}
-	
-	private void random() {
-		Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
-		g.setStroke(new BasicStroke(20, 1, 1));
-		g.setColor(setLineColor(this.lineColor));
-		Point point = new Point(1,1);
-		g.draw((Shape) point);
+	private void random() {
+
+		this.lineStroke = 1.0f;
+		this.lineColor = Color.blue;
+		for (int i = 100; i < 790; i++) {
+			for (int j = 10; j < 590; j++) {
+				drawLineSegment(i, j, i, j);
+			}
+		}
 	}
 
 	/**
@@ -247,14 +260,14 @@ public class Canvas extends JPanel {
 	}
 
 	/**
-	 * Set line color
+	 * create a color out of any of the Color constructors
 	 * 
 	 * @param c
 	 *            color value
 	 * @return a color
 	 */
-	private Color setLineColor(Color c) {
-		return c;
+	private Color setColor(int r, int g, int b, int alpha) {
+		return new Color(r, g, b, alpha);
 	}
 
 	/**
@@ -265,12 +278,25 @@ public class Canvas extends JPanel {
 	 *            an int representing the potential x position to draw on
 	 * @return a new, adjusted value of x
 	 */
-	private int adjustedX(int x) {
+	private int[] adjustedPos(int x, int y) {
 		int newX = x;
-		if (x < windowW + lineStroke / 2.0) {
-			newX = (int) (windowW + (lineStroke / 2.0));
+		int newY = y;
+		if (x < windowW + lineStroke / 2.0 + margins) {
+			newX = (int) (windowW + (lineStroke / 2.0) + margins);
+		} else if (x > canvasW - lineStroke / 2.0 - margins) {
+			newX = (int) (canvasW - margins - lineStroke / 2.0);
 		}
-		return newX;
+
+		if (y < lineStroke / 2.0 + margins) {
+			newY = (int) (lineStroke / 2.0 + margins);
+		} else if (y > canvasH - lineStroke / 2.0 - margins) {
+			newY = (int) (canvasH - margins - lineStroke / 2.0);
+		}
+		int[] result = new int[2];
+		result[0] = newX;
+		result[1] = newY;
+		return result;
+
 	}
 
 	/*
@@ -290,26 +316,30 @@ public class Canvas extends JPanel {
 		// store the coordinates of the last mouse event, so we can
 		// draw a line segment from that last point to the point of the next
 		// mouse event.
+		private int[] lastPos = new int[2];
 		private int lastX, lastY;
 
 		/*
 		 * When mouse button is pressed down, start drawing.
 		 */
 		public void mousePressed(MouseEvent e) {
-			lastX = adjustedX(e.getX());
-			lastY = e.getY();
+
+			lastPos = adjustedPos(e.getX(), e.getY());
+
 		}
 
 		/*
 		 * When mouse moves while a button is pressed down, draw a line segment.
 		 */
 		public void mouseDragged(MouseEvent e) {
-			int x = adjustedX(e.getX());
-			int y = e.getY();
 
-			drawLineSegment(lastX, lastY, x, y);
-			lastX = adjustedX(x);
-			lastY = y;
+			int[] pos = adjustedPos(e.getX(), e.getY());
+			int x = pos[0];
+			int y = pos[1];
+
+			drawLineSegment(lastPos[0], lastPos[1], x, y);
+			lastPos = adjustedPos(x, y);
+
 		}
 
 		public void mouseMoved(MouseEvent e) {
@@ -359,7 +389,7 @@ public class Canvas extends JPanel {
 			if (action.equals("s:Clear board")) {
 				fillWithWhite();
 			}
-			
+
 			if (action.equals("random")) {
 				random();
 			}
