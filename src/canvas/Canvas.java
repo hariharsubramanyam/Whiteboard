@@ -33,10 +33,15 @@ public class Canvas extends JPanel {
 	private static final long serialVersionUID = 1L;
 	// image where the user's drawing is stored
 	private Image drawingBuffer;
+	private Graphics tempBuffer; // TODO: use to create temporary objects
 	private float lineStroke;
 
+	// whiteboard
+	private final int canvasW;
+	private final int canvasH;
+
+	// button layout
 	private final float windowStroke;
-	private final Color windowBackground;
 	private final int margins;
 	private final int windowW;
 	private final int windowH;
@@ -50,8 +55,10 @@ public class Canvas extends JPanel {
 	private final float buttonArc;
 
 	private final Color buttonColor;
-	private final Color textColor;
+	private Color textColor;
 	private Color lineColor;
+	private final Color windowBackground;
+	private Color boardColor;
 
 	/**
 	 * Make a canvas.
@@ -69,38 +76,44 @@ public class Canvas extends JPanel {
 		// works *after* this canvas has been added to a window. Have to
 		// wait until paintComponent() is first called.
 
+		// set the size of the canvas
+		this.canvasW = width;
+		this.canvasH = height;
+
 		// set default values of components in the canvas
-		windowStroke = 0; // no border on button window
-		margins = 3; // a margin size of 3 applied evenly throughout
-		windowW = width / 9; // always 1/9th the width of the entire canvas
-		windowH = height;
+		this.windowStroke = 0; // no border on button window
+		this.margins = 3; // a margin size of 3 applied evenly throughout
+		this.windowW = width / 9; // always 1/9th the width of the entire canvas
+		this.windowH = height;
 
 		// hardcoded buttons for now
-		buttonText = Arrays.asList("Erase", "Pencil", "s:Stroke Small",
-				"s:Stroke Med", "s:Stroke Large");
-		numOfButtons = buttonText.size();
+		this.buttonText = Arrays.asList("Eraser", "Pencil", "s:Stroke Small",
+				"s:Stroke Med", "s:Stroke Large", "s:Clear board");
+		this.numOfButtons = buttonText.size();
 		// leave 1 margin on either side
-		buttonW = windowW - 2 * margins;
+		this.buttonW = windowW - 2 * margins;
 		// we use only half the height to leave space for colors
-		buttonH = (windowH / 2) / numOfButtons - (2 * margins);
-		buttonArc = 30; // in degrees
+		this.buttonH = (int) ((windowH / 2.0) / numOfButtons);
+		this.buttonArc = 30; // in degrees
 
 		// define boundaries of buttons
-		buttonBoundaries = new HashMap<String, List<Integer>>();
+		this.buttonBoundaries = new HashMap<String, List<Integer>>();
 		for (int i = 0; i < numOfButtons; ++i) {
 			int xPos1 = margins;
-			int yPos1 = margins + i * (buttonH + margins);
+			int yPos1 = margins + i * buttonH;
 			int xPos2 = buttonW - margins;
-			int yPos2 = (i + 1) * (buttonH - margins);
+			int yPos2 = (i + 1) * buttonH - margins;
+
 			buttonBoundaries.put(buttonText.get(i),
 					Arrays.asList(xPos1, yPos1, xPos2, yPos2));
 		}
 
 		// colors
-		buttonColor = new Color(0, 255, 127, 100); // spring green
-		windowBackground = new Color(0, 128, 0); // green
-		textColor = new Color(0); // black
-		lineColor = Color.BLACK; // default to black
+		this.buttonColor = new Color(0, 255, 127, 100); // spring green
+		this.windowBackground = new Color(0, 128, 0); // green
+		this.textColor = new Color(0); // black
+		this.lineColor = Color.BLACK; // default to black
+		this.boardColor = Color.WHITE; // default to white
 
 	}
 
@@ -119,35 +132,14 @@ public class Canvas extends JPanel {
 		g.drawImage(drawingBuffer, 0, 0, null);
 	}
 
-	/**
-	 * Set strokeWidth
-	 * 
-	 * @param s
-	 *            number of pixels used when drawing
-	 */
-	private Stroke setStrokeWidth(float s) {
-		return new BasicStroke(s);
-	}
-
-	/**
-	 * Set line color
-	 * 
-	 * @param c
-	 *            color value
-	 * @return a color
-	 */
-	private Color setLineColor(Color c) {
-		return c;
-	}
-
 	/*
 	 * Make the drawing buffer and draw some starting content for it.
 	 */
 	private void makeDrawingBuffer() {
 		drawingBuffer = createImage(getWidth(), getHeight());
+		tempBuffer = drawingBuffer.getGraphics();
 		fillWithWhite();
 		createButtonLayout();
-
 	}
 
 	/*
@@ -156,8 +148,9 @@ public class Canvas extends JPanel {
 	private void fillWithWhite() {
 		final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
-		g.setColor(Color.WHITE);
-		g.fillRect(0, 0, getWidth(), getHeight());
+		g.setColor(boardColor);
+		g.fillRect(0, 0, canvasW, canvasH);
+		createButtonLayout();
 
 		// IMPORTANT! every time we draw on the internal drawing buffer, we
 		// have to notify Swing to repaint this component on the screen.
@@ -181,11 +174,12 @@ public class Canvas extends JPanel {
 		for (int i = 0; i < numOfButtons; ++i) {
 
 			String textToDisplay = buttonText.get(i);
-			int yPos = buttonBoundaries.get(textToDisplay).get(1);
+			int yPos1 = buttonBoundaries.get(textToDisplay).get(1);
+			int adjustedButtonH = buttonH - 2 * margins;
 
 			g.setColor(buttonColor);
-			Shape button = new RoundRectangle2D.Float(margins, yPos, buttonW,
-					buttonH, buttonArc, buttonArc);
+			Shape button = new RoundRectangle2D.Float(margins, yPos1, buttonW-margins,
+					adjustedButtonH, buttonArc, buttonArc);
 			g.fill(button);
 			g.draw(button);
 			g.setColor(textColor);
@@ -199,8 +193,8 @@ public class Canvas extends JPanel {
 			if (textToDisplay.contains("s:")) {
 				String modText = textToDisplay.replace("s:", "");
 				String[] splitText = modText.split(" ");
-				int yStringPos1 = yPos + buttonH / 2 - margins;
-				int yStringPos2 = yPos + buttonH * 2 / 3 + margins;
+				int yStringPos1 = yPos1 + buttonH / 2 - margins;
+				int yStringPos2 = yPos1 + buttonH * 2 / 3 + margins;
 
 				g.drawString(splitText[0], xStringPos, yStringPos1);
 				g.drawString(splitText[1], xStringPos, yStringPos2);
@@ -208,7 +202,7 @@ public class Canvas extends JPanel {
 
 			// for single line text
 			else {
-				int yStringPos = yPos + buttonH / 2 + 2 * margins;
+				int yStringPos = yPos1 + buttonH / 2 + 2 * margins;
 				g.drawString(buttonText.get(i), xStringPos, yStringPos);
 			}
 
@@ -223,13 +217,34 @@ public class Canvas extends JPanel {
 	private void drawLineSegment(int x1, int y1, int x2, int y2) {
 		Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
-		g.setStroke(setStrokeWidth(this.lineStroke));
+		g.setStroke(new BasicStroke(this.lineStroke, 1, 1));
 		g.setColor(setLineColor(this.lineColor));
 		g.drawLine(x1, y1, x2, y2);
 
 		// IMPORTANT! every time we draw on the internal drawing buffer, we
 		// have to notify Swing to repaint this component on the screen.
 		this.repaint();
+	}
+
+	/**
+	 * Set strokeWidth
+	 * 
+	 * @param s
+	 *            number of pixels used when drawing
+	 */
+	private Stroke setStrokeWidth(float s) {
+		return new BasicStroke(s);
+	}
+
+	/**
+	 * Set line color
+	 * 
+	 * @param c
+	 *            color value
+	 * @return a color
+	 */
+	private Color setLineColor(Color c) {
+		return c;
 	}
 
 	/**
@@ -305,10 +320,11 @@ public class Canvas extends JPanel {
 				if (x >= boundaries.get(0) && x <= boundaries.get(2)
 						&& y >= boundaries.get(1) && y <= boundaries.get(3)) {
 					action = button;
+
 				}
 			}
 
-			if (action.equals("Erase")) {
+			if (action.equals("Eraser")) {
 				lineStroke = 25;
 				lineColor = Color.WHITE;
 			}
@@ -328,6 +344,10 @@ public class Canvas extends JPanel {
 
 			if (action.equals("s:Stroke Large")) {
 				lineStroke = 10;
+			}
+
+			if (action.equals("s:Clear board")) {
+				fillWithWhite();
 			}
 
 		}
@@ -352,7 +372,7 @@ public class Canvas extends JPanel {
 				JFrame window = new JFrame("Freehand Canvas");
 				window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 				window.setLayout(new BorderLayout());
-				Canvas canvas = new Canvas(800, 600);
+				Canvas canvas = new Canvas(800, 1200);
 				window.add(canvas, BorderLayout.CENTER);
 				window.pack();
 				window.setVisible(true);
