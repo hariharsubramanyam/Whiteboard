@@ -86,7 +86,7 @@ public class Canvas extends JPanel {
 		// set default values of components in the canvas
 		this.windowStroke = 0; // no border on button window
 		this.margins = 3; // a margin size of 3 applied evenly throughout
-		this.windowW = width / 9; // always 1/9th the width of the entire canvas
+		this.windowW = 255; // always 255 to accomodate for the color palate
 		this.windowH = height;
 
 		// set the size of the canvas
@@ -170,16 +170,80 @@ public class Canvas extends JPanel {
 	}
 
 	/**
+	 * Creates a rectangle with a given stroke width, color, x and y positions
+	 * as referenced from the top left corner, and width and height
+	 * 
+	 * @param g
+	 *            Graphics2D object to modify
+	 * @param stroke
+	 *            a float representing the number of pixels to give the edge of
+	 *            the rectangle. Must be odd and greater than 0.
+	 * @param color
+	 *            a Color object to match the fill and stroke color
+	 * @param x
+	 *            x-position with increasing coordinate left to right, starting
+	 *            at left wall
+	 * @param y
+	 *            y-position with increasing coordinate top to bottom, starting
+	 *            at top wall
+	 * @param width
+	 *            width of rectangle
+	 * @param height
+	 *            height of rectangle
+	 */
+	private void createFilledRectangle(Graphics2D g, float stroke, Color color,
+			int x, int y, int width, int height) {
+		g.setStroke(setStrokeWidth(windowStroke));
+		g.setColor(windowBackground);
+		g.fillRect(0, 0, windowW, windowH);
+	}
+
+	/**
+	 * Prints text to the graphics provided
+	 * 
+	 * @param g
+	 *            Graphics2D object to modify
+	 * @param text
+	 *            String to print
+	 * @param x
+	 *            x-position of the left-aligned text
+	 * @param y
+	 *            y-position of the top-aligned text
+	 * @param textColor
+	 *            Color given to the text
+	 * @param option
+	 *            int that specifies "normal", 0, "bold", 1, "italic", 2
+	 * @param size
+	 *            size of text
+	 */
+	private void createText(Graphics2D g, String text, int x, int y,
+			Color textColor, int option, int size) {
+		g.setColor(textColor);
+		Font font = new Font("ComicSans", option, size);
+		g.setFont(font);
+		g.drawString(text, x, y);
+	}
+	
+	private void createRoundedFilledRectangle(Graphics2D g, Color color, int x, int y, int width, int height, int xArc, int yArc, boolean fill) {
+		g.setColor(color);
+		Shape button = new RoundRectangle2D.Float(x, y, width
+				, height, xArc, yArc);
+		if (fill) {
+			g.fill(button);
+		}
+		g.draw(button);
+	}
+
+	/**
 	 * Creates the button window. This window contains all functional buttons as
 	 * well as the color charts
 	 */
 	private void createButtonLayout() {
 		final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
-		// begin by making sure we have the right coloring
-		g.setStroke(setStrokeWidth(windowStroke));
-		g.setColor(windowBackground);
-		g.fillRect(0, 0, windowW, windowH);
+		// begin by creating the window layout background
+		createFilledRectangle(g, windowStroke, windowBackground, 0, 0, windowW,
+				windowH);
 
 		// iterate through each of the buttons and apply all corresponding
 		// properties
@@ -194,30 +258,49 @@ public class Canvas extends JPanel {
 					- margins, adjustedButtonH, buttonArc, buttonArc);
 			g.fill(button);
 			g.draw(button);
-			g.setColor(textColor);
-
-			// this is a custom font which is bold, the 1, and size 15
-			Font font = new Font("ComicSans", 1, 15);
-			g.setFont(font);
 
 			// the positioning of the text in the buttons for two line text
-			int xStringPos = buttonW / 4;
+			int xStringPos = 5 * margins;
 			if (textToDisplay.contains("s:")) {
 				String modText = textToDisplay.replace("s:", "");
 				String[] splitText = modText.split(" ");
 				int yStringPos1 = yPos1 + buttonH / 2 - margins;
 				int yStringPos2 = yPos1 + buttonH * 2 / 3 + margins;
-
-				g.drawString(splitText[0], xStringPos, yStringPos1);
-				g.drawString(splitText[1], xStringPos, yStringPos2);
+				
+				// this is a custom font which is bold, the 1, and size 15
+				createText(g, splitText[0], xStringPos, yStringPos1, textColor, 1, 15);
+				createText(g, splitText[1], xStringPos, yStringPos2, textColor, 1, 15);
 			}
 
 			// for single line text
 			else {
 				int yStringPos = yPos1 + buttonH / 2 + 2 * margins;
-				g.drawString(buttonText.get(i), xStringPos, yStringPos);
+				createText(g, buttonText.get(i), xStringPos, yStringPos, textColor, 1, 15);
+
 			}
 
+		}
+
+		// now create the color palate which is composed of the saturation, hue
+		// square, and lum bar
+		int lumBarW = 9;
+		int lumBarH = 240;
+		int lumBarX = windowW - lumBarW;
+		int lumBarY = windowH / 2 + 2 * margins;
+
+		int palateW = 240;
+		int palateH = 240;
+		int palateX = margins;
+		int palateY = windowH / 2 + 2 * margins;
+
+		for (int lum = 0; lum <= 240; lum++) {
+
+		}
+
+		for (int hue = 0; hue < 239; hue++) {
+			for (int sat = 0; sat <= 240; sat++) {
+
+			}
 		}
 
 	}
@@ -238,12 +321,12 @@ public class Canvas extends JPanel {
 		this.repaint();
 	}
 
-	private void random() {
+	private void changeBackground() {
 
 		this.lineStroke = 1.0f;
 		this.lineColor = Color.blue;
-		for (int i = 100; i < 790; i++) {
-			for (int j = 10; j < 590; j++) {
+		for (int i = windowW + margins; i < canvasW - margins; i++) {
+			for (int j = margins; j < canvasH - margins; j++) {
 				drawLineSegment(i, j, i, j);
 			}
 		}
@@ -317,7 +400,6 @@ public class Canvas extends JPanel {
 		// draw a line segment from that last point to the point of the next
 		// mouse event.
 		private int[] lastPos = new int[2];
-		private int lastX, lastY;
 
 		/*
 		 * When mouse button is pressed down, start drawing.
@@ -391,7 +473,7 @@ public class Canvas extends JPanel {
 			}
 
 			if (action.equals("random")) {
-				random();
+				changeBackground();
 			}
 
 		}
