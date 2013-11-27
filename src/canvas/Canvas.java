@@ -5,6 +5,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -16,6 +17,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.geom.RoundRectangle2D;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JFrame;
@@ -33,7 +35,6 @@ public class Canvas extends JPanel {
 	private static final long serialVersionUID = 1L;
 	// image where the user's drawing is stored
 	private Image drawingBuffer;
-	private Graphics tempBuffer; // TODO: use to create temporary objects
 	private float lineStroke;
 
 	// whiteboard
@@ -62,6 +63,7 @@ public class Canvas extends JPanel {
 	private Color lineColor;
 	private final Color windowBackground;
 	private Color boardColor;
+	private final List<Color> basicColors;
 
 	/**
 	 * Make a canvas.
@@ -86,7 +88,7 @@ public class Canvas extends JPanel {
 		// set default values of components in the canvas
 		this.windowStroke = 0; // no border on button window
 		this.margins = 3; // a margin size of 3 applied evenly throughout
-		this.windowW = 255; // always 255 to accomodate for the color palate
+		this.windowW = width / 5; // always 1/5th of the width
 		this.windowH = height;
 
 		// set the size of the canvas
@@ -116,11 +118,14 @@ public class Canvas extends JPanel {
 		}
 
 		// colors
-		this.buttonColor = new Color(0, 255, 127, 100); // spring green
-		this.windowBackground = new Color(0, 128, 0, 255); // green
+		this.buttonColor = new Color(100, 100, 100, 100); // light black
+		this.windowBackground = new Color(141, 233, 181, 255); // light green
 		this.textColor = new Color(0); // black
 		this.lineColor = Color.BLACK; // default to black
 		this.boardColor = Color.WHITE; // default to white
+		this.basicColors = Arrays.asList(Color.BLACK, Color.BLUE, Color.CYAN,
+				Color.DARK_GRAY, Color.GRAY, Color.GREEN, Color.MAGENTA,
+				Color.ORANGE, Color.PINK, Color.RED, Color.WHITE, Color.YELLOW);
 
 	}
 
@@ -144,7 +149,6 @@ public class Canvas extends JPanel {
 	 */
 	private void makeDrawingBuffer() {
 		drawingBuffer = createImage(getWidth(), getHeight());
-		tempBuffer = drawingBuffer.getGraphics();
 		fillWithWhite();
 		createButtonLayout();
 	}
@@ -219,11 +223,39 @@ public class Canvas extends JPanel {
 	private void createText(Graphics2D g, String text, int x, int y,
 			Color textColor, int option, int size) {
 		g.setColor(textColor);
-		Font font = new Font("ComicSans", option, size);
+		Font font = new Font("Comic Sans MS", option, size);
+		FontMetrics metrics = g.getFontMetrics(font);
 		g.setFont(font);
 		g.drawString(text, x, y);
 	}
 
+	/**
+	 * Used to draw a rounded rectangle to a provided Graphics2D object. Can be
+	 * filled or not.
+	 * 
+	 * @param g
+	 *            Graphics2D object to modify
+	 * 
+	 * @param color
+	 *            a Color object to match the fill and stroke color
+	 * @param x
+	 *            x-position with increasing coordinate left to right, starting
+	 *            at left wall
+	 * @param y
+	 *            y-position with increasing coordinate top to bottom, starting
+	 *            at top wall
+	 * @param width
+	 *            width of rectangle
+	 * @param height
+	 *            height of rectangle
+	 * @param xArc
+	 *            value in degrees of the radius of the corners
+	 * @param yArc
+	 *            value in degrees of the radius of the corners
+	 * @param fill
+	 *            boolean which is true if the rectangle is to be filled. False
+	 *            otherwise.
+	 */
 	private void createRoundedFilledRectangle(Graphics2D g, Color color, int x,
 			int y, int width, int height, float xArc, float yArc, boolean fill) {
 		g.setColor(color);
@@ -283,29 +315,40 @@ public class Canvas extends JPanel {
 
 		}
 
-		// now create the color palate which is composed of the saturation, hue
-		// square, and lum bar
-		int lumBarW = 9;
-		int lumBarH = 240;
-		int lumBarX = windowW - lumBarW - margins;
-		int lumBarY = windowH / 2 + 2 * margins;
+		// now create the color buttons, total of 12 so 3 squares wide, 4 high
+		int sizeColorSquare = (int) ((windowW - 2 * margins) / 3f);
+		int beginPosY = windowH / 2 + margins;
 
-		int palateW = 240;
-		int palateH = 240;
-		int palateX = margins;
-		int palateY = windowH / 2 + 2 * margins;
-
-		for (int lum = 0; lum <= 240; lum++) {
-			createFilledRectangle(g, 1, setColor(5,50,50,lum), lumBarX, lumBarY, lumBarW,
-					lumBarH);
-			
-		}
-
-		for (int hue = 0; hue < 239; hue++) {
-			for (int sat = 0; sat <= 240; sat++) {
-
+		Iterator<Color> useColor = basicColors.iterator();
+		for (int i = 0; i < 3; ++i) {
+			int xPos = margins + i * sizeColorSquare;
+			for (int j = 0; j < 4; ++j) {
+				Color colorSquare = useColor.next();
+				int yPos = beginPosY + j * sizeColorSquare;
+				createFilledRectangle(g, 1, colorSquare, xPos, yPos,
+						sizeColorSquare, sizeColorSquare);
 			}
 		}
+
+		// for (int tempLum = 0; tempLum <= 255; tempLum++) {
+		//
+		// Color lumColor = new Color(0, 0, 0, tempLum);
+		// int yPos = lumBarY + tempLum;
+		// createFilledRectangle(g, 1, lumColor, lumBarX, yPos, lumBarW, 1);
+		//
+		// }
+		//
+		// for (float tempR = rColor; rColor < 240; tempR++) {
+		// int xPos = (int) (palateX + tempR);
+		// for (float tempG = gColor; tempG < 240; tempG++) {
+		// int yPos = (int) (palateY + tempG);
+		// for (float tempB = bColor; tempB < 240; tempB++) {
+		// Color palateColor = new Color(rColor / 240, tempG / 240,
+		// rColor / 240);
+		// createFilledRectangle(g, 1, palateColor, xPos, yPos, 1, 1);
+		// }
+		// }
+		// }
 
 	}
 
