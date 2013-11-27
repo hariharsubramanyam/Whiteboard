@@ -298,6 +298,7 @@ public class Canvas extends JPanel {
 		for (int lum = 0; lum <= 240; lum++) {
 			createFilledRectangle(g, 1, setColor(5,50,50,lum), lumBarX, lumBarY, lumBarW,
 					lumBarH);
+			
 		}
 
 		for (int hue = 0; hue < 239; hue++) {
