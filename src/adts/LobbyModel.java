@@ -5,21 +5,23 @@ package adts;
  * users into different parts of its code.
  * 
  */
-public class Lobby {
+public class LobbyModel {
 	private final String name;
-
-	public Lobby() {
-		this.name = "";
+	private LobbyGUI gui;
+	
+	public LobbyModel(int id) {
+		this.name = "Whiteboard Lobby";
+		this.gui = new LobbyGUI(id);
 	}
 
 	public boolean equals(Object _that) {
 		// two objects can only be equal if they are of the same type
-		if (!(_that instanceof Lobby)) {
+		if (!(_that instanceof LobbyModel)) {
 			return false;
 		}
 		// if they are, cast the Object into a Lobby object and check for
 		// equality recursively
-		Lobby that = (Lobby) _that;
+		LobbyModel that = (LobbyModel) _that;
 		return this == that; // TODO
 	}
 
