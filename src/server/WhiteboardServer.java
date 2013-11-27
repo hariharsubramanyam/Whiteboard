@@ -1,7 +1,6 @@
 package server;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -12,9 +11,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Queue;
 
+import adts.LobbyModel;
 import adts.Whiteboard;
 
 /**
@@ -77,11 +76,8 @@ public class WhiteboardServer {
 	private static Map<Integer, Whiteboard> a = Collections
 			.synchronizedMap(new HashMap<Integer, Whiteboard>());
 	private final ServerSocket serverSocket;
+	private final LobbyModel lobby;
 	private static Integer numberOfPlayers = 0; // we may need this
-	/**
-	 * True if the server should _not_ disconnect a client.
-	 */
-	private final boolean debug;
 
 	/**
 	 * Make a WhiteboardServer that listens for connections on port.
@@ -89,9 +85,9 @@ public class WhiteboardServer {
 	 * @param port
 	 *            port number, requires 0 <= port <= 65535
 	 */
-	public WhiteboardServer(int port, boolean debug) throws IOException {
-		serverSocket = new ServerSocket(port);
-		this.debug = debug;
+	public WhiteboardServer(int port) throws IOException {
+		this.serverSocket = new ServerSocket(port);
+		this.lobby = new LobbyModel();
 	}
 
 	/**
@@ -230,8 +226,6 @@ public class WhiteboardServer {
 	 * 
 	 */
 	public static void main(String[] args) {
-		// Command-line argument parsing is provided. Do not change this method.
-		boolean debug = true;
 		int port = 4444; // default port
 
 		Queue<String> arguments = new LinkedList<String>(Arrays.asList(args));
@@ -241,7 +235,7 @@ public class WhiteboardServer {
 		}
 
 		try {
-			runWhiteboardServer(port, debug);
+			runWhiteboardServer(port);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -261,11 +255,12 @@ public class WhiteboardServer {
 	 * @param port
 	 *            The network port on which the server should listen.
 	 */
-	public static void runWhiteboardServer(int port, boolean debug) throws IOException {
+	public static void runWhiteboardServer(int port) throws IOException {
 
 		WhiteboardServer server;
+		
 		try {
-			server = new WhiteboardServer(port, debug);
+			server = new WhiteboardServer(port);
 			server.serve();
 			// TODO: something with a Lobby
 		} catch (IOException e) {
