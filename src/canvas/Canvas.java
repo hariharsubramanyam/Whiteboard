@@ -193,9 +193,9 @@ public class Canvas extends JPanel {
 	 */
 	private void createFilledRectangle(Graphics2D g, float stroke, Color color,
 			int x, int y, int width, int height) {
-		g.setStroke(setStrokeWidth(windowStroke));
-		g.setColor(windowBackground);
-		g.fillRect(0, 0, windowW, windowH);
+		g.setStroke(setStrokeWidth(stroke));
+		g.setColor(color);
+		g.fillRect(x, y, width, height);
 	}
 
 	/**
@@ -223,11 +223,12 @@ public class Canvas extends JPanel {
 		g.setFont(font);
 		g.drawString(text, x, y);
 	}
-	
-	private void createRoundedFilledRectangle(Graphics2D g, Color color, int x, int y, int width, int height, int xArc, int yArc, boolean fill) {
+
+	private void createRoundedFilledRectangle(Graphics2D g, Color color, int x,
+			int y, int width, int height, float xArc, float yArc, boolean fill) {
 		g.setColor(color);
-		Shape button = new RoundRectangle2D.Float(x, y, width
-				, height, xArc, yArc);
+		Shape button = new RoundRectangle2D.Float(x, y, width, height, xArc,
+				yArc);
 		if (fill) {
 			g.fill(button);
 		}
@@ -253,11 +254,9 @@ public class Canvas extends JPanel {
 			int yPos1 = buttonBoundaries.get(textToDisplay).get(1);
 			int adjustedButtonH = buttonH - 2 * margins;
 
-			g.setColor(buttonColor);
-			Shape button = new RoundRectangle2D.Float(margins, yPos1, buttonW
-					- margins, adjustedButtonH, buttonArc, buttonArc);
-			g.fill(button);
-			g.draw(button);
+			createRoundedFilledRectangle(g, buttonColor, margins, yPos1,
+					buttonW - margins, adjustedButtonH, buttonArc, buttonArc,
+					true);
 
 			// the positioning of the text in the buttons for two line text
 			int xStringPos = 5 * margins;
@@ -266,16 +265,19 @@ public class Canvas extends JPanel {
 				String[] splitText = modText.split(" ");
 				int yStringPos1 = yPos1 + buttonH / 2 - margins;
 				int yStringPos2 = yPos1 + buttonH * 2 / 3 + margins;
-				
+
 				// this is a custom font which is bold, the 1, and size 15
-				createText(g, splitText[0], xStringPos, yStringPos1, textColor, 1, 15);
-				createText(g, splitText[1], xStringPos, yStringPos2, textColor, 1, 15);
+				createText(g, splitText[0], xStringPos, yStringPos1, textColor,
+						1, 15);
+				createText(g, splitText[1], xStringPos, yStringPos2, textColor,
+						1, 15);
 			}
 
 			// for single line text
 			else {
 				int yStringPos = yPos1 + buttonH / 2 + 2 * margins;
-				createText(g, buttonText.get(i), xStringPos, yStringPos, textColor, 1, 15);
+				createText(g, buttonText.get(i), xStringPos, yStringPos,
+						textColor, 1, 15);
 
 			}
 
@@ -285,7 +287,7 @@ public class Canvas extends JPanel {
 		// square, and lum bar
 		int lumBarW = 9;
 		int lumBarH = 240;
-		int lumBarX = windowW - lumBarW;
+		int lumBarX = windowW - lumBarW - margins;
 		int lumBarY = windowH / 2 + 2 * margins;
 
 		int palateW = 240;
@@ -294,7 +296,8 @@ public class Canvas extends JPanel {
 		int palateY = windowH / 2 + 2 * margins;
 
 		for (int lum = 0; lum <= 240; lum++) {
-
+			createFilledRectangle(g, 1, setColor(5,50,50,lum), lumBarX, lumBarY, lumBarW,
+					lumBarH);
 		}
 
 		for (int hue = 0; hue < 239; hue++) {
