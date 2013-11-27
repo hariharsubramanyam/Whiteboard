@@ -49,12 +49,14 @@ public class Pixel {
 	 * @return the serialized object
 	 */
 	public synchronized String getSerializedResponse() {
-		String response = "{ " + "coordinates : (" + this.position[0] + ", "
-				+ this.position[1] + "), color : (" + this.color[0] + ", "
-				+ this.color[1] + ", " + this.color[2] + ", " + this.color[3]
-				+ ")}";
-
-		return response;
+	    return String.format("%s %s %s %s %s %s", 
+	            this.position[0], 
+	            this.position[1], 
+	            this.position[2], 
+	            this.color[0], 
+	            this.color[1], 
+	            this.color[2], 
+	            this.color[3]); 
 	}
 
 	public boolean equals(Object _that) {
