@@ -1,7 +1,9 @@
 package adts;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -13,13 +15,13 @@ import ui.LobbyGUI;
  * 
  */
 public class LobbyModel {
-	private Map<Whiteboard, Integer> boards = Collections
-			.synchronizedMap(new HashMap<Whiteboard, Integer>());
+	private Map<Whiteboard, List<Integer>> boards = Collections
+			.synchronizedMap(new HashMap<Whiteboard, List<Integer>>());
 	private Map<Integer, Integer> users = Collections
 			.synchronizedMap(new HashMap<Integer, Integer>());
 	private final String name;
 	private LobbyGUI gui;
-	private AtomicInteger uniqueID = new AtomicInteger(0);
+	private AtomicInteger uniqueUserID = new AtomicInteger(0);
 
 	public LobbyModel() {
 		this.name = "Whiteboard Lobby";
@@ -32,7 +34,7 @@ public class LobbyModel {
 	 * instance of this Model.
 	 */
 	public synchronized void addUser() {
-		users.put(uniqueID.getAndIncrement(), (int) System.currentTimeMillis());
+		users.put(uniqueUserID.getAndIncrement(), (int) System.currentTimeMillis());
 	}
 
 	/**
@@ -45,10 +47,17 @@ public class LobbyModel {
 	 *            the unique ID of the user
 	 */
 	public synchronized void linkUser(Whiteboard w, Integer user) {
+		ArrayList<Integer> currentUsers = new ArrayList<Integer>();
 		if (boards.containsKey(w)) {
-			this.boards.put(key, value)
+			currentUsers = (ArrayList<Integer>) this.boards.get(w);
+			currentUsers.add(user);
+			this.boards.put(w, currentUsers);
 		}
-		this.boards.put(w, user);
+		else {
+			currentUsers.add(user);
+			this.boards.put(w, currentUsers);
+		}
+		
 	}
 
 	/**
