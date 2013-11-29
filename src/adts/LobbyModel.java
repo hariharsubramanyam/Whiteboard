@@ -15,15 +15,41 @@ import ui.LobbyGUI;
  * 
  */
 public class LobbyModel {
-	private Map<String, List<User>> usersForBoardName;
-	private List<User> users;
-	private List<Whiteboard> boards;
-	private AtomicInteger uniqueUserID;
+    
+    /**
+     * A counter used to assign unique ids to each user
+     */
+    private final AtomicInteger uniqueUserID;
+    
+    /**
+     * A counter used to assign unique ids to each board
+     */
+    private final AtomicInteger uniqueBoardID;
+    
+    /**
+     * Key = user ID
+     * Value = user with the given ID
+     */
+    private final Map<Integer, User> userForID;
+    
+    /**
+     * Key = board ID
+     * Value = board with the given ID 
+     */
+    private final Map<Integer, Whiteboard> boardForID;
+    
+    /**
+     * Key = board ID
+     * Value = list of IDs of users who are using the board with the given ID
+     */
+    private final Map<Integer, List<Integer>> userIDsForBoardID;
 
 	public LobbyModel() {
 	    uniqueUserID = new AtomicInteger(0);
-	    usersForBoard = Collections.synchronizedMap(new HashMap<Whiteboard, List<User>>());
-	    users = Collections.synchronizedList(new ArrayList<User>());
+	    uniqueBoardID = new AtomicInteger(0);
+	    userForID = Collections.synchronizedMap(new HashMap<Integer, User>());
+	    boardForID = Collections.synchronizedMap(new HashMap<Integer, Whiteboard>());
+	    userIDsForBoardID = Collections.synchronizedMap(new HashMap<Integer, List<Integer>>());
 	}
 	
 	/**

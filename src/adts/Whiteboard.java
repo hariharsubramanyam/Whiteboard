@@ -4,10 +4,16 @@ package adts;
  * ADT that represents an instance of a Whiteboard.
  */
 public class Whiteboard {
+    
+    /**
+     * The ID of this board, does not change! 
+     */
+    private final int boardID;
+    
 	/**
 	 * The name of this board
 	 */
-    private final String boardName;
+    private String boardName;
     
     /**
      * The board contents.
@@ -26,17 +32,32 @@ public class Whiteboard {
 	private final int height;
 
 	/**
-	 * Creates a board with the given boardName, width, and height. The board is cleared such that all pixels are white.
+	 * Creates a board with the given boardID, boardName, width, and height. 
+	 * The board is cleared such that all pixels are white.
+	 * @param boardID the ID of the board
 	 * @param boardName the name of the board
 	 * @param width the width of the board
 	 * @param height this height of the board
 	 */
-	public Whiteboard(String boardName, int width, int height) {
+	public Whiteboard(int boardID, String boardName, int width, int height) {
+	    this.boardID = boardID;
 	    this.boardName = boardName;
 		this.width = width;
 		this.height = height;
 		this.pixelBoard = new RGBA[width][height];
 		clearBoard();
+	}
+	
+	/**
+     * Creates a board with the given boardID width, and height. 
+     * The board is cleared such that all pixels are white.
+     * The boardName is "Board"+boardID (ex. if boardID = 2, the boardName is "Board2") 
+     * @param boardID the ID of the board
+     * @param width the width of the board
+     * @param height this height of the board
+     */
+	public Whiteboard(int boardID, int width, int height){
+	    this(boardID, "Board"+boardID, width, height);
 	}
 
 	/**
@@ -72,6 +93,13 @@ public class Whiteboard {
 	}
 	
 	/**
+	 * @return the ID of the board
+	 */
+	public synchronized int getBoardID(){
+	    return this.boardID;
+	}
+	
+	/**
 	 * @return the name of the board
 	 */
 	public synchronized String getBoardName(){
@@ -94,7 +122,7 @@ public class Whiteboard {
 	
 	/**
 	 * @param the object to check equality against
-	 * @return true if both objects have the same name, height, width, and board contents
+	 * @return true if both objects have the same boardID, boardName, height, width, and board contents
 	 */
 	@Override
 	public boolean equals(Object obj) {
@@ -104,7 +132,8 @@ public class Whiteboard {
 	    
 	    if(!(other.getBoardName().equals(this.boardName)
 	            && other.getWidth() == this.width
-	            && other.getHeight() == this.height))
+	            && other.getHeight() == this.height
+	            && other.getBoardID() == this.boardID))
 	        return false;
 	    
 	    for(int i = 0; i < this.width; i++){
@@ -136,10 +165,10 @@ public class Whiteboard {
 	}
 	
 	/**
-	 * @return the hashcode of this class's string representation
+	 * @return the hashcode of this class's string representation concatenated after the boardID 
 	 */
 	@Override
 	public int hashCode() {
-	    return this.toString().hashCode();
+	    return ("" + this.getBoardID() + " " + this.toString()).hashCode();
 	}
 }

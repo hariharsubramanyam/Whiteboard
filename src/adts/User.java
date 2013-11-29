@@ -53,21 +53,31 @@ public class User {
         this.name = name;
     }
     
+    /**
+     * @return the name of the user
+     */
     @Override
     public String toString() {
-        // TODO Auto-generated method stub
-        return super.toString();
+        return this.name;
     }
     
+    /**
+     * @return the hashcode of the id concatenated with the name of the user
+     */
     @Override
     public int hashCode() {
-        // TODO Auto-generated method stub
-        return super.hashCode();
+        return ("" + this.getID() + " " + this.name).hashCode();
     }
     
+    /**
+     * @param obj the object to check equality against
+     * @return true if both objects have the same id and name
+     */
     @Override
     public boolean equals(Object obj) {
-        // TODO Auto-generated method stub
-        return super.equals(obj);
+        if(!(obj instanceof User))
+            return false;
+        User other = (User)obj;
+        return (other.getID() == this.id && other.getName().equals(this.name));
     }
 }
