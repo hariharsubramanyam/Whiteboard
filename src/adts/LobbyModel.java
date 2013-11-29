@@ -89,6 +89,29 @@ public class LobbyModel {
 	    return getUserNamesForBoardID(getBoardIDForBoardName(boardName));
 	}
 	
+
+	/**
+	 * Change the username for a user with the given userID
+	 * @param newName the name that we should change to
+	 * @param userID the id of the user
+	 * @throws IllegalArgumentException if the userID does not exist
+	 */
+	public synchronized void changeUserName(String newName, int userID){
+	    if(!(this.userForID.keySet().contains(userID)))
+            throw new IllegalArgumentException(String.format("userID=%d does not exist!", userID));
+	    this.userForID.get(userID).setName(newName);
+	}
+	
+	/**
+     * Change the username for a user with the given userName
+     * @param newName the name that we should change to
+     * @param userName the name of the user
+     * @throws IllegalArgumentException if the userName does not exist 
+     */
+    public synchronized void changeUserName(String newName, String userName){
+        changeUserName(newName, getUserIDForUserName(userName));
+    }
+	
 	/**
 	 * Adds a user to the lobby
 	 * @param name the name of the user
@@ -172,6 +195,35 @@ public class LobbyModel {
         List<Integer> userIDs = this.userIDsForBoardID.get(boardID);
         userIDs.add(userID);
     }
+    
+    /**
+     * Removes the user with the given userID from the board with the given boardID
+     * @param userID the id of the user to be added
+     * @param boardID the id of the board that the user should be removed from
+     * @throws IllegalArgumentException if the userID or boardID do not exist
+     */
+    public synchronized void userLeaveBoard(int userID, int boardID){
+        if(!(this.boardForID.keySet().contains(boardID)))
+            throw new IllegalArgumentException(String.format("boardID=%d does not exist!", boardID));
+        if(!(this.userForID.keySet().contains(userID)))
+            throw new IllegalArgumentException(String.format("userID=%d does not exist!", userID));
+        List<Integer> userIDs = this.userIDsForBoardID.get(boardID);
+        userIDs.remove(userID);
+    }
+    
+    /**
+     * Removes the user with the given userID to the board with the given boardName
+     * @param userID the id of the user to be added
+     * @param boardName the name of the board that the user should be removed from
+     * @throws IllegalArgumentException if the userID or boardName do not exist
+     */
+    public synchronized void userLeaveBoard(int userID, String boardName){
+        if(!(this.userForID.keySet().contains(userID)))
+            throw new IllegalArgumentException(String.format("userID=%d does not exist!", userID));
+        int boardID = getBoardIDForBoardName(boardName);
+        List<Integer> userIDs = this.userIDsForBoardID.get(boardID);
+        userIDs.remove(userID);
+    }
 
     /**
      * Returns the boardID for the given boardName
@@ -189,6 +241,24 @@ public class LobbyModel {
         if (boardID == -1)
             throw new IllegalArgumentException(String.format("the board name = %s does not exist!", boardName));
         return boardID;
+    }
+    
+    /**
+     * Returns the userID for the given userName
+     * @param userName the name of the user
+     * @return the id of the user with the given name
+     * @throws IllegalArgument exception if the userName does not exist
+     */
+    private int getUserIDForUserName(String userName) {
+        int userID = -1;
+        for(User user : this.userForID.values()){
+            if(user.getName().equals(userName)){
+                userID = user.getID();
+            }
+        }
+        if (userID == -1)
+            throw new IllegalArgumentException(String.format("the user name = %s does not exist!", userName));
+        return userID;
     }
 
 }
