@@ -56,51 +56,139 @@ public class LobbyModel {
 	 * @return the list of all the whiteboard names
 	 */
 	public synchronized List<String> getWhiteboardNames(){
-	    
+	    List<String> whiteboardNames = new ArrayList<String>();
+	    for (Whiteboard wb : this.boardForID.values()){
+	        whiteboardNames.add(wb.getBoardName());
+	    }
+	    return whiteboardNames;
+	}
+	
+	/**
+	 * Returns the user names for the given boardID
+	 * @param boardID the id of the board
+	 * @return the list of users in the given board
+	 * @throws IllegalArgumentException if the boardID does not exist
+	 */
+	public synchronized List<String> getUserNamesForBoardID(int boardID){
+	    if(!(this.boardForID.keySet().contains(boardID)))
+            throw new IllegalArgumentException(String.format("boardID=%d does not exist!", boardID));
+	    List<String> userNames = new ArrayList<String>();
+	    for(Integer userID : this.userIDsForBoardID.get(boardID)){
+	        userNames.add(this.userForID.get(userID).getName());
+	    }
+	    return userNames;
+	}
+	
+	/**
+     * Returns the user names for the given boardName
+     * @param boardName the name of the board
+     * @return the list of users in the given board
+     * @throws IllegalArgumentException if the boardName does not exist
+     */
+	public synchronized List<String> getUserNamesForBoardName(String boardName){
+	    return getUserNamesForBoardID(getBoardIDForBoardName(boardName));
+	}
+	
+	/**
+	 * Adds a user to the lobby
+	 * @param name the name of the user
+	 * @return the id of the user who was added
+	 */
+	public synchronized int addUser(String name){
+	    int id = this.uniqueUserID.getAndIncrement();
+	    this.userForID.put(id, new User(id, name));
+	    return id;
+	}
+	
+	/**
+	 * Adds a user to the lobby with an automatically assigned name
+	 * @return the id of the user who was added
+	 */
+	public synchronized int addUser(){
+	    int id = this.uniqueUserID.getAndIncrement();
+        this.userForID.put(id, new User(id));
+        return id;
 	}
 
 	/**
-	 * THe server should use this to add unique client connections to the lobby.
-	 * A timestamp is attached with the uniqueID provided globally by the
-	 * instance of this Model.
+	 * Adds a board to the lobby
+	 * @param name the name of the board
+	 * @param width the width of the board
+	 * @param height the height of the board
+	 * @return the id of the board that was added
 	 */
-	public synchronized void addUser() {
-		users.put(uniqueUserID.getAndIncrement(), (int) System.currentTimeMillis());
+	public synchronized int addBoard(String name, int width, int height){
+	    int id = this.uniqueBoardID.getAndIncrement();
+	    this.boardForID.put(id, new Whiteboard(id, name, width, height));
+	    return id;
 	}
-
+	
 	/**
-	 * Once the user is ready to connect to an existing Whiteboard, or create a
-	 * new one, use this to link them to this board
-	 * 
-	 * @param w
-	 *            the Whiteboard to associate the user to
-	 * @param user
-	 *            the unique ID of the user
-	 */
-	public synchronized void linkUser(Whiteboard w, Integer user) {
-		ArrayList<Integer> currentUsers = new ArrayList<Integer>();
-		if (usersForBoard.containsKey(w)) {
-			currentUsers = (ArrayList<Integer>) this.usersForBoard.get(w);
-			currentUsers.add(user);
-			this.usersForBoard.put(w, currentUsers);
-		}
-		else {
-			currentUsers.add(user);
-			this.usersForBoard.put(w, currentUsers);
-		}
-		
-	}
+     * Adds a board to the lobby with a default height and width
+     * @param name the name of the board
+     * @return the id of the board that was added
+     */
+    public synchronized int addBoard(String name){
+        int id = this.uniqueBoardID.getAndIncrement();
+        this.boardForID.put(id, new Whiteboard(id, name, Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT));
+        return id;
+    }
+    
+    /**
+     * Adds a board to the lobby with an automatically generated name and default height and width
+     * @return the id of the board that was added
+     */
+    public synchronized int addBoard(){
+        int id = this.uniqueBoardID.getAndIncrement();
+        this.boardForID.put(id, new Whiteboard(id, Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT));
+        return id;
+    }
+    
+    /**
+     * Adds the user with the given userID to the board with the given boardID
+     * @param userID the id of the user to be added
+     * @param boardID the id of the board that the user should be added to
+     * @throws IllegalArgumentException if the userID or boardID do not exist
+     */
+    public synchronized void userJoinBoard(int userID, int boardID){
+        if(!(this.boardForID.keySet().contains(boardID)))
+            throw new IllegalArgumentException(String.format("boardID=%d does not exist!", boardID));
+        if(!(this.userForID.keySet().contains(userID)))
+            throw new IllegalArgumentException(String.format("userID=%d does not exist!", userID));
+        List<Integer> userIDs = this.userIDsForBoardID.get(boardID);
+        userIDs.add(userID);
+    }
+    
+    /**
+     * Adds the user with the given userID to the board with the given boardName
+     * @param userID the id of the user to be added
+     * @param boardName the name of the board that the user should be added to
+     * @throws IllegalArgumentException if the userID or boardName do not exist
+     */
+    public synchronized void userJoinBoard(int userID, String boardName){
+        if(!(this.userForID.keySet().contains(userID)))
+            throw new IllegalArgumentException(String.format("userID=%d does not exist!", userID));
+        int boardID = getBoardIDForBoardName(boardName);
+        List<Integer> userIDs = this.userIDsForBoardID.get(boardID);
+        userIDs.add(userID);
+    }
 
-	/**
-	 * 
-	 * @return the string representation of a Lobby
-	 */
-	public String toString() {
-		return ""; // TODO
-	}
-
-	public int hashCode() {
-		return 1; // TODO
-	}
+    /**
+     * Returns the boardID for the given boardName
+     * @param boardName the name of the board
+     * @return the id of the board with the given name
+     * @throws IllegalArgument exception if the boardName does not exist
+     */
+    private int getBoardIDForBoardName(String boardName) {
+        int boardID = -1;
+        for(Whiteboard wb : this.boardForID.values()){
+            if(wb.getBoardName().equals(boardName)){
+                boardID = wb.getBoardID();
+            }
+        }
+        if (boardID == -1)
+            throw new IllegalArgumentException(String.format("the board name = %s does not exist!", boardName));
+        return boardID;
+    }
 
 }

@@ -5,6 +5,9 @@ package adts;
  */
 public class Whiteboard {
     
+    public final static int DEFAULT_WIDTH = 600;
+    public final static int DEFAULT_HEIGHT = 400;
+    
     /**
      * The ID of this board, does not change! 
      */
