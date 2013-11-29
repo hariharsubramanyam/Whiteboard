@@ -69,11 +69,11 @@ public class RGBA {
     }
     
     /**
-     * @return A string of the (r=%d, g=%d, b=%d, a=%d) 
+     * @return A string of the %d %d %d %d 
      */
     @Override
     public String toString() {
-        return String.format("(r=%d, g=%d, b=%d, a=%d)", this.red, this.green, this.blue, this.alpha);
+        return String.format("%d %d %d %d", this.red, this.green, this.blue, this.alpha);
     }
     
     /**
