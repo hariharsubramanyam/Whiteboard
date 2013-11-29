@@ -15,17 +15,22 @@ import ui.LobbyGUI;
  * 
  */
 public class LobbyModel {
-	private Map<Whiteboard, List<Integer>> boards = Collections
-			.synchronizedMap(new HashMap<Whiteboard, List<Integer>>());
-	private Map<Integer, Integer> users = Collections
-			.synchronizedMap(new HashMap<Integer, Integer>());
-	private final String name;
-	private LobbyGUI gui;
-	private AtomicInteger uniqueUserID = new AtomicInteger(0);
+	private Map<String, List<User>> usersForBoardName;
+	private List<User> users;
+	private List<Whiteboard> boards;
+	private AtomicInteger uniqueUserID;
 
 	public LobbyModel() {
-		this.name = "Whiteboard Lobby";
-		this.gui = new LobbyGUI(1);
+	    uniqueUserID = new AtomicInteger(0);
+	    usersForBoard = Collections.synchronizedMap(new HashMap<Whiteboard, List<User>>());
+	    users = Collections.synchronizedList(new ArrayList<User>());
+	}
+	
+	/**
+	 * @return the list of all the whiteboard names
+	 */
+	public synchronized List<String> getWhiteboardNames(){
+	    
 	}
 
 	/**
@@ -48,14 +53,14 @@ public class LobbyModel {
 	 */
 	public synchronized void linkUser(Whiteboard w, Integer user) {
 		ArrayList<Integer> currentUsers = new ArrayList<Integer>();
-		if (boards.containsKey(w)) {
-			currentUsers = (ArrayList<Integer>) this.boards.get(w);
+		if (usersForBoard.containsKey(w)) {
+			currentUsers = (ArrayList<Integer>) this.usersForBoard.get(w);
 			currentUsers.add(user);
-			this.boards.put(w, currentUsers);
+			this.usersForBoard.put(w, currentUsers);
 		}
 		else {
 			currentUsers.add(user);
-			this.boards.put(w, currentUsers);
+			this.usersForBoard.put(w, currentUsers);
 		}
 		
 	}

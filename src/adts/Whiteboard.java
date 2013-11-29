@@ -1,7 +1,6 @@
 package adts;
 
-import interfaces.BoardInterface;
-
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,8 +14,9 @@ import java.util.Map;
  * 
  */
 public class Whiteboard implements BoardInterface {
-	private final String title;
-	private List<String> users;
+	private final String boardName;
+	private final Map<Pair,Color> pixelBoard;
+	
 	private Map<String[], String[]> pixelBoard = Collections
 			.synchronizedMap(new HashMap<String[], String[]>());
 	private final int width;
