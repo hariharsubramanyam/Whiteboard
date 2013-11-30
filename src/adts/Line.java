@@ -3,37 +3,37 @@ package adts;
 import java.awt.Color;
 
 public class Line {
-    
+
     /**
      * The first x coordinate
      */
     private final int x1;
-    
+
     /**
      * The first y coordinate
      */
     private final int y1;
-    
+
     /**
      * The second x coordinate
      */
     private final int x2;
-    
+
     /**
      * The second y coordinate
      */
     private final int y2;
-    
+
     /**
      * The stroke thickness
      */
     private final float strokeThickness;
-    
+
     /**
      * The alpha value
      */
     private final int a;
-    
+
     /**
      * The red value
      */
@@ -43,24 +43,34 @@ public class Line {
      * The green value
      */
     private final int g;
-    
+
     /**
      * The blue value
      */
     private final int b;
-    
+
     /**
-     * @param x1 The first x coordinate
-     * @param y1 The first y coordinate
-     * @param x2 The second x coordinate
-     * @param y2 The second y coordinate
-     * @param strokeThickness The stroke thickness
-     * @param a The alpha value
-     * @param r The red value
-     * @param g The green value
-     * @param b The blue value
+     * @param x1
+     *            The first x coordinate
+     * @param y1
+     *            The first y coordinate
+     * @param x2
+     *            The second x coordinate
+     * @param y2
+     *            The second y coordinate
+     * @param strokeThickness
+     *            The stroke thickness
+     * @param a
+     *            The alpha value
+     * @param r
+     *            The red value
+     * @param g
+     *            The green value
+     * @param b
+     *            The blue value
      */
-    public Line(int x1, int y1, int x2, int y2, float strokeThickness, int a, int r, int g, int b){
+    public Line(int x1, int y1, int x2, int y2, float strokeThickness, int a,
+            int r, int g, int b) {
         this.x1 = x1;
         this.y1 = y1;
         this.x2 = x2;
@@ -71,8 +81,8 @@ public class Line {
         this.g = g;
         this.b = b;
     }
-    
-    public Color getColor(){
+
+    public Color getColor() {
         return new Color(r, g, b, a);
     }
 
@@ -138,19 +148,13 @@ public class Line {
     public int getB() {
         return b;
     }
-    
+
     @Override
     public String toString() {
-        return String.format("%d %d %d %d %f %d %d %d %d",this.getX1(),
-                this.getY1(),
-                this.getX2(),
-                this.getY2(),
-                this.getStrokeThickness(),
-                this.getR(),
-                this.getG(),
-                this.getB(),
-                this.getA()
-                );
+        return String.format("%d %d %d %d %f %d %d %d %d", this.getX1(),
+                this.getY1(), this.getX2(), this.getY2(),
+                this.getStrokeThickness(), this.getR(), this.getG(),
+                this.getB(), this.getA());
     }
-    
+
 }

@@ -109,7 +109,6 @@ public class UserThread extends Thread{
     public void run() {
         try {
             this.output(String.format("welcome %d", this.userID));
-            this.broadcast(String.format("User %d has joined!", this.userID));
             handleConnection();
             } catch (Exception e) {} 
         finally {MessageHandler.handleMessage(MessageHandler.REQ_LOGOUT, this, this.lobbyModel);}
@@ -131,21 +130,12 @@ public class UserThread extends Thread{
     private void handleConnection() throws IOException {
         try {
             for (String line = in.readLine(); line != null; line = in.readLine()) {
-                handleRequest(line);
+                MessageHandler.handleMessage(line, this, this.lobbyModel);
             }
         }
         finally {
             out.close();
             in.close();
         }
-    }
-    
-    /**
-     * Processes the user request and generates a response 
-     * @param line the user request
-     * @return the response
-     */
-    private void handleRequest(String line){
-        MessageHandler.handleMessage(line, this, this.lobbyModel);
     }
 }
