@@ -57,11 +57,8 @@ public class MessageHandler {
     }
 
     /**
-     * Request: 'get_board_ids'
-     * Response: 'board_ids [id1] [id2] [id3]...'
-     * @param input 'get_board_ids' 
-     * @param userThread the user's thread
-     * @param lobbyModel the lobby model
+     * Req: get_board_ids
+     * Resp: board_ids [id1] [id2] [id3]
      */
     private static void handleRequestGetBoardIDs(String input, UserThread userThread,LobbyModel lobbyModel) {
         userThread.output(MessageHandler.makeResponseBoardIDs(lobbyModel.getWhiteboardIDs()));
@@ -69,11 +66,9 @@ public class MessageHandler {
     
     
     /**
-     * Request: 'set_username [newName]'
-     * Response (to all users in the given board): 'users_for_board [boardID] [userName11] [userName2]...'
-     * @param input 'set_username [newName]'
-     * @param userThread the user's thread
-     * @param lobbyModel the lobby model
+     * Req: set_username [newUserName]
+     * Resp (to all users in board): users_for_board [boardID] [userName1] [userName2]...
+     * Resp (to users who made request): done
      */
     private static void handleRequestSetUsername(String input, UserThread userThread, LobbyModel lobbyModel) {
         Set<String> userNames = new HashSet<String>();
@@ -97,11 +92,9 @@ public class MessageHandler {
     }
     
     /**
-     * Request: 'create_board [boardName]'
-     * Response (to all users): 'board_ids [id1] [id2] [id3]...' 
-     * @param input 'create_board [userID] [boardName]'
-     * @param userThread the user's thread
-     * @param lobbyModel the lobby model
+     * Req: create_board [boardName]
+     * Resp (to all other users): board_ids [id1] [id2] [id3]
+     * Resp (to user who made request): done
      */
     private static void handleRequestCreateBoard(String input,UserThread userThread, LobbyModel lobbyModel) {
         String[] splitString = input.split(" ");
@@ -114,11 +107,8 @@ public class MessageHandler {
     }
     
     /**
-     * Request: 'get_current_board_id'
-     * Response: 'current_board_id [boardID]' (boardID = -1 if the user is not in a board)
-     * @param input 'get_current_board_id'
-     * @param userThread the user's thread
-     * @param lobbyModel the lobby model
+     * Req: get_current_board_id
+     * Resp: current_board_id [boardID]
      */
     private static void handleRequestGetCurrentBoard(String input, UserThread userThread, LobbyModel lobbyModel) {
         int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread.getUserID());
@@ -126,11 +116,8 @@ public class MessageHandler {
     }
     
     /**
-     * Request: 'get_users_for_board_id [boardID]'
-     * Response: 'users_for_board [boardID] [userName1] [userName2]...'
-     * @param input 'get_users_for_board_id [boardID]'
-     * @param userThread the user's thread
-     * @param lobbyModel the lobby model
+     * Req: get_users_for_board_id [boardID]
+     * Resp: users_for_board [boardID] [userName1] [userName2]...
      */
     private static void handleRequestGetUsersForBoardID(String input, UserThread userThread, LobbyModel lobbyModel) {
         int boardID = Integer.parseInt(input.split(" ")[1]);
@@ -139,15 +126,9 @@ public class MessageHandler {
     }
     
     /**
-     * Request: 'join_board_id [boardID]'
-     * Response (all other users): 'users_for_board [boardID] [userName1] [userName2]...'
-     * Response (user who made request): board_lines [x1] [y1] [x2] [y2] [strokeThickness] 
-     * [r] [g] [b] [a] [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] 
-     * [a] [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1] 
-     * [x2] [y2] [strokeThickness] [r] [g] [b] [a]...
-     * @param input 'join_board_id [boardID]'
-     * @param userThread the user's thread
-     * @param lobbyModel the lobby model
+     * Req: join_board_id [boardID]
+     * Resp (to all users in board): users_for_board [boardID] [userName1] [userName2]...
+     * Resp (to user who made request): board_lines [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a]...
      */
     private static void handleRequestJoinBoardID(String input, UserThread userThread, LobbyModel lobbyModel) {
         int boardID = Integer.parseInt(input.split(" ")[1]);
@@ -165,11 +146,9 @@ public class MessageHandler {
     }
     
     /**
-     * Request: 'logout'
-     * Response: 'logged_out'
-     * @param input 'logout'
-     * @param userThread the user's thread
-     * @param lobbyModel the lobby model
+     * Req: logout
+     * Resp (to all users in board): users_for_board [boardID] [userName1] [userName2]...
+     * Resp (to user who made request): logged_out
      */
     private static void handleRequestLogout(String input, UserThread userThread, LobbyModel lobbyModel) {
         int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread.getUserID());
@@ -185,11 +164,9 @@ public class MessageHandler {
     }
     
     /**
-     * Request: 'get_users_in_my_board'
-     * Response: 'users_for_board [boardID] [userName1] [userName2]...'
-     * @param input 'get_users_in_my_board'
-     * @param userThread the user's thread
-     * @param lobbyModel the lobby model
+     * Req: get_users_in_my_board
+     * Resp: users_for_board [boardID] [userName1] [userName2]...
+     * (if not in a board): failed
      */
     private static void handleRequestGetUsersInMyBoard(String input, UserThread userThread, LobbyModel lobbyModel) {
         int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread.getUserID());
@@ -202,11 +179,9 @@ public class MessageHandler {
     }
     
     /**
-     * Request: 'leave_board'
-     * Response: 'users_for_board [boardID] [userName1] [userName2]...' 
-     * @param input 'leave_board'
-     * @param userThread the user's thread
-     * @param lobbyModel the lobby model
+     * Req: leave_board
+     * Resp (to all users in board): users_for_board [boardID] [userName1] [userName2]...
+     * Resp (to user who made request): done
      */
     private static void handleRequestLeaveBoard(String input, UserThread userThread, LobbyModel lobbyModel) {
         int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread.getUserID());
@@ -223,9 +198,8 @@ public class MessageHandler {
     /**
      * Req: req_draw [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a]
      * Resp (to all users in board): draw [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a]
-     * @param input req_draw [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a]
-     * @param userThread the user's thread
-     * @param lobbyModel the lobby model
+     * Resp (to user who made request): done
+     * (if not in a board): failed
      */
     private static void handleRequestDraw(String input, UserThread userThread, LobbyModel lobbyModel) {
         int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread.getUserID());
@@ -319,13 +293,21 @@ public class MessageHandler {
     
     /**
      * @param boardID the id of the board
-     * @param userNames the names of the users in the board
-     * @return 'users_for_board [boardID] [userName1] [userName2]...'
+     * @param line the line to draw
+     * @return 'draw [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a]'
      */
     private static String makeResponseDraw(Line line){
         return String.format("%s %s", MessageHandler.RESP_DRAW, line.toString());
     }
     
+    /**
+     * @param lines
+     *            the list of lines
+     * @return board_lines [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a]
+     *         [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1]
+     *         [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1] [x2] [y2]
+     *         [strokeThickness] [r] [g] [b] [a]...
+     */
     private static String makeResponseBoardLines(List<Line> lines){
         StringBuilder response = new StringBuilder();
         response.append(MessageHandler.RESP_BOARD_LINES);
