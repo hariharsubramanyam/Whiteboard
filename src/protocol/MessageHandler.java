@@ -225,7 +225,7 @@ public class MessageHandler {
             String response = MessageHandler.makeResponseDraw(line);
             
             userThread.broadcast(response, userIDsOfUsersInSameBoard);
-            userThread.output(MessageHandler.makeResponseDone());
+            userThread.output(response);
         }else{
             userThread.output(MessageHandler.makeResponseFailed());
         }
