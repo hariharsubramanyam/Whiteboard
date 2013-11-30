@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
+import java.util.Set;
 
 import adts.LobbyModel;
 import protocol.MessageHandler;
@@ -83,6 +84,19 @@ public class UserThread extends Thread{
             if(thread.getUserID() == this.userID)
                 continue;
             thread.output(message);
+        }
+    }
+    
+    /**
+     * Output a message to selected set of users
+     * @param message the message to outpu
+     * @param userIDs the list of userIDs to output to
+     */
+    public void broadcast(String message, Set<Integer> userIDs){
+        for(UserThread thread : this.otherThreads){
+            if(userIDs.contains(thread.getUserID())){
+                thread.output(message);
+            }
         }
     }
 

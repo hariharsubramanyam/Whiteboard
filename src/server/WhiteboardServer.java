@@ -16,17 +16,25 @@ public class WhiteboardServer {
 	private final LobbyModel lobbyModel;
 	private final List<UserThread> userThreads;
 	
+	private final List<Integer> boardIDs;
+	
 	public WhiteboardServer(int port) throws IOException {
 		this.serverSocket = new ServerSocket(port);
 		this.lobbyModel = new LobbyModel();
 		this.userThreads = new ArrayList<UserThread>();
+		
+		this.boardIDs = new ArrayList<Integer>();
+		int id = this.lobbyModel.addBoard();
+		this.boardIDs.add(id);
+		id = this.lobbyModel.addBoard();
+		this.boardIDs.add(id);
 	}
 
 	public void serve() throws IOException {
 		while (true) {
 			final Socket socket = serverSocket.accept();
 			int userID = this.lobbyModel.addUser();
-			this.lobbyModel.addBoard();
+			this.lobbyModel.userJoinBoard(userID, this.boardIDs.get(userID%this.boardIDs.size()));
 			UserThread thread = new UserThread(socket, userID, this.userThreads, this.lobbyModel);
 			this.userThreads.add(thread);
 			thread.start();

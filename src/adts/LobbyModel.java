@@ -15,6 +15,8 @@ import ui.LobbyGUI;
  * ADT that represents a Lobby. This is a waiting zone for servers to tunnel
  * users into different parts of its code.
  * 
+ * Rep Invariant: A user can only be in one board!
+ * 
  */
 public class LobbyModel {
     
@@ -44,14 +46,14 @@ public class LobbyModel {
      * Key = board ID
      * Value = list of IDs of users who are using the board with the given ID
      */
-    private final Map<Integer, List<Integer>> userIDsForBoardID;
+    private final Map<Integer, Set<Integer>> userIDsForBoardID;
 
 	public LobbyModel() {
 	    uniqueUserID = new AtomicInteger(0);
 	    uniqueBoardID = new AtomicInteger(0);
 	    userForID = Collections.synchronizedMap(new HashMap<Integer, User>());
 	    boardForID = Collections.synchronizedMap(new HashMap<Integer, Whiteboard>());
-	    userIDsForBoardID = Collections.synchronizedMap(new HashMap<Integer, List<Integer>>());
+	    userIDsForBoardID = Collections.synchronizedMap(new HashMap<Integer, Set<Integer>>());
 	}
 	
 	/**
@@ -70,6 +72,39 @@ public class LobbyModel {
 	 */
 	public synchronized Set<Integer> getWhiteboardIDs(){
 	    return this.boardForID.keySet();
+	}
+	
+	/**
+	 * @param userID
+	 * @return the user ids of all the users who are in the same board(s) as the user with the given userID 
+	 */
+	public synchronized Set<Integer> getUserIDsOfUsersInSameBoardAsGivenUserID(int userID){
+	    Set<Integer> userIDs = new HashSet<Integer>();
+	    // iterate through each boardID
+	    for(int boardID : this.boardForID.keySet()){
+	        // if the set of users ids in that board include the given userID
+	        if(this.userIDsForBoardID.get(boardID).contains(userID)){
+	            userIDs.addAll(this.userIDsForBoardID.get(boardID));
+	        }
+	    }
+	    return userIDs;
+	}
+	
+	/** 
+	 * @param userID the id of the user
+	 * @return the board ID of the board that the user with the given userID is in, or -1 if the user is not in any board
+	 */
+	public synchronized int getBoardIDThatUserIDIsIn(int userID){
+	    for(int boardID : this.boardForID.keySet()){
+	        if(this.userIDsForBoardID.get(boardID).contains(userID)){
+	            return boardID;
+	        }
+	    }
+	    return -1;
+	}
+	
+	public synchronized String getUserNameForUserID(int userID){
+	    return this.userForID.get(userID).getName();
 	}
 	
 	/**
@@ -173,11 +208,13 @@ public class LobbyModel {
     public synchronized int addBoard(){
         int id = this.uniqueBoardID.getAndIncrement();
         this.boardForID.put(id, new Whiteboard(id, Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT));
+        this.userIDsForBoardID.put(id, new HashSet<Integer>());
         return id;
     }
     
     /**
-     * Adds the user with the given userID to the board with the given boardID
+     * Adds the user with the given userID to the board with the given boardID.
+     * If the user is in a board (different from the one with the given boardID), then the user is removed from that board
      * @param userID the id of the user to be added
      * @param boardID the id of the board that the user should be added to
      * @throws IllegalArgumentException if the userID or boardID do not exist
@@ -187,7 +224,12 @@ public class LobbyModel {
             throw new IllegalArgumentException(String.format("boardID=%d does not exist!", boardID));
         if(!(this.userForID.keySet().contains(userID)))
             throw new IllegalArgumentException(String.format("userID=%d does not exist!", userID));
-        List<Integer> userIDs = this.userIDsForBoardID.get(boardID);
+        for(int bID : this.boardForID.keySet()){
+            if(this.userIDsForBoardID.get(bID).contains(userID)){
+                this.userIDsForBoardID.get(bID).remove(userID);
+            }
+        }
+        Set<Integer> userIDs = this.userIDsForBoardID.get(boardID);
         userIDs.add(userID);
     }
     
@@ -201,7 +243,12 @@ public class LobbyModel {
         if(!(this.userForID.keySet().contains(userID)))
             throw new IllegalArgumentException(String.format("userID=%d does not exist!", userID));
         int boardID = getBoardIDForBoardName(boardName);
-        List<Integer> userIDs = this.userIDsForBoardID.get(boardID);
+        for(int bID : this.boardForID.keySet()){
+            if(this.userIDsForBoardID.get(bID).contains(userID)){
+                this.userLeaveBoard(userID, bID);
+            }
+        }
+        Set<Integer> userIDs = this.userIDsForBoardID.get(boardID);
         userIDs.add(userID);
     }
     
@@ -216,7 +263,7 @@ public class LobbyModel {
             throw new IllegalArgumentException(String.format("boardID=%d does not exist!", boardID));
         if(!(this.userForID.keySet().contains(userID)))
             throw new IllegalArgumentException(String.format("userID=%d does not exist!", userID));
-        List<Integer> userIDs = this.userIDsForBoardID.get(boardID);
+        Set<Integer> userIDs = this.userIDsForBoardID.get(boardID);
         userIDs.remove(userID);
     }
     
@@ -230,7 +277,7 @@ public class LobbyModel {
         if(!(this.userForID.keySet().contains(userID)))
             throw new IllegalArgumentException(String.format("userID=%d does not exist!", userID));
         int boardID = getBoardIDForBoardName(boardName);
-        List<Integer> userIDs = this.userIDsForBoardID.get(boardID);
+        Set<Integer> userIDs = this.userIDsForBoardID.get(boardID);
         userIDs.remove(userID);
     }
 
