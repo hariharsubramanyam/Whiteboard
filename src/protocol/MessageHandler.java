@@ -317,4 +317,45 @@ public class MessageHandler {
         return response.toString();
     }
     
+    /*************************************************************/
+    
+    public static String makeRequestStringGetBoardIDs(){
+        return MessageHandler.REQ_GET_BOARD_IDS;
+    }
+    
+    public static String makeRequestStringSetUsername(String newName){
+        return String.format("%s %s", MessageHandler.REQ_SET_USERNAME, newName.replace(" ", "_"));
+    }
+    
+    public static String makeRequestStringCreateBoard(String boardName){
+        return String.format("%s %s", MessageHandler.REQ_CREATE_BOARD, boardName.replace(" ", "_"));
+    }
+    
+    public static String makeRequestStringGetCurrentBoardID(){
+        return MessageHandler.REQ_GET_CURRENT_BOARD_ID;
+    }
+    
+    public static String makeRequestStringGetUsersForBoardID(int boardID){
+        return String.format("%s %d", MessageHandler.REQ_GET_USERS_FOR_BOARD_ID, boardID);
+    }
+    
+    public static String makeRequestStringJoinBoardID(int boardID){
+        return String.format("%s %d", MessageHandler.REQ_JOIN_BOARD_ID, boardID);
+    }
+    
+    public static String makeRequestStringLogout(){
+        return MessageHandler.REQ_LOGOUT;
+    }
+    
+    public static String makeRequestStringGetUsersInMyBoard(){
+        return MessageHandler.REQ_GET_USERS_IN_MY_BOARD;
+    }
+    
+    public static String makeRequestStringLeaveBoard(){
+        return MessageHandler.REQ_LEAVE_BOARD;
+    }
+    
+    public static String makeRequestStringDraw(Line line){
+        return String.format("%s %s", MessageHandler.REQ_DRAW, line.toString());
+    }
 }
