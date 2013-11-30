@@ -88,12 +88,14 @@ public class UserThread extends Thread{
     }
     
     /**
-     * Output a message to selected set of users
+     * Output a message to selected set of users (except this one)
      * @param message the message to outpu
      * @param userIDs the list of userIDs to output to
      */
     public void broadcast(String message, Set<Integer> userIDs){
         for(UserThread thread : this.otherThreads){
+            if(thread.getUserID() == this.userID)
+                continue;
             if(userIDs.contains(thread.getUserID())){
                 thread.output(message);
             }

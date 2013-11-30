@@ -108,13 +108,13 @@ public class LobbyModel {
 	/**
 	 * Returns the user names for the given boardID
 	 * @param boardID the id of the board
-	 * @return the list of users in the given board
+	 * @return the set of users in the given board
 	 * @throws IllegalArgumentException if the boardID does not exist
 	 */
-	public synchronized List<String> getUserNamesForBoardID(int boardID){
+	public synchronized Set<String> getUserNamesForBoardID(int boardID){
 	    if(!(this.boardForID.keySet().contains(boardID)))
             throw new IllegalArgumentException(String.format("boardID=%d does not exist!", boardID));
-	    List<String> userNames = new ArrayList<String>();
+	    Set<String> userNames = new HashSet<String>();
 	    for(Integer userID : this.userIDsForBoardID.get(boardID)){
 	        userNames.add(this.userForID.get(userID).getName());
 	    }
@@ -124,10 +124,10 @@ public class LobbyModel {
 	/**
      * Returns the user names for the given boardName
      * @param boardName the name of the board
-     * @return the list of users in the given board
+     * @return the set of users in the given board
      * @throws IllegalArgumentException if the boardName does not exist
      */
-	public synchronized List<String> getUserNamesForBoardName(String boardName){
+	public synchronized Set<String> getUserNamesForBoardName(String boardName){
 	    return getUserNamesForBoardID(getBoardIDForBoardName(boardName));
 	}
 	

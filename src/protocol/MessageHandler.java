@@ -10,10 +10,14 @@ public class MessageHandler {
     private static final String REQ_GET_BOARD_IDS = "get_board_ids";
     private static final String REQ_SET_USERNAME = "set_username";
     private static final String REQ_CREATE_BOARD = "create_board";
+    private static final String REQ_GET_CURRENT_BOARD_ID = "get_current_board_id";
+    private static final String REQ_GET_USERS_FOR_BOARD_ID = "get_users_for_board_id";
     
     private static final String RESP_BOARD_IDS = "board_ids";
-    private static final String RESP_USERS_FOR_BOARD = "users_for_board";
+    private static final String RESP_USERS_FOR_BOARD = "users_for_board_id";
+    private static final String RESP_CURRENT_BOARD_ID = "current_board_id";
     private static final String RESP_FAILED = "failed";
+    private static final String RESP_DONE = "done";
     
     //SET_USERNAME: set_username [userID] [newUserName]
     
@@ -29,7 +33,15 @@ public class MessageHandler {
         else if (command.equals(MessageHandler.REQ_CREATE_BOARD)){
             MessageHandler.handleRequestCreateBoard(input, userThread, lobbyModel);
         }
+        else if(command.equals(MessageHandler.REQ_GET_CURRENT_BOARD_ID)){
+            MessageHandler.handleRequestGetCurrentBoard(input, userThread, lobbyModel);
+        }
+        else if (command.equals(MessageHandler.REQ_GET_USERS_FOR_BOARD_ID)){
+            MessageHandler.handleRequestGetUsersForBoardID(input, userThread, lobbyModel);
+        }
     }
+
+
 
     /**
      * Request: 'get_board_ids'
@@ -44,9 +56,9 @@ public class MessageHandler {
     
     
     /**
-     * Request: 'set_username [userID] [newName]'
-     * Response (to all users in the given board): 'users_for_board [boardID] [user1] [user2]...'
-     * @param input 'set_username [userID] [newName]'
+     * Request: 'set_username [newName]'
+     * Response (to all users in the given board): 'users_for_board [boardID] [userName11] [userName2]...'
+     * @param input 'set_username [newName]'
      * @param userThread the user's thread
      * @param lobbyModel the lobby model
      */
@@ -55,8 +67,8 @@ public class MessageHandler {
         Set<Integer> userIDsOfUsersInSameBoard = new HashSet<Integer>();
         
         String[] splitString = input.split(" ");
-        int userID = Integer.parseInt(splitString[1]);
-        String newName = splitString[2];
+        int userID = userThread.getUserID();
+        String newName = splitString[1];
         lobbyModel.changeUserName(newName, userID);
         int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userID);
         if(boardID != -1){
@@ -68,10 +80,11 @@ public class MessageHandler {
         
         String response = MessageHandler.makeResponseUsersForBoardID(boardID, userNames);
         userThread.broadcast(response, userIDsOfUsersInSameBoard);
+        userThread.output(MessageHandler.makeResponseDone());
     }
     
     /**
-     * Request: 'create_board [userID] [boardName]'
+     * Request: 'create_board [boardName]'
      * Response (to all users): 'board_ids [id1] [id2] [id3]...' 
      * @param input 'create_board [userID] [boardName]'
      * @param userThread the user's thread
@@ -79,11 +92,62 @@ public class MessageHandler {
      */
     private static void handleRequestCreateBoard(String input,UserThread userThread, LobbyModel lobbyModel) {
         String[] splitString = input.split(" ");
-        int userID = Integer.parseInt(splitString[1]);
-        String boardName = splitString[2];
+        int userID = userThread.getUserID();
+        String boardName = splitString[1];
         int boardID = lobbyModel.addBoard(boardName);
         lobbyModel.userJoinBoard(userID, boardID);
         userThread.broadcast(MessageHandler.makeResponseBoardIDs(lobbyModel.getWhiteboardIDs()));
+        userThread.output(MessageHandler.makeResponseDone());
+    }
+    
+    /**
+     * Request: 'get_current_board_id'
+     * Response: 'current_board_id [boardID]' (boardID = -1 if the user is not in a board)
+     * @param input 'get_current_board_id'
+     * @param userThread the user's thread
+     * @param lobbyModel the lobby model
+     */
+    private static void handleRequestGetCurrentBoard(String input, UserThread userThread, LobbyModel lobbyModel) {
+        int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread.getUserID());
+        userThread.output(MessageHandler.makeResponseCurrentBoardID(boardID));
+    }
+    
+    /**
+     * Request: 'get_users_for_board_id [boardID]'
+     * Response: 'users_for_board [boardID] [userName1] [userName2]...'
+     * @param input 'get_users_for_board_id [boardID]'
+     * @param userThread the user's thread
+     * @param lobbyModel the lobby model
+     */
+    private static void handleRequestGetUsersForBoardID(String input, UserThread userThread, LobbyModel lobbyModel) {
+        int boardID = Integer.parseInt(input.split(" ")[1]);
+        Set<String> userNames = lobbyModel.getUserNamesForBoardID(boardID);
+        userThread.output(MessageHandler.makeResponseUsersForBoardID(boardID, userNames));
+    }
+    
+    
+    /*************************************************************/
+    
+    /**
+     * @return 'done'
+     */
+    private static String makeResponseDone(){
+        return MessageHandler.RESP_DONE;
+    }
+    
+    /**
+     * @return 'failed'
+     */
+    private static String makeResponseFailed(){
+        return MessageHandler.RESP_FAILED;
+    }
+    
+    /**
+     * @param boardID the board id
+     * @return 'current_board_id [boardID]'
+     */
+    private static String makeResponseCurrentBoardID(int boardID){
+        return String.format("%s %d", MessageHandler.RESP_CURRENT_BOARD_ID, boardID);
     }
     
     /**
@@ -106,7 +170,7 @@ public class MessageHandler {
      */
     private static String makeResponseUsersForBoardID(int boardID, Set<String> userNames){
         StringBuilder response = new StringBuilder();
-        response.append(MessageHandler.REQ_SET_USERNAME);
+        response.append(MessageHandler.RESP_USERS_FOR_BOARD);
         response.append(" " + boardID);
         for(String userName : userNames){
             response.append(" " + userName);
