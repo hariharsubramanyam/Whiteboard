@@ -316,5 +316,25 @@ public class LobbyModel {
             throw new IllegalArgumentException(String.format("the user name = %s does not exist!", userName));
         return userID;
     }
+    
+    /**
+     * Delete user from set of users and remove the user from all the boards
+     * @param userID the id of the user to delete
+     */
+    public void deleteUser(int userID){
+        this.userForID.remove(userID);
+        for(int boardID : this.userIDsForBoardID.keySet()){
+            this.userIDsForBoardID.get(boardID).remove(userID);
+        }
+    }
 
+    /**
+     * Returns the user ids in the board with the given boardID
+     * @param boardID the id of the board
+     * @return the set of user ids of the users in the board with the given board id
+     */
+    public Set<Integer> getUserIDsForBoardID(int boardID){
+        return this.userIDsForBoardID.get(boardID);
+    }
+    
 }

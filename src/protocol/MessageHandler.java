@@ -7,19 +7,20 @@ import adts.LobbyModel;
 import server.UserThread;
 
 public class MessageHandler {
-    private static final String REQ_GET_BOARD_IDS = "get_board_ids";
-    private static final String REQ_SET_USERNAME = "set_username";
-    private static final String REQ_CREATE_BOARD = "create_board";
-    private static final String REQ_GET_CURRENT_BOARD_ID = "get_current_board_id";
-    private static final String REQ_GET_USERS_FOR_BOARD_ID = "get_users_for_board_id";
+    public static final String REQ_GET_BOARD_IDS = "get_board_ids";
+    public static final String REQ_SET_USERNAME = "set_username";
+    public static final String REQ_CREATE_BOARD = "create_board";
+    public static final String REQ_GET_CURRENT_BOARD_ID = "get_current_board_id";
+    public static final String REQ_GET_USERS_FOR_BOARD_ID = "get_users_for_board_id";
+    public static final String REQ_JOIN_BOARD_ID = "join_board_id";
+    public static final String REQ_LOGOUT = "logout";
     
-    private static final String RESP_BOARD_IDS = "board_ids";
-    private static final String RESP_USERS_FOR_BOARD = "users_for_board_id";
-    private static final String RESP_CURRENT_BOARD_ID = "current_board_id";
-    private static final String RESP_FAILED = "failed";
-    private static final String RESP_DONE = "done";
-    
-    //SET_USERNAME: set_username [userID] [newUserName]
+    public static final String RESP_BOARD_IDS = "board_ids";
+    public static final String RESP_USERS_FOR_BOARD = "users_for_board_id";
+    public static final String RESP_CURRENT_BOARD_ID = "current_board_id";
+    public static final String RESP_FAILED = "failed";
+    public static final String RESP_DONE = "done";
+    public static final String RESP_LOGGED_OUT = "logged_out";
     
     public static void handleMessage(String input, UserThread userThread, LobbyModel lobbyModel){
         String command = input.split(" ")[0];
@@ -39,8 +40,13 @@ public class MessageHandler {
         else if (command.equals(MessageHandler.REQ_GET_USERS_FOR_BOARD_ID)){
             MessageHandler.handleRequestGetUsersForBoardID(input, userThread, lobbyModel);
         }
+        else if (command.equals(MessageHandler.REQ_JOIN_BOARD_ID)){
+            MessageHandler.handleRequestJoinBoardID(input, userThread, lobbyModel);
+        }
+        else if (command.equals(MessageHandler.REQ_LOGOUT)){
+            MessageHandler.handleRequestLogout(input, userThread, lobbyModel);
+        }
     }
-
 
 
     /**
@@ -125,6 +131,46 @@ public class MessageHandler {
         userThread.output(MessageHandler.makeResponseUsersForBoardID(boardID, userNames));
     }
     
+    /**
+     * Request: 'join_board_id [boardID]'
+     * Response: 'users_for_board [boardID] [userName1] [userName2]...'
+     * @param input 'join_board_id [boardID]'
+     * @param userThread the user's thread
+     * @param lobbyModel the lobby model
+     */
+    private static void handleRequestJoinBoardID(String input, UserThread userThread, LobbyModel lobbyModel) {
+        int boardID = Integer.parseInt(input.split(" ")[1]);
+        try{
+            lobbyModel.userJoinBoard(userThread.getUserID(), boardID);
+            Set<Integer> userIDsOfUsersInSameBoard = lobbyModel.getUserIDsOfUsersInSameBoardAsGivenUserID(userThread.getUserID());
+            Set<String> userNames = lobbyModel.getUserNamesForBoardID(boardID);
+            String response = MessageHandler.makeResponseUsersForBoardID(boardID, userNames);
+            userThread.broadcast(response, userIDsOfUsersInSameBoard);
+            userThread.output(MessageHandler.makeResponseDone());
+        }catch(Exception ex){
+            userThread.output(MessageHandler.makeResponseFailed());
+        }
+    }
+    
+    /**
+     * Request: 'logout'
+     * Response: 'logged_out'
+     * @param input 'logout'
+     * @param userThread the user's thread
+     * @param lobbyModel the lobby model
+     */
+    private static void handleRequestLogout(String input, UserThread userThread, LobbyModel lobbyModel) {
+        int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread.getUserID());
+        lobbyModel.deleteUser(userThread.getUserID());
+        if(boardID != -1){
+            Set<Integer> userIDsOfUsersInSameBoard = lobbyModel.getUserIDsForBoardID(boardID);
+            Set<String> userNames = lobbyModel.getUserNamesForBoardID(boardID);
+            String response = MessageHandler.makeResponseUsersForBoardID(boardID, userNames);
+            userThread.broadcast(response, userIDsOfUsersInSameBoard);
+        }
+        userThread.output(MessageHandler.makeResponseLoggedOut());
+        userThread.closeSocket();
+    }
     
     /*************************************************************/
     
@@ -140,6 +186,13 @@ public class MessageHandler {
      */
     private static String makeResponseFailed(){
         return MessageHandler.RESP_FAILED;
+    }
+    
+    /**
+     * @return 'logged_out'
+     */
+    private static String makeResponseLoggedOut(){
+        return MessageHandler.RESP_LOGGED_OUT;
     }
     
     /**

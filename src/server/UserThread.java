@@ -111,8 +111,17 @@ public class UserThread extends Thread{
             this.output(String.format("welcome %d", this.userID));
             this.broadcast(String.format("User %d has joined!", this.userID));
             handleConnection();
-            } catch (Exception e) {e.printStackTrace();} 
-        finally {try {socket.close();} catch (IOException e) {e.printStackTrace();}}
+            } catch (Exception e) {} 
+        finally {MessageHandler.handleMessage(MessageHandler.REQ_LOGOUT, this, this.lobbyModel);}
+    }
+    
+    /**
+     * Close the socket
+     */
+    public void closeSocket(){
+        try {
+            this.socket.close();
+        } catch (Exception e) {}
     }
 
     /**
