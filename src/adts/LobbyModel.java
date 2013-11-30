@@ -337,4 +337,26 @@ public class LobbyModel {
         return this.userIDsForBoardID.get(boardID);
     }
     
+    /**
+     * Draws a line on a board
+     * @param l the line to add
+     * @param boardID the id of the board we should add the line to
+     */
+    public void addLineToBoardID(Line l, int boardID){
+        if(!(this.boardForID.keySet().contains(boardID)))
+            throw new IllegalArgumentException(String.format("boardID=%d does not exist!", boardID));
+        this.boardForID.get(boardID).addLine(l);
+    }
+    
+    /**
+     * Gets the lines for the board with the given boardID
+     * @param boardID the id of the board
+     * @return the lines on that board
+     */
+    public List<Line> getLinesForBoardID(int boardID){
+        if(!(this.boardForID.keySet().contains(boardID)))
+            throw new IllegalArgumentException(String.format("boardID=%d does not exist!", boardID));
+        return this.boardForID.get(boardID).getLines();
+    }
+    
 }

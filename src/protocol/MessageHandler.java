@@ -1,8 +1,10 @@
 package protocol;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import adts.Line;
 import adts.LobbyModel;
 import server.UserThread;
 
@@ -16,6 +18,7 @@ public class MessageHandler {
     public static final String REQ_LOGOUT = "logout";
     public static final String REQ_GET_USERS_IN_MY_BOARD = "get_users_in_my_board";
     public static final String REQ_LEAVE_BOARD = "leave_board";
+    public static final String REQ_DRAW = "req_draw";
     
     
     public static final String RESP_BOARD_IDS = "board_ids";
@@ -24,6 +27,8 @@ public class MessageHandler {
     public static final String RESP_FAILED = "failed";
     public static final String RESP_DONE = "done";
     public static final String RESP_LOGGED_OUT = "logged_out";
+    public static final String RESP_DRAW = "draw";
+    public static final String RESP_BOARD_LINES = "board_lines";
     
     public static void handleMessage(String input, UserThread userThread, LobbyModel lobbyModel){
         String command = input.split(" ")[0];
@@ -46,6 +51,8 @@ public class MessageHandler {
             MessageHandler.handleRequestGetUsersInMyBoard(input, userThread, lobbyModel);
         }else if (command.equals(MessageHandler.REQ_LEAVE_BOARD)){
             MessageHandler.handleRequestLeaveBoard(input, userThread, lobbyModel);
+        }else if (command.equals(MessageHandler.REQ_DRAW)){
+            MessageHandler.handleRequestDraw(input, userThread, lobbyModel);
         }
     }
 
@@ -133,7 +140,11 @@ public class MessageHandler {
     
     /**
      * Request: 'join_board_id [boardID]'
-     * Response: 'users_for_board [boardID] [userName1] [userName2]...'
+     * Response (all other users): 'users_for_board [boardID] [userName1] [userName2]...'
+     * Response (user who made request): board_lines [x1] [y1] [x2] [y2] [strokeThickness] 
+     * [r] [g] [b] [a] [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] 
+     * [a] [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1] 
+     * [x2] [y2] [strokeThickness] [r] [g] [b] [a]...
      * @param input 'join_board_id [boardID]'
      * @param userThread the user's thread
      * @param lobbyModel the lobby model
@@ -145,8 +156,9 @@ public class MessageHandler {
             Set<Integer> userIDsOfUsersInSameBoard = lobbyModel.getUserIDsOfUsersInSameBoardAsGivenUserID(userThread.getUserID());
             Set<String> userNames = lobbyModel.getUserNamesForBoardID(boardID);
             String response = MessageHandler.makeResponseUsersForBoardID(boardID, userNames);
+            List<Line> lines = lobbyModel.getLinesForBoardID(boardID); 
             userThread.broadcast(response, userIDsOfUsersInSameBoard);
-            userThread.output(MessageHandler.makeResponseDone());
+            userThread.output(MessageHandler.makeResponseBoardLines(lines));
         }catch(Exception ex){
             userThread.output(MessageHandler.makeResponseFailed());
         }
@@ -208,6 +220,43 @@ public class MessageHandler {
         userThread.output(MessageHandler.makeResponseDone());
     }
     
+    /**
+     * Req: req_draw [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a]
+     * Resp (to all users in board): draw [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a]
+     * @param input req_draw [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a]
+     * @param userThread the user's thread
+     * @param lobbyModel the lobby model
+     */
+    private static void handleRequestDraw(String input, UserThread userThread, LobbyModel lobbyModel) {
+        int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread.getUserID());
+        if(boardID != -1){
+            String[] splitInput = input.split(" ");
+            float x1 = Float.parseFloat(splitInput[1]);
+            float y1 = Float.parseFloat(splitInput[2]);
+            
+            float x2 = Float.parseFloat(splitInput[3]);
+            float y2 = Float.parseFloat(splitInput[4]);
+            
+            float strokeThickness = Float.parseFloat(splitInput[5]);
+            
+            float r = Float.parseFloat(splitInput[6]);
+            float g = Float.parseFloat(splitInput[7]);
+            float b = Float.parseFloat(splitInput[8]);
+            float a = Float.parseFloat(splitInput[9]);
+            
+            Line line = new Line(x1, y1, x2, y2, strokeThickness, a, r, g, b);
+            lobbyModel.addLineToBoardID(line, boardID);
+            
+            Set<Integer> userIDsOfUsersInSameBoard = lobbyModel.getUserIDsForBoardID(boardID);
+            String response = MessageHandler.makeResponseDraw(line);
+            
+            userThread.broadcast(response, userIDsOfUsersInSameBoard);
+            userThread.output(MessageHandler.makeResponseDone());
+        }else{
+            userThread.output(MessageHandler.makeResponseFailed());
+        }
+    }
+    
     /*************************************************************/
     
     /**
@@ -266,4 +315,24 @@ public class MessageHandler {
         }
         return response.toString();
     }
+    
+    
+    /**
+     * @param boardID the id of the board
+     * @param userNames the names of the users in the board
+     * @return 'users_for_board [boardID] [userName1] [userName2]...'
+     */
+    private static String makeResponseDraw(Line line){
+        return String.format("%s %s", MessageHandler.RESP_DRAW, line.toString());
+    }
+    
+    private static String makeResponseBoardLines(List<Line> lines){
+        StringBuilder response = new StringBuilder();
+        response.append(MessageHandler.RESP_BOARD_LINES);
+        for(Line line : lines){
+            response.append(" " + line.toString());
+        }
+        return response.toString();
+    }
+    
 }

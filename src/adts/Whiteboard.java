@@ -1,5 +1,8 @@
 package adts;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * ADT that represents an instance of a Whiteboard.
  */
@@ -19,10 +22,10 @@ public class Whiteboard {
     private String boardName;
     
     /**
-     * The board contents.
-     * The pixel at (x,y) has an RGBA color given by pixelBoard[x][y]
+     * The list of lines that have been drawn 
+     * The last line is the latest one that has been drawn
      */
-    private final RGBA[][] pixelBoard;
+    private final List<Line> drawnLines;
 	
 	/**
 	 * The width of the board
@@ -47,8 +50,7 @@ public class Whiteboard {
 	    this.boardName = boardName;
 		this.width = width;
 		this.height = height;
-		this.pixelBoard = new RGBA[width][height];
-		clearBoard();
+		this.drawnLines = new ArrayList<Line>();
 	}
 	
 	/**
@@ -62,39 +64,21 @@ public class Whiteboard {
 	public Whiteboard(int boardID, int width, int height){
 	    this(boardID, "Board"+boardID, width, height);
 	}
+	
+	/**
+	 * @param l the line to add to the list of drawn lines
+	 */
+	public void addLine(Line l){
+	    this.drawnLines.add(l);
+	}
+	
+	/**
+	 * @return all the drawn lines
+	 */
+	public List<Line> getLines(){
+	    return this.drawnLines;
+	}
 
-	/**
-	 * Makes all pixels white
-	 */
-	public synchronized void clearBoard() {
-	    RGBA white = new RGBA(255,255,255,255);
-		for (int i = 0; i < width; ++i) {
-			for (int j = 0; j < height; ++j) {
-			    this.pixelBoard[i][j] = white;
-			}
-		}
-	}
-	
-	/**
-	 * Sets the pixel at (x,y) to color 
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @param color the color that the pixel should be
-	 */
-	public synchronized void setPixel(int x, int y, RGBA color){
-	    this.pixelBoard[x][y] = color;
-	}
-	
-	/**
-	 * Returns the color of the pixel at (x,y)
-	 * @param x the x coordinate
-	 * @param y the y coordinate
-	 * @return the color of the pixel at (x,y)
-	 */
-	public synchronized RGBA getPixel(int x, int y){
-	    return this.pixelBoard[x][y];
-	}
-	
 	/**
 	 * @return the ID of the board
 	 */
@@ -129,57 +113,5 @@ public class Whiteboard {
 	 */
 	public synchronized int getHeight(){
 	    return this.height;
-	}
-	
-	/**
-	 * @param the object to check equality against
-	 * @return true if both objects have the same boardID, boardName, height, width, and board contents
-	 */
-	@Override
-	public boolean equals(Object obj) {
-	    if(!(obj instanceof Whiteboard))
-	        return false;
-	    Whiteboard other = (Whiteboard)obj;
-	    
-	    if(!(other.getBoardName().equals(this.boardName)
-	            && other.getWidth() == this.width
-	            && other.getHeight() == this.height
-	            && other.getBoardID() == this.boardID))
-	        return false;
-	    
-	    for(int i = 0; i < this.width; i++){
-	        for(int j = 0; j < this.height; j++){
-	            if(!this.getPixel(i, j).equals(other.getPixel(i, j)))
-	                return false;
-	        }
-	    }
-	    
-	    return true;
-	}
-	
-	/**
-	 * @return A string of the form
-	 * <boardName> <width> <height> <r1> <g1> <b1> <a1> <r2> <g2> <b2> <a2> ...
-	 * 
-	 *  The r, g, b, and a values are listed row by row
-	 */
-	@Override
-	public String toString() {
-	    StringBuilder buildBoardAsString = new StringBuilder();
-	    buildBoardAsString.append(String.format("%s %d %d", this.boardName, this.width, this.height));
-	    for(int i = 0; i < this.width; i++){
-	        for(int j = 0; j < this.height; j++){
-	            buildBoardAsString.append(" " + this.getPixel(i, j).toString());
-	        }
-	    }
-	    return buildBoardAsString.toString();
-	}
-	
-	/**
-	 * @return the hashcode of this class's string representation concatenated after the boardID 
-	 */
-	@Override
-	public int hashCode() {
-	    return ("" + this.getBoardID() + " " + this.toString()).hashCode();
 	}
 }
