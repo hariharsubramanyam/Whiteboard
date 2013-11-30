@@ -3,8 +3,10 @@ package adts;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import ui.LobbyGUI;
@@ -53,14 +55,21 @@ public class LobbyModel {
 	}
 	
 	/**
-	 * @return the list of all the whiteboard names
+	 * @return the set of all the whiteboard names
 	 */
-	public synchronized List<String> getWhiteboardNames(){
-	    List<String> whiteboardNames = new ArrayList<String>();
+	public synchronized Set<String> getWhiteboardNames(){
+	    Set<String> whiteboardNames = new HashSet<String>();
 	    for (Whiteboard wb : this.boardForID.values()){
 	        whiteboardNames.add(wb.getBoardName());
 	    }
 	    return whiteboardNames;
+	}
+	
+	/**
+	 * @return the set of all whiteboard IDs
+	 */
+	public synchronized Set<Integer> getWhiteboardIDs(){
+	    return this.boardForID.keySet();
 	}
 	
 	/**

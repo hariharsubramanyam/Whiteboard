@@ -26,7 +26,8 @@ public class WhiteboardServer {
 		while (true) {
 			final Socket socket = serverSocket.accept();
 			int userID = this.lobbyModel.addUser();
-			UserThread thread = new UserThread(socket, userID, this.userThreads);
+			this.lobbyModel.addBoard();
+			UserThread thread = new UserThread(socket, userID, this.userThreads, this.lobbyModel);
 			this.userThreads.add(thread);
 			thread.start();
 		}

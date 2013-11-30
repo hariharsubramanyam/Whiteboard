@@ -7,6 +7,9 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
 
+import adts.LobbyModel;
+import protocol.MessageHandler;
+
 public class UserThread extends Thread{
 
     /**
@@ -34,6 +37,11 @@ public class UserThread extends Thread{
      */
     private final List<UserThread> otherThreads;
     
+    /**
+     * The lobby model
+     */
+    private final LobbyModel lobbyModel;
+    
     
     /**
      * Create the user thread
@@ -42,10 +50,11 @@ public class UserThread extends Thread{
      * @param otherThreads the list of other user threads
      * @throws IOException
      */
-    public UserThread(Socket socket, int userID, List<UserThread> otherThreads) throws IOException{
+    public UserThread(Socket socket, int userID, List<UserThread> otherThreads, LobbyModel lobbyModel) throws IOException{
         this.socket = socket;
         this.userID = userID;
         this.otherThreads = otherThreads;
+        this.lobbyModel = lobbyModel;
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         this.out = new PrintWriter(socket.getOutputStream(), true);
     }
@@ -97,13 +106,7 @@ public class UserThread extends Thread{
     private void handleConnection() throws IOException {
         try {
             for (String line = in.readLine(); line != null; line = in.readLine()) {
-                String output = handleRequest(line);
-                if (output != null) {
-                    out.println(output);
-                    if (output.equals("Leave whiteboard")) {
-                        break;
-                    }
-                }
+                handleRequest(line);
             }
         }
         finally {
@@ -117,7 +120,7 @@ public class UserThread extends Thread{
      * @param line the user request
      * @return the response
      */
-    private String handleRequest(String line){
-        return String.format("%d", this.userID);
+    private void handleRequest(String line){
+        MessageHandler.handleMessage(line, this, this.lobbyModel);
     }
 }
