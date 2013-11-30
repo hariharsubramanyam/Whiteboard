@@ -205,18 +205,18 @@ public class MessageHandler {
         int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread.getUserID());
         if(boardID != -1){
             String[] splitInput = input.split(" ");
-            float x1 = Float.parseFloat(splitInput[1]);
-            float y1 = Float.parseFloat(splitInput[2]);
+            int x1 = Integer.parseInt(splitInput[1]);
+            int y1 = Integer.parseInt(splitInput[2]);
             
-            float x2 = Float.parseFloat(splitInput[3]);
-            float y2 = Float.parseFloat(splitInput[4]);
+            int x2 = Integer.parseInt(splitInput[3]);
+            int y2 = Integer.parseInt(splitInput[4]);
             
             float strokeThickness = Float.parseFloat(splitInput[5]);
             
-            float r = Float.parseFloat(splitInput[6]);
-            float g = Float.parseFloat(splitInput[7]);
-            float b = Float.parseFloat(splitInput[8]);
-            float a = Float.parseFloat(splitInput[9]);
+            int r = Integer.parseInt(splitInput[6]);
+            int g = Integer.parseInt(splitInput[7]);
+            int b = Integer.parseInt(splitInput[8]);
+            int a = Integer.parseInt(splitInput[9]);
             
             Line line = new Line(x1, y1, x2, y2, strokeThickness, a, r, g, b);
             lobbyModel.addLineToBoardID(line, boardID);
