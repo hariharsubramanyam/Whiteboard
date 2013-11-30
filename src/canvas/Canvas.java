@@ -5,7 +5,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -14,6 +13,7 @@ import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.RoundRectangle2D;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,34 +30,98 @@ import javax.swing.SwingUtilities;
  */
 public class Canvas extends JPanel {
 	/**
-	 * 
+	 * This is the GUI acting as the View for a Whiteboard. It is drawn in such
+	 * a way that almost every component is dependent on the Constructor
+	 * parameters.
 	 */
 	private static final long serialVersionUID = 1L;
+
 	// image where the user's drawing is stored
 	private Image drawingBuffer;
-	private float lineStroke;
 
-	// whiteboard
+	/*
+	 * Dimensions defined by their component name followed by X, x-coordinate,
+	 * Y, y-coordinate, W, width, and H, height
+	 */
+
+	/**
+	 * The dimension for margins applied where needed. Defaults to 3.
+	 */
+	private final int margins;
+
+	/**
+	 * Width of entire Canvas.
+	 */
 	private final int canvasW;
+	/**
+	 * Height of entire Canvas.
+	 */
 	private final int canvasH;
 
+	/**
+	 * Width of drawable part of the Canvas.
+	 */
 	private final int drawableCanvasW;
+	/**
+	 * Height of drawable part of the Canvas.
+	 */
 	private final int drawableCanvasH;
 
-	// button layout
-	private final float windowStroke;
-	private final int margins;
+	/**
+	 * Height of the button window layout
+	 */
 	private final int windowW;
+	/**
+	 * Width of the button window layout
+	 */
 	private final int windowH;
 
+	/**
+	 * Width of each individual button. Set to width of button window layout
+	 * minus 2 margins.
+	 */
+	private final int buttonW;
+	/**
+	 * Height of each individual button. Set to the height of the Canvas.
+	 */
+	private final int buttonH;
+	/**
+	 * In degrees, the radius of the square corners
+	 */
+	private final float buttonArc;
+	/**
+	 * Y position of the current color button square
+	 */
+	private int currentColorSquareY;
+	/**
+	 * List with String representation of the text to display for each button.
+	 */
 	final List<String> buttonText;
+	/**
+	 * A Map from button text (used as the identifier) to the x,y coordinates of
+	 * the button.
+	 */
 	final HashMap<String, List<Integer>> buttonBoundaries;
+	/**
+	 * A Map from Color button (used as the identifier) to the x,y coordinates
+	 * of the button.
+	 */
+	final HashMap<Color, List<Integer>> colorButtonBoundaries;
+	/**
+	 * Total number of buttons. Used to determine the relative height of each
+	 * button.
+	 */
 	private final int numOfButtons;
 
-	private final int buttonW;
-	private final int buttonH;
-	private final float buttonArc;
+	/**
+	 * Width of shape drawing. It is the number of pixels any given line will
+	 * draw above/below. It is always odd so as to allow for equal number of
+	 * pixels above and below.
+	 */
+	private float lineStroke;
+	private final float windowStroke;
 
+	// Color properties of different components in the board
 	private final Color buttonColor;
 	private Color textColor;
 	private Color lineColor;
@@ -74,8 +138,10 @@ public class Canvas extends JPanel {
 	 *            height in pixels
 	 */
 	public Canvas(int width, int height) {
+
 		this.setPreferredSize(new Dimension(width, height));
 		this.lineStroke = 1; // default to 1 pixel
+
 		addDrawingController();
 		// note: we can't call makeDrawingBuffer here, because it only
 		// works *after* this canvas has been added to a window. Have to
@@ -95,15 +161,18 @@ public class Canvas extends JPanel {
 		this.drawableCanvasW = width - 2 * margins - windowW;
 		this.drawableCanvasH = height - 2 * margins;
 
-		// hardcoded buttons for now
-		this.buttonText = Arrays.asList("Eraser", "Pencil", "s:Stroke Small",
-				"s:Stroke Med", "s:Stroke Large", "s:Clear board", "random");
+		/*
+		 * Button properties: text, boundaries, color, margins
+		 */
+
+		this.buttonText = Arrays.asList("Eraser", "Pencil", "Stroke Small",
+				"Stroke Med", "Stroke Large", "Clear board", "random");
 		this.numOfButtons = buttonText.size();
 		// leave 1 margin on either side
 		this.buttonW = windowW - 2 * margins;
 		// we use only half the height to leave space for colors
 		this.buttonH = (int) ((windowH / 2.0) / numOfButtons);
-		this.buttonArc = 30; // in degrees
+		this.buttonArc = 30;
 
 		// define boundaries of buttons
 		this.buttonBoundaries = new HashMap<String, List<Integer>>();
@@ -117,7 +186,9 @@ public class Canvas extends JPanel {
 					Arrays.asList(xPos1, yPos1, xPos2, yPos2));
 		}
 
-		// colors
+		this.colorButtonBoundaries = new HashMap<Color, List<Integer>>();
+
+		// initialize colors
 		this.buttonColor = new Color(100, 100, 100, 100); // light black
 		this.windowBackground = new Color(141, 233, 181, 255); // light green
 		this.textColor = new Color(0); // black
@@ -159,11 +230,19 @@ public class Canvas extends JPanel {
 	private void fillWithWhite() {
 		final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
+		/*
+		 * Create a gray layer to separate the button window, in green, from the
+		 * drawable area, in white.
+		 */
 		int amountOfGrey = 130; // between 0 and 255. The closer to 0 the more
 								// black.
 		int alpha = 180; // creates transparent looking colors
 		g.setColor(setColor(amountOfGrey, amountOfGrey, amountOfGrey, alpha));
 		g.fillRect(0, 0, canvasW, canvasH);
+
+		/*
+		 * Create the white drawable area and the button window
+		 */
 		g.setColor(boardColor);
 		g.fillRect(margins + windowW, margins, drawableCanvasW, drawableCanvasH);
 		createButtonLayout();
@@ -218,13 +297,12 @@ public class Canvas extends JPanel {
 	 * @param option
 	 *            int that specifies "normal", 0, "bold", 1, "italic", 2
 	 * @param size
-	 *            size of text
+	 *            text size
 	 */
 	private void createText(Graphics2D g, String text, int x, int y,
 			Color textColor, int option, int size) {
 		g.setColor(textColor);
 		Font font = new Font("Comic Sans MS", option, size);
-		FontMetrics metrics = g.getFontMetrics(font);
 		g.setFont(font);
 		g.drawString(text, x, y);
 	}
@@ -278,8 +356,10 @@ public class Canvas extends JPanel {
 		createFilledRectangle(g, windowStroke, windowBackground, 0, 0, windowW,
 				windowH);
 
-		// iterate through each of the buttons and apply all corresponding
-		// properties
+		/*
+		 * Iterate through each of the buttons and apply all corresponding
+		 * properties to create them.
+		 */
 		for (int i = 0; i < numOfButtons; ++i) {
 
 			String textToDisplay = buttonText.get(i);
@@ -290,66 +370,60 @@ public class Canvas extends JPanel {
 					buttonW - margins, adjustedButtonH, buttonArc, buttonArc,
 					true);
 
-			// the positioning of the text in the buttons for two line text
+			// the x-position of the text's left starting position
 			int xStringPos = 5 * margins;
-			if (textToDisplay.contains("s:")) {
-				String modText = textToDisplay.replace("s:", "");
-				String[] splitText = modText.split(" ");
-				int yStringPos1 = yPos1 + buttonH / 2 - margins;
-				int yStringPos2 = yPos1 + buttonH * 2 / 3 + margins;
+			int yStringPos = yPos1 + buttonH / 2 + margins;
 
-				// this is a custom font which is bold, the 1, and size 15
-				createText(g, splitText[0], xStringPos, yStringPos1, textColor,
-						1, 15);
-				createText(g, splitText[1], xStringPos, yStringPos2, textColor,
-						1, 15);
-			}
-
-			// for single line text
-			else {
-				int yStringPos = yPos1 + buttonH / 2 + 2 * margins;
-				createText(g, buttonText.get(i), xStringPos, yStringPos,
-						textColor, 1, 15);
-
-			}
+			createText(g, buttonText.get(i), xStringPos, yStringPos, textColor,
+					1, 15);
 
 		}
 
-		// now create the color buttons, total of 12 so 3 squares wide, 4 high
-		int sizeColorSquare = (int) ((windowW - 2 * margins) / 3f);
+		/*
+		 * Create the color buttons, total of 12; 4 squares wide, 3 high
+		 */
+		int sizeColorSquare = (int) ((windowW - 2 * margins) / 4f);
 		int beginPosY = windowH / 2 + margins;
 
+		/*
+		 * After drawing them, append their boundaries to link an action to them
+		 */
 		Iterator<Color> useColor = basicColors.iterator();
-		for (int i = 0; i < 3; ++i) {
+		for (int i = 0; i < 4; ++i) {
 			int xPos = margins + i * sizeColorSquare;
-			for (int j = 0; j < 4; ++j) {
+			for (int j = 0; j < 3; ++j) {
 				Color colorSquare = useColor.next();
 				int yPos = beginPosY + j * sizeColorSquare;
 				createFilledRectangle(g, 1, colorSquare, xPos, yPos,
 						sizeColorSquare, sizeColorSquare);
+				this.colorButtonBoundaries.put(
+						colorSquare,
+						Arrays.asList(xPos, yPos, xPos + sizeColorSquare, yPos
+								+ sizeColorSquare));
 			}
 		}
+
+		/*
+		 * Create a small square representing the current color selected. The
+		 * y-position is the begining position of the color squares plus the
+		 * number of squares high, in this case 3, plus a margins.
+		 */
+
+		this.currentColorSquareY = beginPosY + 3 * sizeColorSquare + margins;
+		setLineColor(g, this.lineColor);
 
 		// for (int tempLum = 0; tempLum <= 255; tempLum++) {
 		//
 		// Color lumColor = new Color(0, 0, 0, tempLum);
-		// int yPos = lumBarY + tempLum;
-		// createFilledRectangle(g, 1, lumColor, lumBarX, yPos, lumBarW, 1);
+		// int yPos = canvasH/2 + tempLum;
+		// createFilledRectangle(g, 1, lumColor, windowW - 20, yPos, 15, 1);
 		//
 		// }
-		//
-		// for (float tempR = rColor; rColor < 240; tempR++) {
-		// int xPos = (int) (palateX + tempR);
-		// for (float tempG = gColor; tempG < 240; tempG++) {
-		// int yPos = (int) (palateY + tempG);
-		// for (float tempB = bColor; tempB < 240; tempB++) {
-		// Color palateColor = new Color(rColor / 240, tempG / 240,
-		// rColor / 240);
-		// createFilledRectangle(g, 1, palateColor, xPos, yPos, 1, 1);
-		// }
-		// }
-		// }
+	}
 
+	private void setLineColor(Graphics2D g, Color lineColor) {
+		createFilledRectangle(g, 1, lineColor, margins,
+				this.currentColorSquareY, windowW / 4, windowW / 4);
 	}
 
 	/*
@@ -359,9 +433,24 @@ public class Canvas extends JPanel {
 	private void drawLineSegment(int x1, int y1, int x2, int y2) {
 		Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
-		g.setStroke(new BasicStroke(this.lineStroke, 1, 1));
+		g.setStroke(new BasicStroke(this.lineStroke));
 		g.setColor(this.lineColor);
-		g.drawLine(x1, y1, x2, y2);
+
+		int deltaX = x2 - x1;
+		int deltaY = y2 - y1;
+		
+		if (deltaX != 0 && deltaY != 0) {
+			g.drawLine(x1, y1, x2, y1);
+			g.drawLine(x2, y1, x2, y2);
+			System.out.println(String.format("%d %d %d %d", x1, y1, x2, y1));
+			System.out.println(String.format("%d %d %d %d", x2, y1, x2, y2));
+		} else {
+			g.drawLine(x1, y1, x2, y2);
+			System.out.println(String.format("%d %d %d %d", x1, y1, x2, y2));
+		}
+
+		// String output = String.format("%d %d %d %d", x1, y1, x2, y2);
+		// System.out.println(output);
 
 		// IMPORTANT! every time we draw on the internal drawing buffer, we
 		// have to notify Swing to repaint this component on the screen.
@@ -370,7 +459,7 @@ public class Canvas extends JPanel {
 
 	private void changeBackground() {
 
-		this.lineStroke = 1.0f;
+		this.lineStroke = 0.001f;
 		this.lineColor = Color.blue;
 		for (int i = windowW + margins; i < canvasW - margins; i++) {
 			for (int j = margins; j < canvasH - margins; j++) {
@@ -484,12 +573,20 @@ public class Canvas extends JPanel {
 			// check where the click happened and if within a button's
 			// boundaries, act accordingly
 			String action = "";
-			for (String button : buttonText) {
+			for (String button : buttonBoundaries.keySet()) {
 				List<Integer> boundaries = buttonBoundaries.get(button);
 				if (x >= boundaries.get(0) && x <= boundaries.get(2)
 						&& y >= boundaries.get(1) && y <= boundaries.get(3)) {
 					action = button;
+				}
+			}
 
+			Color colorAction = null;
+			for (Color color : colorButtonBoundaries.keySet()) {
+				List<Integer> boundaries = colorButtonBoundaries.get(color);
+				if (x >= boundaries.get(0) && x <= boundaries.get(2)
+						&& y >= boundaries.get(1) && y <= boundaries.get(3)) {
+					colorAction = color;
 				}
 			}
 
@@ -500,27 +597,36 @@ public class Canvas extends JPanel {
 
 			if (action.equals("Pencil")) {
 				lineStroke = 1;
-				lineColor = Color.BLACK;
+				if (lineColor.equals(Color.WHITE)) {
+					lineColor = Color.BLACK;
+				}
 			}
 
-			if (action.equals("s:Stroke Small")) {
+			if (action.equals("Stroke Small")) {
 				lineStroke = 1;
 			}
 
-			if (action.equals("s:Stroke Med")) {
+			if (action.equals("Stroke Med")) {
 				lineStroke = 5;
 			}
 
-			if (action.equals("s:Stroke Large")) {
-				lineStroke = 10;
+			if (action.equals("Stroke Large")) {
+				lineStroke = 11;
 			}
 
-			if (action.equals("s:Clear board")) {
+			if (action.equals("Clear board")) {
 				fillWithWhite();
 			}
 
 			if (action.equals("random")) {
 				changeBackground();
+			}
+
+			if (colorAction != null) {
+				final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
+				lineColor = colorAction;
+				setLineColor(g, lineColor);
+				repaint();
 			}
 
 		}

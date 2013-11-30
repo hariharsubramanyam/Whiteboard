@@ -23,46 +23,9 @@ import adts.LobbyModel;
 
 /**
  * 
- * TODO: this is from my Jotto GUI. We need to modify it.
- * 
- * Multi-threaded GUI for playing the game Jotto. This simple class creates the
- * layout for playing the game by using JSwing components. The user inputs
- * textual guesses of the word which get sent to a remote server as a GET
- * request. The server then, behind the scenes and on its own thread, returns
- * either a valid or invalid response. Regardless of the time it takes for the
- * server to respond, the user can continue to make use of the GUI, hence its
- * multi-threaded behavior.
- * 
- * Thread-safe argument:
- * 
- * As mentioned before, multi-threading occurs only during server calls in the
- * typeGuess textbox. The only object being worked on, however, is the table.
- * Therefore, we make this mutable object thread-safe in the following way.
- * There is an initial set of three atomic integers.
- * 
- * The first is the gameCounter which is incremented (in an atomic way) only
- * when a new game is created. Getting this value (atomically) is used to assert
- * that each thread is still connected to the puzzle that was active when the
- * thread was created.
- * 
- * The second and third are the totalRows and rowCounter atomic integers. The
- * rowCounter value is assigned to a local integer as soon as a thread is
- * created, thereby giving this thread a unique identifier to its target row
- * later on. The totalRows variable, however, is not assigned in the thread
- * because it is the reference variable. It is the link between the disconnected
- * thread state and the current state of the puzzle. Since both of these are
- * atomic, and there is no more data being transferred between threads, we can
- * safely assume that the GUI is completely thread-safe.
- * 
- * Lastly, there is a the issue of how to safely pass the text from the
- * typeGuess textbox to each of the threads in a safe manner. If two users
- * activate the listener for this textbox, then there could be race conditions
- * where the String in the textbox from one user is used for both threads.
- * However, there is only one user, in this case the GUI, so we will never have
- * multiple calls to this method, making the GUI, once again, thread-safe.
- * 
- * 
- * 
+ * This is the Controller and GUI for the Lobby. It serves as the connection
+ * between the user View of the Canvas and the Server and Model. These
+ * Controllers are independent instances given unique IDs by the Model.
  * 
  * Testing strategy:
  * 
@@ -74,34 +37,12 @@ import adts.LobbyModel;
  *           textboxes to get wider (but not taller), with no upperbound, and
  *           that the table gets wider (no upperbound) and taller (upperbound of
  *           500 pixels).
- * @category puzzle number label, button, and textbox: test that clicking on the
- *           New Puzzle button changes the puzzle label and if the new puzzle
- *           textbox had a valid number, check to see that the label is
- *           correctly changed. Any non-valid entry will causes the puzzle
- *           number to be randomly assigned.
- * @category guess label and table: to test that these were working correctly
- *           (after asserting that the Model worked as planned), enter puzzle
- *           number 5555 and check to see the correct behavior ("You win!" on
- *           column 2 and the guess in column 1) when entering the string
- *           "vapid" in the guess box. Since the Model works, we don't test any
- *           other entries except for an invalid entry to see it appear on the
- *           second column.
- * @category testing the scroll pane: we expect the pane to automatically scroll
- *           to the latest entered row so put in enough rows to see this
- *           behavior happen.
- * @category threading: still in puzzle 5555, test the String "vapi*" and expect
- *           the GUI to allow for other submissions. Enter others and watch the
- *           table keep populating itself and, after certain time, the response
- *           for "vapi*" returns. The thread-safety is also tested by sending
- *           "vapi*" and immediately creating a New Puzzle. Waiting should not
- *           do anything since the late response gets tossed.
  * 
  */
 public class LobbyGUI extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
-	// Use these objects in the GUI:
 	private final JLabel puzzleNumber;
 	private final JButton newPuzzleButton;
 	private final JTextField newPuzzleNumber;
