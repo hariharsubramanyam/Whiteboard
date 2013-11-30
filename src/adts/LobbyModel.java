@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import ui.LobbyGUI;
-
 /**
  * ADT that represents a Lobby. This is a waiting zone for servers to tunnel
  * users into different parts of its code.
@@ -187,6 +185,7 @@ public class LobbyModel {
 	public synchronized int addBoard(String name, int width, int height){
 	    int id = this.uniqueBoardID.getAndIncrement();
 	    this.boardForID.put(id, new Whiteboard(id, name, width, height));
+	    this.userIDsForBoardID.put(id, new HashSet<Integer>());
 	    return id;
 	}
 	
@@ -198,6 +197,7 @@ public class LobbyModel {
     public synchronized int addBoard(String name){
         int id = this.uniqueBoardID.getAndIncrement();
         this.boardForID.put(id, new Whiteboard(id, name, Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT));
+        this.userIDsForBoardID.put(id, new HashSet<Integer>());
         return id;
     }
     

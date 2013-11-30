@@ -110,6 +110,14 @@ public class Whiteboard {
 	}
 	
 	/**
+	 * sets the name of the board
+	 * @param boardName the new name of the board
+	 */
+    public synchronized void setBoardName(String boardName){
+        this.boardName = boardName;
+    }
+	
+	/**
 	 * @return the width of the board
 	 */
 	public synchronized int getWidth(){

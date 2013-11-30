@@ -9,6 +9,7 @@ import server.UserThread;
 public class MessageHandler {
     private static final String REQ_GET_BOARD_IDS = "get_board_ids";
     private static final String REQ_SET_USERNAME = "set_username";
+    private static final String REQ_CREATE_BOARD = "create_board";
     
     private static final String RESP_BOARD_IDS = "board_ids";
     private static final String RESP_USERS_FOR_BOARD = "users_for_board";
@@ -24,6 +25,9 @@ public class MessageHandler {
         }
         else if (command.equals(MessageHandler.REQ_SET_USERNAME)){
             MessageHandler.handleRequestSetUsername(input, userThread, lobbyModel);
+        }
+        else if (command.equals(MessageHandler.REQ_CREATE_BOARD)){
+            MessageHandler.handleRequestCreateBoard(input, userThread, lobbyModel);
         }
     }
 
@@ -49,6 +53,7 @@ public class MessageHandler {
     private static void handleRequestSetUsername(String input, UserThread userThread, LobbyModel lobbyModel) {
         Set<String> userNames = new HashSet<String>();
         Set<Integer> userIDsOfUsersInSameBoard = new HashSet<Integer>();
+        
         String[] splitString = input.split(" ");
         int userID = Integer.parseInt(splitString[1]);
         String newName = splitString[2];
@@ -63,6 +68,22 @@ public class MessageHandler {
         
         String response = MessageHandler.makeResponseUsersForBoardID(boardID, userNames);
         userThread.broadcast(response, userIDsOfUsersInSameBoard);
+    }
+    
+    /**
+     * Request: 'create_board [userID] [boardName]'
+     * Response (to all users): 'board_ids [id1] [id2] [id3]...' 
+     * @param input 'create_board [userID] [boardName]'
+     * @param userThread the user's thread
+     * @param lobbyModel the lobby model
+     */
+    private static void handleRequestCreateBoard(String input,UserThread userThread, LobbyModel lobbyModel) {
+        String[] splitString = input.split(" ");
+        int userID = Integer.parseInt(splitString[1]);
+        String boardName = splitString[2];
+        int boardID = lobbyModel.addBoard(boardName);
+        lobbyModel.userJoinBoard(userID, boardID);
+        userThread.broadcast(MessageHandler.makeResponseBoardIDs(lobbyModel.getWhiteboardIDs()));
     }
     
     /**
