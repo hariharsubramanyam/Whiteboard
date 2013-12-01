@@ -287,6 +287,8 @@ public class LobbyGUI extends JFrame {
 				// handle the client
 				while (true) {
 					// final Socket socket;
+					
+						
 					try {
 						// handleConnection(socket);
 					} finally {

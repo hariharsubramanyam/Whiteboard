@@ -423,18 +423,37 @@ public class Canvas extends JPanel {
 
 		/*
 		 * Create a small square representing the current color selected. The
-		 * y-position is the begining position of the color squares plus the
+		 * y-position is the beginning position of the color squares plus the
 		 * number of squares high, in this case 3, plus a margins.
 		 */
 
 		this.currentColorSquareY = beginPosY + 3 * sizeColorSquare + margins;
-		setLineColor(g, this.lineColor);
+		int yPos = createLineColorSquare(g, this.lineColor);
+		
+
+		
+		createUserTable(yPos);
 
 	}
 
-	private void setLineColor(Graphics2D g, Color lineColor) {
+	private void createUserTable(int yPos) {
+		final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
+
+		int xPos = margins;
+		yPos = yPos + margins;
+		int tableWidth = windowW - 2* margins;
+		int tableHeight = windowH - yPos - margins;
+		// begin by creating the window layout background
+		createFilledRectangle(g, 1, Color.WHITE, xPos, yPos, tableWidth,
+				tableHeight);
+
+		
+	}
+
+	private int createLineColorSquare(Graphics2D g, Color lineColor) {
 		createFilledRectangle(g, 1, lineColor, margins,
 				this.currentColorSquareY, windowW / 4, windowW / 4);
+		return this.currentColorSquareY + windowW/4;
 	}
 
 	/*
@@ -614,7 +633,7 @@ public class Canvas extends JPanel {
 				R = lineColor.getRed();
 				G = lineColor.getGreen();
 				B = lineColor.getBlue();
-				setLineColor(g, lineColor);
+				createLineColorSquare(g, lineColor);
 				repaint();
 			}
 
