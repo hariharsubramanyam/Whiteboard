@@ -13,7 +13,6 @@ import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.RoundRectangle2D;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -433,24 +432,10 @@ public class Canvas extends JPanel {
     private void drawLineSegment(int x1, int y1, int x2, int y2) {
         Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
-        g.setStroke(new BasicStroke(this.lineStroke));
+        g.setStroke(new BasicStroke(this.lineStroke,1,1));
         g.setColor(this.lineColor);
 
-        int deltaX = x2 - x1;
-        int deltaY = y2 - y1;
-
-        if (deltaX != 0 && deltaY != 0) {
-            g.drawLine(x1, y1, x2, y1);
-            g.drawLine(x2, y1, x2, y2);
-            System.out.println(String.format("%d %d %d %d", x1, y1, x2, y1));
-            System.out.println(String.format("%d %d %d %d", x2, y1, x2, y2));
-        } else {
-            g.drawLine(x1, y1, x2, y2);
-            System.out.println(String.format("%d %d %d %d", x1, y1, x2, y2));
-        }
-
-        // String output = String.format("%d %d %d %d", x1, y1, x2, y2);
-        // System.out.println(output);
+        g.drawLine(x1, y1, x2, y2);
 
         // IMPORTANT! every time we draw on the internal drawing buffer, we
         // have to notify Swing to repaint this component on the screen.

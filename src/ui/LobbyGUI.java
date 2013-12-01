@@ -5,9 +5,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
@@ -18,6 +15,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 
 import adts.LobbyModel;
 
@@ -43,43 +41,51 @@ public class LobbyGUI extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
-	private final JLabel puzzleNumber;
-	private final JButton newPuzzleButton;
-	private final JTextField newPuzzleNumber;
-	private final JLabel typeGuess;
-	private final JTextField guess;
-	private final JTable guessTable;
+	private final JLabel serverIpLabel;
+	private final JTextField serverIpField;
+	private final JLabel portLabel;
+	private final JButton connect;
+
+	private final JLabel newBoardLabel;
+	private final JTextField newBoardField;
+	private final JButton createButton;
+
+	private final JLabel userNameLabel;
+	private final JLabel userNameSetLabel;
+	private final JTextField userNameField;
+
+	private final JTable currentBoards;
+	private final JTable boardUsers;
+	private final JTable allUsers;
 
 	// create a grouping to help localize JObjects
 	private final GroupLayout layout;
-	// initialize the table model which will be used in guessTable. It is
-	// initialized to start with 0 rows and 3 columns
-	private final DefaultTableModel tableModel = new DefaultTableModel(0, 3);
-	private final JScrollPane pane;
+
+	/**
+	 * This list contains two columns: one for the name of the boards and the
+	 * other with the number of users. It is inside of a scroll pane object.
+	 */
+	private final DefaultTableModel currentBoardsModel = new DefaultTableModel(
+			0, 2);
+	private final JScrollPane currentBoardsPane;
+
+	/**
+	 * This list contains one column: the name of the users in the board in
+	 * focus. It is inside of a scroll pane object.
+	 */
+	private final DefaultTableModel boardUsersModel = new DefaultTableModel(0,
+			1);
+	private final JScrollPane boardUsersPane;
+
+	/**
+	 * This list contains one column for the name of the users. It is inside of
+	 * a scroll pane object.
+	 */
+	private final DefaultTableModel allUsersModel = new DefaultTableModel(0, 1);
+	private final JScrollPane allUsersPane;
 
 	private LobbyModel lobby;
-	private int userID = 0;
-
-	// to allow for multi-threading guess commands, we must protect against user
-	// inputs after a delayed response. For this reason, we create these atomic
-	// integers to keep track of delayed behavior.
-
-	// rowCounter will give each thread an identifier to know where to post its
-	// delayed response. Then guessTry is the thread-safe text from
-	// the guessText textbox
-	private AtomicInteger rowCounter = new AtomicInteger(-1);
-
-	// if a new game is initialized while a thread is still waiting for server
-	// response, this response will be discarded. this counter is incremented
-	// whenever the puzzle button or puzzle text field are fired
-	private AtomicInteger gameCounter = new AtomicInteger(0);
-
-	// these three strings are the three possible error messages we can receive
-	// from the server
-	private final List<String> errorMessages = Arrays
-			.asList("error 0: Ill-formatted request.",
-					"error 1: Non-number puzzle ID.",
-					"error 2: Invalid guess. Length of guess != 5 or guess is not a dictionary word.");
+	private int userID;
 
 	/**
 	 * The constructor for this class can be separated into three distinct
@@ -91,34 +97,65 @@ public class LobbyGUI extends JFrame {
 	public LobbyGUI(int ID) {
 		this.userID = ID;
 
-		// Initialize the top row consisting of the three elements for
-		// displaying/changing puzzle number
-		puzzleNumber = new JLabel("Puzzle #" + String.valueOf(userID));
-		puzzleNumber.setName("puzzleNumber");
-		newPuzzleNumber = new JTextField();
-		newPuzzleNumber.setName("newPuzzleNumber");
-		newPuzzleButton = new JButton("New Puzzle");
-		newPuzzleButton.setName("newPuzzleButton");
+		/*
+		 * Initialize the top row with the server information
+		 */
+		serverIpLabel = new JLabel("Server IP:");
+		serverIpLabel.setName("serverIpLabel");
+		serverIpField = new JTextField();
+		serverIpField.setName("serverIpTextField");
+		portLabel = new JLabel("Port: 4444");
+		portLabel.setName("portLabel");
+		connect = new JButton("Connect!");
+		connect.setName("connect");
 
-		// Initialize the second row with the two elements to do guesses
-		typeGuess = new JLabel("Type guess here:");
-		typeGuess.setName("typeGuess");
-		guess = new JTextField();
-		guess.setName("guess");
+		/*
+		 * Initialize the second row with the user information
+		 */
+		userNameLabel = new JLabel("User name: " + this.userID);
+		userNameLabel.setName("userNameLabel");
+		userNameSetLabel = new JLabel("Set name: ");
+		userNameSetLabel.setName("userNameSetLabel");
+		userNameField = new JTextField();
+		userNameField.setName("userNameField");
 
-		// Initialize the last row with the guess table inside the scroll pane
-		guessTable = new JTable(tableModel);
-		guessTable.setName("guessTable");
+		/*
+		 * Initialize the third row with the board information
+		 */
+		newBoardLabel = new JLabel("Create new board: ");
+		newBoardLabel.setName("newBoardLabel");
+		newBoardField = new JTextField();
+		newBoardField.setName("newBoardTextField");
+		createButton = new JButton("GO");
+		createButton.setName("createButton");
 
-		pane = new JScrollPane(guessTable);
-		pane.setName("pane");
-
-		// get rid of the tableHeader
-		guessTable.setTableHeader(null);
-
+		/*
+		 * Initialize the last row with the three tables inside their own
+		 * respective panes
+		 */
+		currentBoards = new JTable(currentBoardsModel);
+		currentBoards.setName("currentBoards");
+		currentBoardsPane = new JScrollPane(currentBoards);
+		currentBoardsPane.setName("currentBoardsPane");
 		// no lines
-		guessTable.setShowHorizontalLines(false);
-		guessTable.setShowVerticalLines(false);
+		currentBoards.setShowHorizontalLines(false);
+		currentBoards.setShowVerticalLines(false);
+
+		boardUsers = new JTable(boardUsersModel);
+		boardUsers.setName("boardUsers");
+		boardUsersPane = new JScrollPane(boardUsers);
+		boardUsersPane.setName("boardUsersPane");
+		// no lines
+		boardUsers.setShowHorizontalLines(false);
+		boardUsers.setShowVerticalLines(false);
+
+		allUsers = new JTable(allUsersModel);
+		allUsers.setName("allUsers");
+		allUsersPane = new JScrollPane(allUsers);
+		allUsersPane.setName("allUsersPane");
+		// no lines
+		allUsers.setShowHorizontalLines(false);
+		allUsers.setShowVerticalLines(false);
 
 		// Default settings and layout setup
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -129,43 +166,55 @@ public class LobbyGUI extends JFrame {
 		layout.setAutoCreateGaps(true);
 		layout.setAutoCreateContainerGaps(true);
 
-		// Create the horizontal settings for the window. These are three
-		// components in parallel where the first is a sequential group of the
-		// three puzzle components, the second is another sequential group of
-		// the guess label and text fields, and the last is the table component.
-		// Note that the lower limit dimensions are hardcoded to prevent the
-		// user from shrinking the window so much that it starts to disfigure
-		// the components. However, they can extend the window to expand the
-		// size of the horizontal text fields.
 		layout.setHorizontalGroup(layout
 				.createParallelGroup()
 				.addGroup(
 						layout.createSequentialGroup()
-								.addComponent(puzzleNumber, 90, 90, 90)
-								.addComponent(newPuzzleButton, 100, 100, 100)
-								.addComponent(newPuzzleNumber, 120, 120,
-										Short.MAX_VALUE))
+								.addComponent(serverIpLabel, 60, 60, 60)
+								.addComponent(serverIpField, 100, 100, Short.MAX_VALUE)
+								.addComponent(portLabel, 60, 60,
+										60)
+								.addComponent(connect, 90, 90, 90))
 				.addGroup(
-						layout.createSequentialGroup().addComponent(typeGuess)
-								.addComponent(guess, 220, 220, Short.MAX_VALUE))
-				.addComponent(pane));
+						layout.createSequentialGroup()
+								.addComponent(userNameLabel, 150, 150, 150)
+								.addComponent(userNameSetLabel, 60, 60, 60)
+								.addComponent(userNameField, 90, 90, Short.MAX_VALUE))
+				.addGroup(
+						layout.createSequentialGroup()
+								.addComponent(newBoardLabel, 120, 120, 120)
+								.addComponent(newBoardField, 90, 90, Short.MAX_VALUE)
+								.addComponent(createButton, 90, 90, 90))
+				.addGroup(
+						layout.createSequentialGroup()
+								.addComponent(currentBoards, 250, 250, 250)
+								.addComponent(boardUsers, 200, 200, 200)
+								.addComponent(allUsers, 200, 200, 200)));
 
-		// Create the vertical settings for the window. These are layed out
-		// exactly as before except now we have a sequential group of two
-		// parallel groups and a component. Again, for all but the table itself,
-		// the heights are hardcoded.
 		layout.setVerticalGroup(layout
 				.createSequentialGroup()
 				.addGroup(
 						layout.createParallelGroup()
-								.addComponent(puzzleNumber, 25, 25, 25)
-								.addComponent(newPuzzleButton, 25, 25, 25)
-								.addComponent(newPuzzleNumber, 25, 25, 25))
+								.addComponent(serverIpLabel, 25, 25, 25)
+								.addComponent(serverIpField, 25, 25, 25)
+								.addComponent(portLabel, 25, 25,
+										25)
+								.addComponent(connect, 25, 25, 25))
 				.addGroup(
 						layout.createParallelGroup()
-								.addComponent(typeGuess, 25, 25, 25)
-								.addComponent(guess, 25, 25, 25))
-				.addComponent(pane, 200, 200, 500));
+								.addComponent(userNameLabel, 25, 25, 25)
+								.addComponent(userNameSetLabel, 25, 25, 25)
+								.addComponent(userNameField, 25, 25, 25))
+				.addGroup(
+						layout.createParallelGroup()
+								.addComponent(newBoardLabel, 25, 25, 25)
+								.addComponent(newBoardField, 25, 25, 25)
+								.addComponent(createButton, 25, 25, 25))
+				.addGroup(
+						layout.createParallelGroup()
+								.addComponent(currentBoards, 150, 150, 150)
+								.addComponent(boardUsers, 150, 150, 150)
+								.addComponent(allUsers, 150, 150, 150)));
 
 		this.pack();
 
@@ -174,172 +223,40 @@ public class LobbyGUI extends JFrame {
 	}
 
 	/**
-	 * Function used when an action listener needs to create a new puzzle. If a
-	 * correctly parsed puzzle number (integers grater than 0) is supplied in
-	 * the newPuzzleNumber text field, the new puzzle will be initialized with
-	 * this puzzle number. Otherwise, a random number between 1 and 10000 is
-	 * picked.
-	 * 
-	 * The thread variables are also initialized to indicate the addition of a
-	 * new game.
-	 */
-	private void enterNewPuzzle() {
-		// retrieve the text from the puzzle number text field and create a new
-		// puzzle instance, either random or with the value supplied
-		String in = newPuzzleNumber.getText();
-
-		// only integers greater than 0 should be allowed. leading 0's are
-		// ignored: the string "0001" is equivalent to "1" in terms of puzzle
-		// selected
-		if (in.matches("[0]*[1-9][0-9]*")) {
-			// remove the leading 0s
-			String out = in.replaceFirst("[0]+", "");
-			puzzle = new JottoModel(in);
-			userID = out;
-			System.out.println(out);
-		} else {
-			int randInt = (int) (Math.random() * 10000) + 1;
-			userID = String.valueOf(randInt);
-			puzzle = new JottoModel(userID);
-		}
-		// change the puzzle number label to display the correct puzzle number
-		// and clear the text in the text field
-		puzzleNumber.setText("Puzzle #" + userID);
-		newPuzzleNumber.setText("");
-		// erase the table entries
-		tableModel.setRowCount(0);
-
-		// reset the row counts and increment the game counter
-		rowCounter.set(-1);
-		gameCounter.incrementAndGet();
-	}
-
-	/**
-	 * There are a total of three action listeners and those are on the
-	 * newPuzzleButton to create a new puzzle, on newPuzzleNumber to also create
-	 * a new puzzle, and on the guess text field to submit a guess String.
-	 * 
-	 * The guess action listener functions normally except that it runs the
-	 * server GET request in a background thread to allow for the user to
-	 * continue making guesses while the server works through the request.
+	 * TODO
 	 */
 	private void makeActions() {
-		// both puzzle action listeners use the enterNewPuzzle() method and
-		// react exactly the same. The only difference is that the button is
-		// fired on click while the text field is fired on enter
-		newPuzzleButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				enterNewPuzzle();
-			}
-		});
 
-		newPuzzleNumber.addActionListener(new ActionListener() {
+		connect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				enterNewPuzzle();
+				// TODO: connect to server
 			}
 		});
 
 		// setting the scroll pane to automatically scroll to the last row
-		guessTable.addComponentListener(new ComponentAdapter() {
+		currentBoards.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
-				guessTable.scrollRectToVisible(guessTable.getCellRect(
-						guessTable.getRowCount() - 1, 0, true));
+				currentBoards.scrollRectToVisible(currentBoards.getCellRect(
+						currentBoards.getRowCount() - 1, 0, true));
 			}
 		});
 
-		// Multi-threaded guess text field response
-		guess.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				// begin by incrementing the current row number
-				rowCounter.incrementAndGet();
-
-				// assign the current value of the guess text field to this
-				// string
-				final String textboxText = guess.getText();
-				// clear the text field
-				guess.setText("");
-
-				// initialize a String array of size three to be used by the
-				// tableModel to insert responses.
-				final String[] response = new String[3];
-				// the first column always has the text from the text field
-				// regardless of the response.
-				response[0] = textboxText;
-				tableModel.insertRow(rowCounter.get(), response);
-
-				// the user will now see his/her guess and will wait to fill in
-				// the other two columns which is a task being processed by this
-				// background thread
-				Thread backgroundThread = new Thread(new Runnable() {
-					public void run() {
-						// right when we enter the thread, we get the counter
-						// number. This way if the server takes so long to
-						// respond that the user already started a new puzzle,
-						// the thread will terminate with no further action
-						// being taken.
-						int myCounter = gameCounter.get();
-						// to keep track of the row to assign the delayed value
-						// to, we get the value of the row when the thread was
-						// started.
-						final int currentRow = rowCounter.get();
-
-						// call on the Model to make the GET request
-						String unparsedResponse = puzzle.makeGuess(textboxText);
-						// if the response is in the errorMessages array, it
-						// sets the second column to the error message below.
-						if (errorMessages.contains(unparsedResponse)) {
-							response[1] = "Invalid guess.";
-						}
-						// otherwise, we know we have two whitespaces so we
-						// split on this and assign the second and third values
-						// to the second and third columns.
-						else {
-							String[] parsedResponse = unparsedResponse
-									.split(" ");
-							response[1] = parsedResponse[1];
-							response[2] = parsedResponse[2];
-							// if the guess was correct, set column 1 to You
-							// win! and column 2 to nothing.
-							if (parsedResponse[2].equals("5")) {
-								response[1] = "You win!";
-								response[2] = "";
-							}
-						}
-						// now only assign values if we are still in the same
-						// game, otherwise do nothing
-						if (gameCounter.get() == myCounter) {
-							refreshInUIThread(response[1], currentRow, 1);
-							refreshInUIThread(response[2], currentRow, 2);
-
-						}
-					}
-				});
-				backgroundThread.start();
+		// setting the scroll pane to automatically scroll to the last row
+		boardUsers.addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent e) {
+				boardUsers.scrollRectToVisible(boardUsers.getCellRect(
+						boardUsers.getRowCount() - 1, 0, true));
 			}
 		});
-	}
 
-	/**
-	 * Since we have separate Threads running background work, we need to
-	 * thread-safely mutate the UI. This function allows us to do this. In
-	 * particular, there are two mutating operations done on the GUI table which
-	 * are inserting the values for columns 2 and 3 of the table.
-	 * 
-	 * @param response
-	 *            the String representation of the value to insert into int
-	 *            column
-	 * @param currentRow
-	 *            the row at which to insert the response's value
-	 * @param column
-	 *            the column number at which to insert the response's value
-	 */
-	private void refreshInUIThread(final String response, final int currentRow,
-			final int column) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				tableModel.setValueAt(response, currentRow, column);
+		// setting the scroll pane to automatically scroll to the last row
+		allUsers.addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent e) {
+				allUsers.scrollRectToVisible(allUsers.getCellRect(
+						allUsers.getRowCount() - 1, 0, true));
 			}
 		});
+
 	}
 
 	/**
@@ -350,7 +267,7 @@ public class LobbyGUI extends JFrame {
 	public static void main(final String[] args) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				LobbyGUI main = new LobbyGUI();
+				LobbyGUI main = new LobbyGUI(1000000000);
 				main.setVisible(true);
 			}
 		});
