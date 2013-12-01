@@ -114,6 +114,7 @@ public class Canvas extends JPanel {
 	 */
 	private final int numOfButtons;
 
+	private final JFrame window;
 	/**
 	 * Width of shape drawing. It is the number of pixels any given line will
 	 * draw above/below. It is always odd so as to allow for equal number of
@@ -147,7 +148,7 @@ public class Canvas extends JPanel {
 	public Canvas(int width, int height, LobbyGUI lobby) {
 		this.lobby = lobby;
 
-		JFrame window = new JFrame("Freehand Canvas");
+		window = new JFrame("Freehand Canvas");
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		window.setLayout(new BorderLayout());
 
@@ -178,7 +179,7 @@ public class Canvas extends JPanel {
 		 */
 
 		this.buttonText = Arrays.asList("Eraser", "Pencil", "Stroke Small",
-				"Stroke Med", "Stroke Large", "Clear board");
+				"Stroke Med", "Stroke Large", "Clear board", "LEAVE BOARD");
 		this.numOfButtons = buttonText.size();
 		// leave 1 margin on either side
 		this.buttonW = windowW - 2 * margins;
@@ -429,19 +430,6 @@ public class Canvas extends JPanel {
 		this.currentColorSquareY = beginPosY + 3 * sizeColorSquare + margins;
 		setLineColor(g, this.lineColor);
 
-		/*
-		 * Leave board button
-		 */
-
-		int xPos = margins;
-		int yPos = canvasH - buttonH;
-
-		createFilledRectangle(g, 1, Color.BLACK, xPos, yPos, buttonW, buttonH
-				- margins);
-
-		int xStringPos = 5 * margins;
-		int yStringPos = yPos + buttonH / 2 + margins;
-		createText(g, "Leave Board", xStringPos, yStringPos, Color.WHITE, 1, 15);
 	}
 
 	private void setLineColor(Graphics2D g, Color lineColor) {
@@ -613,6 +601,11 @@ public class Canvas extends JPanel {
 			if (action.equals("Clear board")) {
 				fillWithWhite();
 				lobby.sendPacketToServer("clear");
+			}
+			
+			if (action.equals("LEAVE BOARD")) {
+				window.dispose();
+				lobby.setVisible(true);
 			}
 
 			if (colorAction != null) {

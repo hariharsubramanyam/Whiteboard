@@ -5,6 +5,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.Socket;
+import java.net.URL;
 
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
@@ -40,6 +46,8 @@ import adts.LobbyModel;
 public class LobbyGUI extends JFrame {
 
 	private static final long serialVersionUID = 1L;
+
+	private Canvas canvas;
 
 	private final JLabel serverIpLabel;
 	private final JTextField serverIpField;
@@ -263,13 +271,30 @@ public class LobbyGUI extends JFrame {
 		allUsers.setVisible(set);
 		this.pack();
 	}
-	
+
 	public void sendPacketToServer(String drawPacket) {
 		System.out.println(drawPacket);
 	}
-	
+
 	public void sendPacketToCanvas() {
 		System.out.println("test");
+	}
+
+	private void createOutgoingThread() {
+
+		Thread outgoingThread = new Thread(new Runnable() {
+			public void run() {
+				// handle the client
+				while (true) {
+					// final Socket socket;
+					try {
+						// handleConnection(socket);
+					} finally {
+					}
+				}
+			}
+		});
+		outgoingThread.start();
 	}
 
 	/**
@@ -282,7 +307,7 @@ public class LobbyGUI extends JFrame {
 				// TODO: do something while connecting just in case it fails to
 				// connect because of a wrong IP
 				setVisibility(true);
-				// TODO: connect to server
+				createOutgoingThread();
 			}
 		});
 
@@ -299,10 +324,22 @@ public class LobbyGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				// TODO: send new board to server
 				String newBoardName = newBoardField.getText();
-
+				sendPacketToServer(newBoardName);
+				
 				newBoardField.setText("");
-				new Canvas(1000, 800, lobbyGUI);
-				dispose();
+				canvas = new Canvas(1000, 800, lobbyGUI);
+				setVisible(false);
+			}
+		});
+		
+		createButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// TODO: send new board to server
+				String newBoardName = newBoardField.getText();
+				sendPacketToServer(newBoardName);
+				newBoardField.setText("");
+				canvas = new Canvas(1000, 800, lobbyGUI);
+				setVisible(false);
 			}
 		});
 
