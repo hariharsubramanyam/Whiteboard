@@ -16,6 +16,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
+import canvas.Canvas;
 import adts.LobbyModel;
 
 /**
@@ -85,6 +86,7 @@ public class LobbyGUI extends JFrame {
 
 	private LobbyModel lobby;
 	private int userID;
+	private LobbyGUI lobbyGUI;
 
 	/**
 	 * The constructor for this class can be separated into three distinct
@@ -95,7 +97,7 @@ public class LobbyGUI extends JFrame {
 	 */
 	public LobbyGUI(int ID) {
 		this.userID = ID;
-
+		this.lobbyGUI = this;
 		/*
 		 * Initialize the top row with the server information
 		 */
@@ -118,10 +120,6 @@ public class LobbyGUI extends JFrame {
 		userNameField = new JTextField();
 		userNameField.setName("userNameField");
 
-		userNameLabel.setVisible(true);
-		userNameSetLabel.setVisible(true);
-		userNameField.setVisible(true);
-		
 		/*
 		 * Initialize the third row with the board information
 		 */
@@ -129,19 +127,16 @@ public class LobbyGUI extends JFrame {
 		newBoardLabel.setName("newBoardLabel");
 		newBoardField = new JTextField();
 		newBoardField.setName("newBoardTextField");
-		createButton = new JButton("GO");
+		createButton = new JButton("Create and join!");
 		createButton.setName("createButton");
-
-		newBoardLabel.setVisible(true);
-		newBoardField.setVisible(true);
-		userNameField.setVisible(true);
 
 		/*
 		 * Initialize the last row with the three tables inside their own
 		 * respective panes
 		 */
-		final String[] boardHeader = new String[] {"Board name", "Number of users"};
-		currentBoardsModel.insertRow(0,boardHeader);
+		final String[] boardHeader = new String[] { "Board name",
+				"Number of users" };
+		currentBoardsModel.insertRow(0, boardHeader);
 		currentBoards = new JTable(currentBoardsModel);
 		currentBoards.setName("currentBoards");
 		currentBoardsPane = new JScrollPane(currentBoards);
@@ -150,8 +145,8 @@ public class LobbyGUI extends JFrame {
 		currentBoards.setShowHorizontalLines(false);
 		currentBoards.setShowVerticalLines(false);
 
-		final String[] userHeader = new String[] {"Users in board"};
-		boardUsersModel.insertRow(0,userHeader);
+		final String[] userHeader = new String[] { "Users in board" };
+		boardUsersModel.insertRow(0, userHeader);
 		boardUsers = new JTable(boardUsersModel);
 		boardUsers.setName("boardUsers");
 		boardUsersPane = new JScrollPane(boardUsers);
@@ -160,8 +155,8 @@ public class LobbyGUI extends JFrame {
 		boardUsers.setShowHorizontalLines(false);
 		boardUsers.setShowVerticalLines(false);
 
-		final String[] allUsersHeader = new String[] {"Users in lobby"};
-		allUsersModel.insertRow(0,allUsersHeader);
+		final String[] allUsersHeader = new String[] { "Users in lobby" };
+		allUsersModel.insertRow(0, allUsersHeader);
 		allUsers = new JTable(allUsersModel);
 		allUsers.setName("allUsers");
 		allUsersPane = new JScrollPane(allUsers);
@@ -184,25 +179,30 @@ public class LobbyGUI extends JFrame {
 				.addGroup(
 						layout.createSequentialGroup()
 								.addComponent(serverIpLabel, 60, 60, 60)
-								.addComponent(serverIpField, 100, 100, Short.MAX_VALUE)
-								.addComponent(portLabel, 60, 60,
-										60)
+								.addComponent(serverIpField, 100, 100,
+										Short.MAX_VALUE)
+								.addComponent(portLabel, 60, 60, 60)
 								.addComponent(connect, 90, 90, 90))
 				.addGroup(
 						layout.createSequentialGroup()
 								.addComponent(userNameLabel, 150, 150, 150)
 								.addComponent(userNameSetLabel, 60, 60, 60)
-								.addComponent(userNameField, 90, 90, Short.MAX_VALUE))
+								.addComponent(userNameField, 90, 90,
+										Short.MAX_VALUE))
 				.addGroup(
 						layout.createSequentialGroup()
 								.addComponent(newBoardLabel, 120, 120, 120)
-								.addComponent(newBoardField, 90, 90, Short.MAX_VALUE)
-								.addComponent(createButton, 90, 90, 90))
+								.addComponent(newBoardField, 90, 90,
+										Short.MAX_VALUE)
+								.addComponent(createButton, 130, 130, 130))
 				.addGroup(
 						layout.createSequentialGroup()
-								.addComponent(currentBoards, 250, 250, Short.MAX_VALUE)
-								.addComponent(boardUsers, 200, 200, Short.MAX_VALUE)
-								.addComponent(allUsers, 200, 200, Short.MAX_VALUE)));
+								.addComponent(currentBoards, 250, 250,
+										Short.MAX_VALUE)
+								.addComponent(boardUsers, 200, 200,
+										Short.MAX_VALUE)
+								.addComponent(allUsers, 200, 200,
+										Short.MAX_VALUE)));
 
 		layout.setVerticalGroup(layout
 				.createSequentialGroup()
@@ -210,8 +210,7 @@ public class LobbyGUI extends JFrame {
 						layout.createParallelGroup()
 								.addComponent(serverIpLabel, 25, 25, 25)
 								.addComponent(serverIpField, 25, 25, 25)
-								.addComponent(portLabel, 25, 25,
-										25)
+								.addComponent(portLabel, 25, 25, 25)
 								.addComponent(connect, 25, 25, 25))
 				.addGroup(
 						layout.createParallelGroup()
@@ -225,14 +224,52 @@ public class LobbyGUI extends JFrame {
 								.addComponent(createButton, 25, 25, 25))
 				.addGroup(
 						layout.createParallelGroup()
-								.addComponent(currentBoards, 150, 150, Short.MAX_VALUE)
-								.addComponent(boardUsers, 150, 150, Short.MAX_VALUE)
-								.addComponent(allUsers, 150, 150, Short.MAX_VALUE)));
+								.addComponent(currentBoards, 150, 150,
+										Short.MAX_VALUE)
+								.addComponent(boardUsers, 150, 150,
+										Short.MAX_VALUE)
+								.addComponent(allUsers, 150, 150,
+										Short.MAX_VALUE)));
 
+		setVisibility(false);
 		this.pack();
 
 		// fire the action listeners
 		makeActions();
+	}
+
+	/**
+	 * Used to change the visibility of the server login information and the
+	 * connected lobby.
+	 * 
+	 * @param set
+	 *            boolean which is false when server information is needed and
+	 *            true otherwise
+	 */
+	private void setVisibility(boolean set) {
+		serverIpLabel.setVisible(!set);
+		serverIpField.setVisible(!set);
+		portLabel.setVisible(!set);
+		connect.setVisible(!set);
+		userNameLabel.setVisible(set);
+		userNameSetLabel.setVisible(set);
+		userNameField.setVisible(set);
+		newBoardLabel.setVisible(set);
+		newBoardField.setVisible(set);
+		userNameField.setVisible(set);
+		createButton.setVisible(set);
+		currentBoards.setVisible(set);
+		boardUsers.setVisible(set);
+		allUsers.setVisible(set);
+		this.pack();
+	}
+	
+	public void sendPacketToServer(String drawPacket) {
+		System.out.println(drawPacket);
+	}
+	
+	public void sendPacketToCanvas() {
+		System.out.println("test");
 	}
 
 	/**
@@ -242,7 +279,30 @@ public class LobbyGUI extends JFrame {
 
 		connect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				// TODO: do something while connecting just in case it fails to
+				// connect because of a wrong IP
+				setVisibility(true);
 				// TODO: connect to server
+			}
+		});
+
+		userNameField.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// TODO: send new name to server
+				String newName = userNameField.getText();
+				userNameLabel.setText("User name: " + newName);
+				userNameField.setText("");
+			}
+		});
+
+		newBoardField.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// TODO: send new board to server
+				String newBoardName = newBoardField.getText();
+
+				newBoardField.setText("");
+				new Canvas(1000, 800, lobbyGUI);
+				dispose();
 			}
 		});
 
@@ -280,6 +340,7 @@ public class LobbyGUI extends JFrame {
 	public static void main(final String[] args) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
+				// the GUI needs to be instantiated with the Controller given ID
 				LobbyGUI main = new LobbyGUI(1000000000);
 				main.setVisible(true);
 			}
