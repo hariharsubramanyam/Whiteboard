@@ -15,7 +15,6 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 
 import adts.LobbyModel;
 
@@ -119,6 +118,10 @@ public class LobbyGUI extends JFrame {
 		userNameField = new JTextField();
 		userNameField.setName("userNameField");
 
+		userNameLabel.setVisible(true);
+		userNameSetLabel.setVisible(true);
+		userNameField.setVisible(true);
+		
 		/*
 		 * Initialize the third row with the board information
 		 */
@@ -129,10 +132,16 @@ public class LobbyGUI extends JFrame {
 		createButton = new JButton("GO");
 		createButton.setName("createButton");
 
+		newBoardLabel.setVisible(true);
+		newBoardField.setVisible(true);
+		userNameField.setVisible(true);
+
 		/*
 		 * Initialize the last row with the three tables inside their own
 		 * respective panes
 		 */
+		final String[] boardHeader = new String[] {"Board name", "Number of users"};
+		currentBoardsModel.insertRow(0,boardHeader);
 		currentBoards = new JTable(currentBoardsModel);
 		currentBoards.setName("currentBoards");
 		currentBoardsPane = new JScrollPane(currentBoards);
@@ -141,6 +150,8 @@ public class LobbyGUI extends JFrame {
 		currentBoards.setShowHorizontalLines(false);
 		currentBoards.setShowVerticalLines(false);
 
+		final String[] userHeader = new String[] {"Users in board"};
+		boardUsersModel.insertRow(0,userHeader);
 		boardUsers = new JTable(boardUsersModel);
 		boardUsers.setName("boardUsers");
 		boardUsersPane = new JScrollPane(boardUsers);
@@ -149,6 +160,8 @@ public class LobbyGUI extends JFrame {
 		boardUsers.setShowHorizontalLines(false);
 		boardUsers.setShowVerticalLines(false);
 
+		final String[] allUsersHeader = new String[] {"Users in lobby"};
+		allUsersModel.insertRow(0,allUsersHeader);
 		allUsers = new JTable(allUsersModel);
 		allUsers.setName("allUsers");
 		allUsersPane = new JScrollPane(allUsers);
@@ -187,9 +200,9 @@ public class LobbyGUI extends JFrame {
 								.addComponent(createButton, 90, 90, 90))
 				.addGroup(
 						layout.createSequentialGroup()
-								.addComponent(currentBoards, 250, 250, 250)
-								.addComponent(boardUsers, 200, 200, 200)
-								.addComponent(allUsers, 200, 200, 200)));
+								.addComponent(currentBoards, 250, 250, Short.MAX_VALUE)
+								.addComponent(boardUsers, 200, 200, Short.MAX_VALUE)
+								.addComponent(allUsers, 200, 200, Short.MAX_VALUE)));
 
 		layout.setVerticalGroup(layout
 				.createSequentialGroup()
@@ -212,9 +225,9 @@ public class LobbyGUI extends JFrame {
 								.addComponent(createButton, 25, 25, 25))
 				.addGroup(
 						layout.createParallelGroup()
-								.addComponent(currentBoards, 150, 150, 150)
-								.addComponent(boardUsers, 150, 150, 150)
-								.addComponent(allUsers, 150, 150, 150)));
+								.addComponent(currentBoards, 150, 150, Short.MAX_VALUE)
+								.addComponent(boardUsers, 150, 150, Short.MAX_VALUE)
+								.addComponent(allUsers, 150, 150, Short.MAX_VALUE)));
 
 		this.pack();
 
