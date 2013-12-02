@@ -130,7 +130,9 @@ public class UserThread extends Thread{
     private void handleConnection() throws IOException {
         try {
             for (String line = in.readLine(); line != null; line = in.readLine()) {
-                MessageHandler.handleMessage(line, this, this.lobbyModel);
+            	out.println(line);
+            	System.out.println(line);
+            	MessageHandler.handleMessage(line, this, this.lobbyModel);
             }
         }
         finally {

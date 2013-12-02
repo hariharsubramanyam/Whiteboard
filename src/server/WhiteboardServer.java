@@ -40,6 +40,7 @@ public class WhiteboardServer {
                     this.userThreads, this.lobbyModel);
             this.userThreads.add(thread);
             thread.start();
+            
         }
     }
 

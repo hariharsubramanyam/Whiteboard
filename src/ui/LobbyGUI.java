@@ -8,6 +8,7 @@ import java.awt.event.ComponentEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
@@ -91,6 +92,12 @@ public class LobbyGUI extends JFrame {
 	 */
 	private final DefaultTableModel allUsersModel = new DefaultTableModel(0, 1);
 	private final JScrollPane allUsersPane;
+
+	private Socket socket;
+	private PrintWriter out;
+	private BufferedReader in;
+
+	// TODO fix the above socket/out/in declarations
 
 	private LobbyModel lobby;
 	private int userID;
@@ -280,30 +287,11 @@ public class LobbyGUI extends JFrame {
 		System.out.println("test");
 	}
 
-	private void createOutgoingThread() {
-
-		Thread outgoingThread = new Thread(new Runnable() {
-			public void run() {
-				// handle the client
-				while (true) {
-					// final Socket socket;
-					
-						
-					try {
-						// handleConnection(socket);
-					} finally {
-					}
-				}
-			}
-		});
-		outgoingThread.start();
-	}
-	
 	private void createCanvas() {
 		// TODO: send new board to server
 		String newBoardName = newBoardField.getText();
 		sendPacketToServer(newBoardName);
-		
+
 		newBoardField.setText("");
 		String newName = userNameLabel.getText();
 		String user = newName.substring(11);
@@ -321,7 +309,15 @@ public class LobbyGUI extends JFrame {
 				// TODO: do something while connecting just in case it fails to
 				// connect because of a wrong IP
 				setVisibility(true);
-				createOutgoingThread();
+				try {
+					socket = new Socket(serverIpField.getText(), 4444);
+					out = new PrintWriter(socket.getOutputStream(), true);
+					in = new BufferedReader(new InputStreamReader(socket
+							.getInputStream()));
+				} catch (IOException ex) {
+					System.out.println("Couldn't connect");
+				}
+
 			}
 		});
 
@@ -329,6 +325,7 @@ public class LobbyGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				// TODO: send new name to server
 				String newName = userNameField.getText();
+				out.println(newName);
 				userNameLabel.setText("User name: " + newName);
 				userNameField.setText("");
 			}
@@ -339,7 +336,7 @@ public class LobbyGUI extends JFrame {
 				createCanvas();
 			}
 		});
-		
+
 		createButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// TODO: send new board to server
