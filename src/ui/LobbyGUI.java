@@ -310,7 +310,15 @@ public class LobbyGUI extends JFrame {
 				// connect because of a wrong IP
 				setVisibility(true);
 				try {
-					socket = new Socket(serverIpField.getText(), 4444);
+					String ip; // IP to connect to
+					if (serverIpField.getText().toLowerCase().equals("localhost")) {
+						ip = "127.0.0.1"; // localhost IP
+					}
+					else {
+						ip = serverIpField.getText();
+					}
+					
+					socket = new Socket(ip, 4444);
 					out = new PrintWriter(socket.getOutputStream(), true);
 					in = new BufferedReader(new InputStreamReader(socket
 							.getInputStream()));
