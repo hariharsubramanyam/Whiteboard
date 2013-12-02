@@ -1,5 +1,8 @@
 package ui;
 
+import protocol.ClientSideMessageMaker;
+import protocol.ClientSideResponseHandler;
+
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -50,6 +53,7 @@ public class LobbyGUI extends JFrame {
 
 	private Canvas canvas;
 
+	private final LobbyGUI thisGUI = this;
 	private final JLabel serverIpLabel;
 	private final JTextField serverIpField;
 	private final JLabel portLabel;
@@ -280,7 +284,7 @@ public class LobbyGUI extends JFrame {
 	}
 
 	public void sendPacketToServer(String drawPacket) {
-		System.out.println(drawPacket);
+		out.println(drawPacket);
 	}
 
 	public void sendPacketToCanvas() {
@@ -310,10 +314,36 @@ public class LobbyGUI extends JFrame {
 				// connect because of a wrong IP
 				setVisibility(true);
 				try {
-					socket = new Socket(serverIpField.getText(), 4444);
+					String ip; // IP to connect to
+					if (serverIpField.getText().toLowerCase().equals("localhost")) {
+						ip = "127.0.0.1"; // localhost IP
+					}
+					else {
+						ip = serverIpField.getText();
+					}
+					
+					socket = new Socket(ip, 4444);
 					out = new PrintWriter(socket.getOutputStream(), true);
 					in = new BufferedReader(new InputStreamReader(socket
 							.getInputStream()));
+					
+					// now create a thread for the incoming stream
+					Thread incomingStream = new Thread(new Runnable() {
+						public void run() {
+							// When we run the thread, have it repeatedly check for incoming responses (from the server).
+							String serverResponse;
+							while (true) {
+								try {
+									while ((serverResponse = in.readLine()) != null) {
+									    ClientSideResponseHandler.handleResponse(serverResponse, thisGUI);
+									}
+								} catch (IOException e) {
+									System.out.println("I/O error in incomingStream in LobbyGUI.java");
+								}
+							}
+						}
+					});
+					incomingStream.start();
 				} catch (IOException ex) {
 					System.out.println("Couldn't connect");
 				}
@@ -325,7 +355,8 @@ public class LobbyGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				// TODO: send new name to server
 				String newName = userNameField.getText();
-				out.println(newName);
+				String requestString = ClientSideMessageMaker.makeRequestStringSetUsername(newName);
+				out.println(requestString);
 				userNameLabel.setText("User name: " + newName);
 				userNameField.setText("");
 			}
@@ -334,12 +365,15 @@ public class LobbyGUI extends JFrame {
 		newBoardField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				createCanvas();
+				// TODO why is this createCanvas() here?
 			}
 		});
 
 		createButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// TODO: send new board to server
+				String boardName = newBoardField.getText();
+				String requestString = ClientSideMessageMaker.makeRequestStringCreateBoard(boardName);
+				out.println(requestString);
 				createCanvas();
 			}
 		});
