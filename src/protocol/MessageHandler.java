@@ -22,6 +22,7 @@ public class MessageHandler {
     public static final String REQ_GET_USERS_IN_MY_BOARD = "get_users_in_my_board";
     public static final String REQ_LEAVE_BOARD = "leave_board";
     public static final String REQ_DRAW = "req_draw";
+    public static final String REQ_CLEAR = "req_clear";
 
     public static final String RESP_BOARD_IDS = "board_ids";
     public static final String RESP_USERS_FOR_BOARD = "users_for_board_id";
@@ -31,6 +32,7 @@ public class MessageHandler {
     public static final String RESP_LOGGED_OUT = "logged_out";
     public static final String RESP_DRAW = "draw";
     public static final String RESP_BOARD_LINES = "board_lines";
+    public static final String RESP_CLEAR = "clear_board";
 
     public static void handleMessage(String input, UserThread userThread,
             LobbyModel lobbyModel) {
@@ -64,6 +66,8 @@ public class MessageHandler {
                     lobbyModel);
         } else if (command.equals(MessageHandler.REQ_DRAW)) {
             MessageHandler.handleRequestDraw(input, userThread, lobbyModel);
+        } else if (command.equals(MessageHandler.REQ_CLEAR)){
+            MessageHandler.handleRequestClear(input, userThread, lobbyModel);
         }
     }
 
@@ -267,6 +271,17 @@ public class MessageHandler {
         }
     }
 
+    private static void handleRequestClear(String input, UserThread userThread, LobbyModel lobbyModel){
+        int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread.getUserID());
+        if(boardID != -1){
+            lobbyModel.clearBoard(boardID);
+            String response = MessageHandler.makeResponseClearBoard();
+            userThread.broadcast(response);
+            userThread.output(response);
+        }else{
+            userThread.output(MessageHandler.makeResponseFailed());
+        }
+    }
     /*************************************************************/
 
     /**
@@ -360,6 +375,10 @@ public class MessageHandler {
         }
         return response.toString();
     }
+    
+    private static String makeResponseClearBoard(){
+        return MessageHandler.RESP_CLEAR;
+    }
 
     /*************************************************************/
 
@@ -405,5 +424,9 @@ public class MessageHandler {
 
     public static String makeRequestStringDraw(Line line) {
         return String.format("%s %s", MessageHandler.REQ_DRAW, line.toString());
+    }
+    
+    public static String makeClearRequest(){
+        return MessageHandler.REQ_CLEAR;
     }
 }
