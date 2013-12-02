@@ -8,6 +8,9 @@ import adts.Line;
 import adts.LobbyModel;
 import server.UserThread;
 
+/**
+ * Is used by the server to handle messages and update the ADT accordingly.
+ */
 public class MessageHandler {
     public static final String REQ_GET_BOARD_IDS = "get_board_ids";
     public static final String REQ_SET_USERNAME = "set_username";
