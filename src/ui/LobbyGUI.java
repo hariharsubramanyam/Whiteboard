@@ -53,7 +53,6 @@ public class LobbyGUI extends JFrame {
 
 	private Canvas canvas;
 
-	private final LobbyGUI thisGUI = this;
 	private final JLabel serverIpLabel;
 	private final JTextField serverIpField;
 	private final JLabel portLabel;
@@ -78,23 +77,22 @@ public class LobbyGUI extends JFrame {
 	 * This list contains two columns: one for the name of the boards and the
 	 * other with the number of users. It is inside of a scroll pane object.
 	 */
-	private final DefaultTableModel currentBoardsModel = new DefaultTableModel(
-			0, 2);
+	private final DefaultTableModel currentBoardsModel;
+
 	private final JScrollPane currentBoardsPane;
 
 	/**
 	 * This list contains one column: the name of the users in the board in
 	 * focus. It is inside of a scroll pane object.
 	 */
-	private final DefaultTableModel boardUsersModel = new DefaultTableModel(0,
-			1);
+	private final DefaultTableModel boardUsersModel;
 	private final JScrollPane boardUsersPane;
 
 	/**
 	 * This list contains one column for the name of the users. It is inside of
 	 * a scroll pane object.
 	 */
-	private final DefaultTableModel allUsersModel = new DefaultTableModel(0, 1);
+	private final DefaultTableModel allUsersModel;
 	private final JScrollPane allUsersPane;
 
 	private Socket socket;
@@ -115,6 +113,34 @@ public class LobbyGUI extends JFrame {
 	 * calling on makeActions().
 	 */
 	public LobbyGUI(int ID) {
+
+		currentBoardsModel = new DefaultTableModel(0, 2) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+
+				// Make the cells not editable
+				return false;
+			}
+		};
+
+		boardUsersModel = new DefaultTableModel(0, 1) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+
+				// Make the cells not editable
+				return false;
+			}
+		};
+
+		allUsersModel = new DefaultTableModel(0, 1) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+
+				// Make the cells not editable
+				return false;
+			}
+		};
+
 		this.userID = ID;
 		this.lobbyGUI = this;
 		/*
@@ -315,30 +341,34 @@ public class LobbyGUI extends JFrame {
 				setVisibility(true);
 				try {
 					String ip; // IP to connect to
-					if (serverIpField.getText().toLowerCase().equals("localhost")) {
+					if (serverIpField.getText().toLowerCase()
+							.equals("localhost")) {
 						ip = "127.0.0.1"; // localhost IP
-					}
-					else {
+					} else {
 						ip = serverIpField.getText();
 					}
-					
+
 					socket = new Socket(ip, 4444);
 					out = new PrintWriter(socket.getOutputStream(), true);
 					in = new BufferedReader(new InputStreamReader(socket
 							.getInputStream()));
-					
+
 					// now create a thread for the incoming stream
 					Thread incomingStream = new Thread(new Runnable() {
 						public void run() {
-							// When we run the thread, have it repeatedly check for incoming responses (from the server).
+							// When we run the thread, have it repeatedly check
+							// for incoming responses (from the server).
 							String serverResponse;
 							while (true) {
 								try {
 									while ((serverResponse = in.readLine()) != null) {
-									    ClientSideResponseHandler.handleResponse(serverResponse, thisGUI);
+										ClientSideResponseHandler
+												.handleResponse(serverResponse,
+														lobbyGUI);
 									}
 								} catch (IOException e) {
-									System.out.println("I/O error in incomingStream in LobbyGUI.java");
+									System.out
+											.println("I/O error in incomingStream in LobbyGUI.java");
 								}
 							}
 						}
@@ -355,7 +385,8 @@ public class LobbyGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				// TODO: send new name to server
 				String newName = userNameField.getText();
-				String requestString = ClientSideMessageMaker.makeRequestStringSetUsername(newName);
+				String requestString = ClientSideMessageMaker
+						.makeRequestStringSetUsername(newName);
 				out.println(requestString);
 				userNameLabel.setText("User name: " + newName);
 				userNameField.setText("");
@@ -372,7 +403,8 @@ public class LobbyGUI extends JFrame {
 		createButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String boardName = newBoardField.getText();
-				String requestString = ClientSideMessageMaker.makeRequestStringCreateBoard(boardName);
+				String requestString = ClientSideMessageMaker
+						.makeRequestStringCreateBoard(boardName);
 				out.println(requestString);
 				createCanvas();
 			}

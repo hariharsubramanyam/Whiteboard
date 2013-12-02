@@ -671,7 +671,7 @@ public class Canvas extends JPanel {
 					colorAction = color;
 				}
 			}
-			
+
 			final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
 			if (action.equals("Eraser")) {
@@ -694,7 +694,7 @@ public class Canvas extends JPanel {
 				}
 				createCurrentColorSquare(g);
 				repaint();
-				
+
 			}
 
 			if (action.equals("Stroke Small")) {
