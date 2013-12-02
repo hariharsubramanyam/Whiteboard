@@ -95,6 +95,10 @@ public class Canvas extends JPanel {
 	 */
 	private int currentColorSquareY;
 	/**
+	 * Size of the squares in the color palate
+	 */
+	private int sizeColorSquare;
+	/**
 	 * List with String representation of the text to display for each button.
 	 */
 	final List<String> buttonText;
@@ -206,6 +210,8 @@ public class Canvas extends JPanel {
 		// we use only a third the height to leave space for colors
 		this.buttonH = (int) ((windowH / 3.0) / numOfButtons);
 		this.buttonArc = 30;
+		// for the color palate
+		this.sizeColorSquare = (int) ((windowW - 2 * margins) / 4f);
 
 		// define boundaries of buttons
 		this.buttonBoundaries = new HashMap<String, List<Integer>>();
@@ -356,7 +362,7 @@ public class Canvas extends JPanel {
 	private void createText(Graphics2D g, String text, int x, int y,
 			Color textColor, int option, int size) {
 		g.setColor(textColor);
-		Font font = new Font("Comic Sans MS", option, size);
+		Font font = new Font("Verdana", option, size);
 		g.setFont(font);
 		g.drawString(text, x, y);
 	}
@@ -464,11 +470,18 @@ public class Canvas extends JPanel {
 	 *            the Graphics2D object to work with
 	 */
 	private void createCurrentColorSquare(Graphics2D g) {
-		int beginPosY = windowH / 3 + margins;
-		int sizeColorSquare = (int) ((windowW - 2 * margins) / 4f);
-		this.currentColorSquareY = beginPosY + 3 * sizeColorSquare + margins;
-		createFilledRectangle(g, 1, lineColor, margins,
-				this.currentColorSquareY, windowW / 4, windowW / 4);
+		int yStringPos = windowH / 3 + margins + 3 * this.sizeColorSquare
+				+ this.sizeColorSquare / 2;
+		int xStringPos = 3 * margins;
+		createText(g, "Current color: ", xStringPos, yStringPos, textColor, 1,
+				15);
+
+		this.currentColorSquareY = yStringPos - this.sizeColorSquare * 2 / 3;
+		int ySquarePos = this.currentColorSquareY + this.sizeColorSquare / 3;
+		int xSquarePos = windowW - margins - sizeColorSquare / 4 * 3;
+
+		createFilledRectangle(g, 1, lineColor, xSquarePos, ySquarePos,
+				sizeColorSquare / 2, sizeColorSquare / 2);
 	}
 
 	/**
@@ -658,6 +671,8 @@ public class Canvas extends JPanel {
 					colorAction = color;
 				}
 			}
+			
+			final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
 			if (action.equals("Eraser")) {
 				lineStroke = 25;
@@ -665,6 +680,8 @@ public class Canvas extends JPanel {
 				R = lineColor.getRed();
 				G = lineColor.getGreen();
 				B = lineColor.getBlue();
+				createCurrentColorSquare(g);
+				repaint();
 			}
 
 			if (action.equals("Pencil")) {
@@ -675,6 +692,9 @@ public class Canvas extends JPanel {
 					G = lineColor.getGreen();
 					B = lineColor.getBlue();
 				}
+				createCurrentColorSquare(g);
+				repaint();
+				
 			}
 
 			if (action.equals("Stroke Small")) {
@@ -700,7 +720,6 @@ public class Canvas extends JPanel {
 			}
 
 			if (colorAction != null) {
-				final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 				lineColor = colorAction;
 				R = lineColor.getRed();
 				G = lineColor.getGreen();
