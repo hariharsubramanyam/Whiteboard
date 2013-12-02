@@ -14,6 +14,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.RoundRectangle2D;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,7 +22,6 @@ import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
 import ui.LobbyGUI;
 
@@ -114,7 +114,11 @@ public class Canvas extends JPanel {
 	 */
 	private final int numOfButtons;
 
+	/**
+	 * The instance of the JFram we are constructing
+	 */
 	private final JFrame window;
+
 	/**
 	 * Width of shape drawing. It is the number of pixels any given line will
 	 * draw above/below. It is always odd so as to allow for equal number of
@@ -122,6 +126,12 @@ public class Canvas extends JPanel {
 	 */
 	private float lineStroke;
 	private final float windowStroke;
+
+	/**
+	 * The active list of users connected to the board. It gets wiped and
+	 * redrawn every time the controller provides new inputs
+	 */
+	private List<String> userNames;
 
 	// Color properties of different components in the board
 	private final Color buttonColor;
@@ -144,8 +154,14 @@ public class Canvas extends JPanel {
 	 *            width in pixels
 	 * @param height
 	 *            height in pixels
+	 * @param lobby
+	 *            the instance of the LobbyGUI Controller which handles the data
+	 *            traffic
+	 * @param user
+	 *            every Canvas must be instantiated with a user String which is
+	 *            the userName of the user who started it
 	 */
-	public Canvas(int width, int height, LobbyGUI lobby) {
+	public Canvas(int width, int height, LobbyGUI lobby, String user) {
 		this.lobby = lobby;
 
 		window = new JFrame("Freehand Canvas");
@@ -159,6 +175,10 @@ public class Canvas extends JPanel {
 		// note: we can't call makeDrawingBuffer here, because it only
 		// works *after* this canvas has been added to a window. Have to
 		// wait until paintComponent() is first called.
+
+		// Initialize the user list
+		userNames = new ArrayList<String>();
+		userNames.add(user);
 
 		// set the size of the canvas
 		this.canvasW = width;
@@ -221,6 +241,20 @@ public class Canvas extends JPanel {
 	}
 
 	/**
+	 * Controller can use this function to add users to the board.
+	 * 
+	 * @param newUsers
+	 *            a String composed of every username separated by white spaces
+	 */
+	public void addUser(String newUsers) {
+		String[] users = newUsers.split(" ");
+		userNames = new ArrayList<String>();
+		for (String newUser : users) {
+			userNames.add(newUser);
+		}
+	}
+
+	/**
 	 * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
 	 */
 	@Override
@@ -235,8 +269,9 @@ public class Canvas extends JPanel {
 		g.drawImage(drawingBuffer, 0, 0, null);
 	}
 
-	/*
-	 * Make the drawing buffer and draw some starting content for it.
+	/**
+	 * Make the drawing buffer and draw some starting content for it. It draws
+	 * all necessary starting components such as backgrounds and buttons
 	 */
 	private void makeDrawingBuffer() {
 		drawingBuffer = createImage(getWidth(), getHeight());
@@ -244,8 +279,9 @@ public class Canvas extends JPanel {
 		createButtonLayout();
 	}
 
-	/*
-	 * Make the drawing buffer entirely white.
+	/**
+	 * Make the drawing buffer's background. This includes a GRAY back rectangle
+	 * and the white "drawable canvas" on top.
 	 */
 	private void fillWithWhite() {
 		final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
@@ -364,20 +400,12 @@ public class Canvas extends JPanel {
 	}
 
 	/**
-	 * Creates the button window. This window contains all functional buttons as
-	 * well as the color charts
+	 * Draws the button layout window as well as the buttons and their text.
+	 * 
+	 * @param g
+	 *            the Graphics2D object to work with
 	 */
-	private void createButtonLayout() {
-		final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
-
-		// begin by creating the window layout background
-		createFilledRectangle(g, windowStroke, windowBackground, 0, 0, windowW,
-				windowH);
-
-		/*
-		 * Iterate through each of the buttons and apply all corresponding
-		 * properties to create them.
-		 */
+	private void createButtonsAndText(Graphics2D g) {
 		for (int i = 0; i < numOfButtons; ++i) {
 
 			String textToDisplay = buttonText.get(i);
@@ -396,10 +424,15 @@ public class Canvas extends JPanel {
 					1, 15);
 
 		}
+	}
 
-		/*
-		 * Create the color buttons, total of 12; 4 squares wide, 3 high
-		 */
+	/**
+	 * Draws the color palate and the "current color" square.
+	 * 
+	 * @param g
+	 *            the Graphics2D object to work with
+	 */
+	private void createColorPalate(Graphics2D g) {
 		int sizeColorSquare = (int) ((windowW - 2 * margins) / 4f);
 		int beginPosY = windowH / 3 + margins;
 
@@ -420,40 +453,79 @@ public class Canvas extends JPanel {
 								+ sizeColorSquare));
 			}
 		}
+	}
 
-		/*
-		 * Create a small square representing the current color selected. The
-		 * y-position is the beginning position of the color squares plus the
-		 * number of squares high, in this case 3, plus a margins.
-		 */
-
+	/**
+	 * Create a small square representing the current color selected. The
+	 * y-position is the beginning position of the color squares plus the number
+	 * of squares high, in this case 3, plus a margins.
+	 * 
+	 * @param g
+	 *            the Graphics2D object to work with
+	 */
+	private void createCurrentColorSquare(Graphics2D g) {
+		int beginPosY = windowH / 3 + margins;
+		int sizeColorSquare = (int) ((windowW - 2 * margins) / 4f);
 		this.currentColorSquareY = beginPosY + 3 * sizeColorSquare + margins;
-		int yPos = createLineColorSquare(g, this.lineColor);
-		
-
-		
-		createUserTable(yPos);
-
-	}
-
-	private void createUserTable(int yPos) {
-		final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
-
-		int xPos = margins;
-		yPos = yPos + margins;
-		int tableWidth = windowW - 2* margins;
-		int tableHeight = windowH - yPos - margins;
-		// begin by creating the window layout background
-		createFilledRectangle(g, 1, Color.WHITE, xPos, yPos, tableWidth,
-				tableHeight);
-
-		
-	}
-
-	private int createLineColorSquare(Graphics2D g, Color lineColor) {
 		createFilledRectangle(g, 1, lineColor, margins,
 				this.currentColorSquareY, windowW / 4, windowW / 4);
-		return this.currentColorSquareY + windowW/4;
+	}
+
+	/**
+	 * The Canvas has a table with all the users connected to it. This
+	 * information is handled by the function which the controller calls on to
+	 * add users.
+	 * 
+	 * @param g
+	 *            the Graphics2D object to work with
+	 */
+	private void createUserTable(Graphics2D g) {
+		int yPos = this.currentColorSquareY + windowW / 4;
+		int xPos = margins;
+		yPos = yPos + margins;
+		int tableWidth = windowW - 2 * margins;
+		int tableHeight = windowH - yPos - margins;
+
+		g.setColor(Color.CYAN);
+		// the background of the table
+		g.fillRect(xPos, yPos, tableWidth, tableHeight);
+
+		g.setColor(Color.BLACK);
+		g.setStroke(setStrokeWidth(2));
+		g.drawRect(xPos, yPos, tableWidth, tableHeight);
+
+		// the user header
+		g.drawRect(xPos, yPos, tableWidth, tableHeight / 10);
+		int xStringPos = 3 * margins;
+		int yStringPos = yPos + tableHeight / 15;
+		createText(g, "Active Users", xStringPos, yStringPos, textColor, 1, 15);
+
+		// insert the active users supplied by the controller
+		int startingY = yPos + tableHeight / 15 + 3 * margins;
+		int heightOfString = tableHeight / 15;
+		for (int i = 0; i < userNames.size(); i++) {
+			String tableEntry = String.valueOf(i + 1) + ". " + userNames.get(i);
+			createText(g, tableEntry, xStringPos, startingY + heightOfString
+					* (i + 1), textColor, 1, 13);
+		}
+
+	}
+
+	/**
+	 * Creates the button window. This window contains all functional buttons as
+	 * well as the color charts
+	 */
+	private void createButtonLayout() {
+		final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
+
+		// window layout background
+		createFilledRectangle(g, windowStroke, windowBackground, 0, 0, windowW,
+				windowH);
+
+		createButtonsAndText(g);
+		createColorPalate(g);
+		createCurrentColorSquare(g);
+		createUserTable(g);
 	}
 
 	/*
@@ -621,7 +693,7 @@ public class Canvas extends JPanel {
 				fillWithWhite();
 				lobby.sendPacketToServer("clear");
 			}
-			
+
 			if (action.equals("LEAVE BOARD")) {
 				window.dispose();
 				lobby.setVisible(true);
@@ -633,7 +705,7 @@ public class Canvas extends JPanel {
 				R = lineColor.getRed();
 				G = lineColor.getGreen();
 				B = lineColor.getBlue();
-				createLineColorSquare(g, lineColor);
+				createCurrentColorSquare(g);
 				repaint();
 			}
 

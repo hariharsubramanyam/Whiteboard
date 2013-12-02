@@ -298,6 +298,18 @@ public class LobbyGUI extends JFrame {
 		});
 		outgoingThread.start();
 	}
+	
+	private void createCanvas() {
+		// TODO: send new board to server
+		String newBoardName = newBoardField.getText();
+		sendPacketToServer(newBoardName);
+		
+		newBoardField.setText("");
+		String newName = userNameLabel.getText();
+		String user = newName.substring(11);
+		canvas = new Canvas(1000, 800, lobbyGUI, user);
+		setVisible(false);
+	}
 
 	/**
 	 * TODO
@@ -324,24 +336,14 @@ public class LobbyGUI extends JFrame {
 
 		newBoardField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// TODO: send new board to server
-				String newBoardName = newBoardField.getText();
-				sendPacketToServer(newBoardName);
-				
-				newBoardField.setText("");
-				canvas = new Canvas(1000, 800, lobbyGUI);
-				setVisible(false);
+				createCanvas();
 			}
 		});
 		
 		createButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// TODO: send new board to server
-				String newBoardName = newBoardField.getText();
-				sendPacketToServer(newBoardName);
-				newBoardField.setText("");
-				canvas = new Canvas(1000, 800, lobbyGUI);
-				setVisible(false);
+				createCanvas();
 			}
 		});
 
