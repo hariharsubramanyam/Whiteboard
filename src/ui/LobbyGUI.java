@@ -112,9 +112,10 @@ public class LobbyGUI extends JFrame {
 	 * components using JSwing. Finally, the action listeners are initiated by
 	 * calling on makeActions().
 	 */
+	@SuppressWarnings("serial")
 	public LobbyGUI(int ID) {
 
-		currentBoardsModel = new DefaultTableModel(0, 2) {
+		currentBoardsModel = new DefaultTableModel(0, 1) {
 			@Override
 			public boolean isCellEditable(int row, int column) {
 
@@ -179,8 +180,7 @@ public class LobbyGUI extends JFrame {
 		 * Initialize the last row with the three tables inside their own
 		 * respective panes
 		 */
-		final String[] boardHeader = new String[] { "Board name",
-				"Number of users" };
+		final String[] boardHeader = new String[] { "Board name" };
 		currentBoardsModel.insertRow(0, boardHeader);
 		currentBoards = new JTable(currentBoardsModel);
 		currentBoards.setName("currentBoards");
@@ -317,10 +317,30 @@ public class LobbyGUI extends JFrame {
 		System.out.println("test");
 	}
 
+	private void addRowToCurrentBoardsModel(final int tableNumber,
+			final String[] input) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				if (tableNumber == 0) {
+					currentBoardsModel.addRow(input);
+				}
+				else if (tableNumber == 1) {
+					boardUsersModel.addRow(input);
+				}
+				else if (tableNumber == 2) {
+					allUsersModel.addRow(input);
+				}
+			}
+		});
+	}
+
 	private void createCanvas() {
-		// TODO: send new board to server
-		String newBoardName = newBoardField.getText();
-		sendPacketToServer(newBoardName);
+		final String newBoardName = newBoardField.getText();
+
+		String requestString = ClientSideMessageMaker
+				.makeRequestStringCreateBoard(newBoardName);
+		out.println(requestString);
+		// TODO: the incoming boards will set the boards table
 
 		newBoardField.setText("");
 		String newName = userNameLabel.getText();
@@ -374,6 +394,15 @@ public class LobbyGUI extends JFrame {
 						}
 					});
 					incomingStream.start();
+
+					// populate the boards table
+					String[] boardIDs = ClientSideMessageMaker
+							.makeRequestStringGetBoardIDs()
+							.replace("board_ids", "").split(" ");
+					for (String boardID : boardIDs) {
+						addRowToCurrentBoardsModel(0, new String[] {boardID});
+					}
+
 				} catch (IOException ex) {
 					System.out.println("Couldn't connect");
 				}
@@ -383,8 +412,8 @@ public class LobbyGUI extends JFrame {
 
 		userNameField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// TODO: send new name to server
 				String newName = userNameField.getText();
+				// send new name to server
 				String requestString = ClientSideMessageMaker
 						.makeRequestStringSetUsername(newName);
 				out.println(requestString);
