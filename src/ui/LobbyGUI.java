@@ -398,7 +398,7 @@ public class LobbyGUI extends JFrame {
 					// populate the boards table
 					String[] boardIDs = ClientSideMessageMaker
 							.makeRequestStringGetBoardIDs()
-							.replace("board_ids", "").split(" ");
+							.replace("get_board_ids", "").split(" ");
 					for (String boardID : boardIDs) {
 						addRowToCurrentBoardsModel(0, new String[] {boardID});
 					}
