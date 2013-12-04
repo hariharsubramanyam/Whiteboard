@@ -66,7 +66,7 @@ public class MessageHandler {
                     lobbyModel);
         } else if (command.equals(MessageHandler.REQ_DRAW)) {
             MessageHandler.handleRequestDraw(input, userThread, lobbyModel);
-        } else if (command.equals(MessageHandler.REQ_CLEAR)){
+        } else if (command.equals(MessageHandler.REQ_CLEAR)) {
             MessageHandler.handleRequestClear(input, userThread, lobbyModel);
         }
     }
@@ -81,8 +81,8 @@ public class MessageHandler {
     }
 
     /**
-     * Req: set_username [newUserName] Resp (to all users in board):
-     * users_for_board [boardID] [userName1] [userName2]... Resp (to users who
+     * Req: set_username [newUserName] Resp (to all users):
+     * users_for_board [boardID] [userName1] [userName2]... Resp (to user who
      * made request): done
      */
     private static void handleRequestSetUsername(String input,
@@ -105,7 +105,8 @@ public class MessageHandler {
 
         String response = MessageHandler.makeResponseUsersForBoardID(boardID,
                 userNames);
-        userThread.broadcast(response, userIDsOfUsersInSameBoard);
+        // userThread.broadcast(response, userIDsOfUsersInSameBoard);
+        userThread.broadcast(response);
         userThread.output(MessageHandler.makeResponseDone());
     }
 
@@ -148,7 +149,7 @@ public class MessageHandler {
     }
 
     /**
-     * Req: join_board_id [boardID] Resp (to all users in board):
+     * Req: join_board_id [boardID] Resp (to all users):
      * users_for_board [boardID] [userName1] [userName2]... Resp (to user who
      * made request): board_lines [x1] [y1] [x2] [y2] [strokeThickness] [r] [g]
      * [b] [a] [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1]
@@ -167,7 +168,8 @@ public class MessageHandler {
             String response = MessageHandler.makeResponseUsersForBoardID(
                     boardID, userNames);
             List<Line> lines = lobbyModel.getLinesForBoardID(boardID);
-            userThread.broadcast(response, userIDsOfUsersInSameBoard);
+            //userThread.broadcast(response, userIDsOfUsersInSameBoard);
+            userThread.broadcast(response);
             userThread.output(MessageHandler.makeResponseBoardLines(lines));
         } catch (Exception ex) {
             userThread.output(MessageHandler.makeResponseFailed());
@@ -175,7 +177,7 @@ public class MessageHandler {
     }
 
     /**
-     * Req: logout Resp (to all users in board): users_for_board [boardID]
+     * Req: logout Resp (to all users): users_for_board [boardID]
      * [userName1] [userName2]... Resp (to user who made request): logged_out
      */
     private static void handleRequestLogout(String input,
@@ -189,7 +191,8 @@ public class MessageHandler {
             Set<String> userNames = lobbyModel.getUserNamesForBoardID(boardID);
             String response = MessageHandler.makeResponseUsersForBoardID(
                     boardID, userNames);
-            userThread.broadcast(response, userIDsOfUsersInSameBoard);
+            userThread.broadcast(response);
+            //userThread.broadcast(response, userIDsOfUsersInSameBoard);
         }
         userThread.output(MessageHandler.makeResponseLoggedOut());
         userThread.closeSocket();
@@ -213,7 +216,7 @@ public class MessageHandler {
     }
 
     /**
-     * Req: leave_board Resp (to all users in board): users_for_board [boardID]
+     * Req: leave_board Resp (to all users): users_for_board [boardID]
      * [userName1] [userName2]... Resp (to user who made request): done
      */
     private static void handleRequestLeaveBoard(String input,
@@ -227,7 +230,8 @@ public class MessageHandler {
             Set<String> userNames = lobbyModel.getUserNamesForBoardID(boardID);
             String response = MessageHandler.makeResponseUsersForBoardID(
                     boardID, userNames);
-            userThread.broadcast(response, userIDsOfUsersInSameBoard);
+            userThread.broadcast(response);
+            //userThread.broadcast(response, userIDsOfUsersInSameBoard);
         }
         userThread.output(MessageHandler.makeResponseDone());
     }
@@ -271,17 +275,27 @@ public class MessageHandler {
         }
     }
 
-    private static void handleRequestClear(String input, UserThread userThread, LobbyModel lobbyModel){
-        int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread.getUserID());
-        if(boardID != -1){
+    /**
+     * Req: req_clear
+     * Resp (to all users in board):clear
+     * Resp (to user who made request): done (if not in a board):
+     * failed
+     */
+    private static void handleRequestClear(String input, UserThread userThread,
+            LobbyModel lobbyModel) {
+        int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread
+                .getUserID());
+        if (boardID != -1) {
             lobbyModel.clearBoard(boardID);
             String response = MessageHandler.makeResponseClearBoard();
-            userThread.broadcast(response);
+            Set<Integer> userIDsInSameBoard = lobbyModel.getUserIDsForBoardID(boardID);
+            userThread.broadcast(response, userIDsInSameBoard);
             userThread.output(response);
-        }else{
+        } else {
             userThread.output(MessageHandler.makeResponseFailed());
         }
     }
+
     /*************************************************************/
 
     /**
@@ -375,8 +389,8 @@ public class MessageHandler {
         }
         return response.toString();
     }
-    
-    private static String makeResponseClearBoard(){
+
+    private static String makeResponseClearBoard() {
         return MessageHandler.RESP_CLEAR;
     }
 
@@ -425,8 +439,8 @@ public class MessageHandler {
     public static String makeRequestStringDraw(Line line) {
         return String.format("%s %s", MessageHandler.REQ_DRAW, line.toString());
     }
-    
-    public static String makeClearRequest(){
+
+    public static String makeClearRequest() {
         return MessageHandler.REQ_CLEAR;
     }
 }
