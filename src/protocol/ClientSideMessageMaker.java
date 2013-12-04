@@ -23,8 +23,8 @@ public class ClientSideMessageMaker {
     public static final String RESP_DRAW = "draw";
     public static final String RESP_BOARD_LINES = "board_lines";
 
-    public static String makeRequestStringGetBoardIDs() {
-        return ClientSideMessageMaker.REQ_GET_BOARD_IDS;
+    public static String[] makeRequestStringGetBoardIDs() {
+        return ClientSideMessageMaker.REQ_GET_BOARD_IDS.replace("get_board_ids", "").split(" ");
     }
 
     public static String makeRequestStringSetUsername(String newName) {

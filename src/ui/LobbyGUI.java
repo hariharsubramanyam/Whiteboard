@@ -1,20 +1,19 @@
 package ui;
 
-import protocol.ClientSideMessageMaker;
-import protocol.ClientSideResponseHandler;
-
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.MalformedURLException;
 import java.net.Socket;
-import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
@@ -26,8 +25,9 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
+import protocol.ClientSideMessageMaker;
+import protocol.ClientSideResponseHandler;
 import canvas.Canvas;
-import adts.LobbyModel;
 
 /**
  * 
@@ -66,20 +66,21 @@ public class LobbyGUI extends JFrame {
 	private final JLabel userNameSetLabel;
 	private final JTextField userNameField;
 
-	private final JTable currentBoards;
-	private final JTable boardUsers;
-	private final JTable allUsers;
+	private final JTable boardsTable;
+	private final JTable boardUsersTable;
+	private final JTable lobbyUsersTable;
 
 	// create a grouping to help localize JObjects
 	private final GroupLayout layout;
 
-	/**
-	 * This list contains two columns: one for the name of the boards and the
-	 * other with the number of users. It is inside of a scroll pane object.
-	 */
-	private final DefaultTableModel currentBoardsModel;
+	private final Map<Integer, DefaultTableModel> hashOfAllModels;
 
-	private final JScrollPane currentBoardsPane;
+	/**
+	 * This list contains one column for the name of the boards. It is inside of
+	 * a scroll pane object.
+	 */
+	private final DefaultTableModel boardsModel;
+	private final JScrollPane boardsPane;
 
 	/**
 	 * This list contains one column: the name of the users in the board in
@@ -92,8 +93,8 @@ public class LobbyGUI extends JFrame {
 	 * This list contains one column for the name of the users. It is inside of
 	 * a scroll pane object.
 	 */
-	private final DefaultTableModel allUsersModel;
-	private final JScrollPane allUsersPane;
+	private final DefaultTableModel lobbyUsersModel;
+	private final JScrollPane lobbyUsersPane;
 
 	private Socket socket;
 	private PrintWriter out;
@@ -101,7 +102,6 @@ public class LobbyGUI extends JFrame {
 
 	// TODO fix the above socket/out/in declarations
 
-	private LobbyModel lobby;
 	private int userID;
 	private LobbyGUI lobbyGUI;
 
@@ -113,9 +113,9 @@ public class LobbyGUI extends JFrame {
 	 * calling on makeActions().
 	 */
 	@SuppressWarnings("serial")
-	public LobbyGUI(int ID) {
+	public LobbyGUI() {
 
-		currentBoardsModel = new DefaultTableModel(0, 1) {
+		boardsModel = new DefaultTableModel(0, 1) {
 			@Override
 			public boolean isCellEditable(int row, int column) {
 
@@ -133,7 +133,7 @@ public class LobbyGUI extends JFrame {
 			}
 		};
 
-		allUsersModel = new DefaultTableModel(0, 1) {
+		lobbyUsersModel = new DefaultTableModel(0, 1) {
 			@Override
 			public boolean isCellEditable(int row, int column) {
 
@@ -142,7 +142,11 @@ public class LobbyGUI extends JFrame {
 			}
 		};
 
-		this.userID = ID;
+		hashOfAllModels = new HashMap<Integer, DefaultTableModel>();
+		hashOfAllModels.put(0, boardsModel);
+		hashOfAllModels.put(1, boardUsersModel);
+		hashOfAllModels.put(2, lobbyUsersModel);
+
 		this.lobbyGUI = this;
 		/*
 		 * Initialize the top row with the server information
@@ -181,34 +185,34 @@ public class LobbyGUI extends JFrame {
 		 * respective panes
 		 */
 		final String[] boardHeader = new String[] { "Board name" };
-		currentBoardsModel.insertRow(0, boardHeader);
-		currentBoards = new JTable(currentBoardsModel);
-		currentBoards.setName("currentBoards");
-		currentBoardsPane = new JScrollPane(currentBoards);
-		currentBoardsPane.setName("currentBoardsPane");
+		boardsModel.insertRow(0, boardHeader);
+		boardsTable = new JTable(boardsModel);
+		boardsTable.setName("boardsTable");
+		boardsPane = new JScrollPane(boardsTable);
+		boardsPane.setName("boardsPane");
 		// no lines
-		currentBoards.setShowHorizontalLines(false);
-		currentBoards.setShowVerticalLines(false);
+		boardsTable.setShowHorizontalLines(false);
+		boardsTable.setShowVerticalLines(false);
 
-		final String[] userHeader = new String[] { "Users in board" };
-		boardUsersModel.insertRow(0, userHeader);
-		boardUsers = new JTable(boardUsersModel);
-		boardUsers.setName("boardUsers");
-		boardUsersPane = new JScrollPane(boardUsers);
+		final String[] boardUsersHeader = new String[] { "Users in board" };
+		boardUsersModel.insertRow(0, boardUsersHeader);
+		boardUsersTable = new JTable(boardUsersModel);
+		boardUsersTable.setName("boardUsersTable");
+		boardUsersPane = new JScrollPane(boardUsersTable);
 		boardUsersPane.setName("boardUsersPane");
 		// no lines
-		boardUsers.setShowHorizontalLines(false);
-		boardUsers.setShowVerticalLines(false);
+		boardUsersTable.setShowHorizontalLines(false);
+		boardUsersTable.setShowVerticalLines(false);
 
-		final String[] allUsersHeader = new String[] { "Users in lobby" };
-		allUsersModel.insertRow(0, allUsersHeader);
-		allUsers = new JTable(allUsersModel);
-		allUsers.setName("allUsers");
-		allUsersPane = new JScrollPane(allUsers);
-		allUsersPane.setName("allUsersPane");
+		final String[] lobbyUsersHeader = new String[] { "Users in lobby" };
+		lobbyUsersModel.insertRow(0, lobbyUsersHeader);
+		lobbyUsersTable = new JTable(lobbyUsersModel);
+		lobbyUsersTable.setName("lobbyUsersTable");
+		lobbyUsersPane = new JScrollPane(lobbyUsersTable);
+		lobbyUsersPane.setName("lobbyUsersPane");
 		// no lines
-		allUsers.setShowHorizontalLines(false);
-		allUsers.setShowVerticalLines(false);
+		lobbyUsersTable.setShowHorizontalLines(false);
+		lobbyUsersTable.setShowVerticalLines(false);
 
 		// Default settings and layout setup
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -242,11 +246,11 @@ public class LobbyGUI extends JFrame {
 								.addComponent(createButton, 130, 130, 130))
 				.addGroup(
 						layout.createSequentialGroup()
-								.addComponent(currentBoards, 250, 250,
+								.addComponent(boardsTable, 250, 250,
 										Short.MAX_VALUE)
-								.addComponent(boardUsers, 200, 200,
+								.addComponent(boardUsersTable, 200, 200,
 										Short.MAX_VALUE)
-								.addComponent(allUsers, 200, 200,
+								.addComponent(lobbyUsersTable, 200, 200,
 										Short.MAX_VALUE)));
 
 		layout.setVerticalGroup(layout
@@ -269,11 +273,11 @@ public class LobbyGUI extends JFrame {
 								.addComponent(createButton, 25, 25, 25))
 				.addGroup(
 						layout.createParallelGroup()
-								.addComponent(currentBoards, 150, 150,
+								.addComponent(boardsTable, 150, 150,
 										Short.MAX_VALUE)
-								.addComponent(boardUsers, 150, 150,
+								.addComponent(boardUsersTable, 150, 150,
 										Short.MAX_VALUE)
-								.addComponent(allUsers, 150, 150,
+								.addComponent(lobbyUsersTable, 150, 150,
 										Short.MAX_VALUE)));
 
 		setVisibility(false);
@@ -303,9 +307,9 @@ public class LobbyGUI extends JFrame {
 		newBoardField.setVisible(set);
 		userNameField.setVisible(set);
 		createButton.setVisible(set);
-		currentBoards.setVisible(set);
-		boardUsers.setVisible(set);
-		allUsers.setVisible(set);
+		boardsTable.setVisible(set);
+		boardUsersTable.setVisible(set);
+		lobbyUsersTable.setVisible(set);
 		this.pack();
 	}
 
@@ -321,19 +325,12 @@ public class LobbyGUI extends JFrame {
 			final String[] input) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				if (tableNumber == 0) {
-					currentBoardsModel.addRow(input);
-				}
-				else if (tableNumber == 1) {
-					boardUsersModel.addRow(input);
-				}
-				else if (tableNumber == 2) {
-					allUsersModel.addRow(input);
-				}
+				hashOfAllModels.get(tableNumber).addRow(input);
 			}
 		});
 	}
 
+	// TODO
 	private void createCanvas() {
 		final String newBoardName = newBoardField.getText();
 
@@ -349,6 +346,34 @@ public class LobbyGUI extends JFrame {
 		setVisible(false);
 	}
 
+	private void clearAllRows(final int tableNumber) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				DefaultTableModel modelToClear = hashOfAllModels.get(tableNumber);
+				int rowCount = modelToClear.getRowCount();
+				for (int i = 0; i < rowCount; i++) {
+					modelToClear.removeRow(i);
+				}
+			}
+		});
+	}
+
+	// TODO
+	private void updateBoardUsers(final int whichUserTable) {
+		clearAllRows(whichUserTable);
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				String[] boardIDs = ClientSideMessageMaker
+						.makeRequestStringGetBoardIDs();
+				out.println(requestString);
+				for (String boardID : boardIDs) {
+					addRowToCurrentBoardsModel(whichUserTable, new String[] { boardID });
+				}
+				;
+			}
+		});
+	}
+
 	/**
 	 * TODO
 	 */
@@ -358,7 +383,6 @@ public class LobbyGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				// TODO: do something while connecting just in case it fails to
 				// connect because of a wrong IP
-				setVisibility(true);
 				try {
 					String ip; // IP to connect to
 					if (serverIpField.getText().toLowerCase()
@@ -372,6 +396,8 @@ public class LobbyGUI extends JFrame {
 					out = new PrintWriter(socket.getOutputStream(), true);
 					in = new BufferedReader(new InputStreamReader(socket
 							.getInputStream()));
+
+					setVisibility(true);
 
 					// now create a thread for the incoming stream
 					Thread incomingStream = new Thread(new Runnable() {
@@ -396,11 +422,11 @@ public class LobbyGUI extends JFrame {
 					incomingStream.start();
 
 					// populate the boards table
-					String[] boardIDs = ClientSideMessageMaker
-							.makeRequestStringGetBoardIDs()
-							.replace("get_board_ids", "").split(" ");
+					// String[] boardIDs = ClientSideMessageMaker
+					// .makeRequestStringGetBoardIDs();
+					String[] boardIDs = new String[] { "0", "1", "2" };
 					for (String boardID : boardIDs) {
-						addRowToCurrentBoardsModel(0, new String[] {boardID});
+						addRowToCurrentBoardsModel(0, new String[] { boardID });
 					}
 
 				} catch (IOException ex) {
@@ -425,7 +451,6 @@ public class LobbyGUI extends JFrame {
 		newBoardField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				createCanvas();
-				// TODO why is this createCanvas() here?
 			}
 		});
 
@@ -440,26 +465,44 @@ public class LobbyGUI extends JFrame {
 		});
 
 		// setting the scroll pane to automatically scroll to the last row
-		currentBoards.addComponentListener(new ComponentAdapter() {
+		boardsTable.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
-				currentBoards.scrollRectToVisible(currentBoards.getCellRect(
-						currentBoards.getRowCount() - 1, 0, true));
+				boardsTable.scrollRectToVisible(boardsTable.getCellRect(
+						boardsTable.getRowCount() - 1, 0, true));
 			}
 		});
 
 		// setting the scroll pane to automatically scroll to the last row
-		boardUsers.addComponentListener(new ComponentAdapter() {
+		boardUsersTable.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
-				boardUsers.scrollRectToVisible(boardUsers.getCellRect(
-						boardUsers.getRowCount() - 1, 0, true));
+				boardUsersTable.scrollRectToVisible(boardUsersTable
+						.getCellRect(boardUsersTable.getRowCount() - 1, 0, true));
 			}
 		});
 
 		// setting the scroll pane to automatically scroll to the last row
-		allUsers.addComponentListener(new ComponentAdapter() {
+		lobbyUsersTable.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
-				allUsers.scrollRectToVisible(allUsers.getCellRect(
-						allUsers.getRowCount() - 1, 0, true));
+				lobbyUsersTable.scrollRectToVisible(lobbyUsersTable
+						.getCellRect(lobbyUsersTable.getRowCount() - 1, 0, true));
+			}
+		});
+
+		boardsTable.addMouseListener(new MouseAdapter() {
+			public synchronized void mouseClicked(MouseEvent e) {
+
+				JTable target = (JTable) e.getSource();
+				int row = target.getSelectedRow();
+
+				if (e.getClickCount() == 2 && row > 0) {
+					ClientSideMessageMaker
+							.makeRequestStringJoinBoardID(row - 1);
+					createCanvas();
+				}
+
+				else if (e.getClickCount() == 1 && row > 0) {
+					updateBoardUsers(1);
+				}
 			}
 		});
 
@@ -474,9 +517,10 @@ public class LobbyGUI extends JFrame {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				// the GUI needs to be instantiated with the Controller given ID
-				LobbyGUI main = new LobbyGUI(1000000000);
+				LobbyGUI main = new LobbyGUI();
 				main.setVisible(true);
 			}
 		});
 	}
+
 }
