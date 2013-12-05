@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -317,11 +318,11 @@ public class LobbyGUI extends JFrame {
 		out.println(drawPacket);
 	}
 
-	public void sendPacketToCanvas() {
-		System.out.println("test");
+	public void sendPacketToCanvas(ArrayList<Integer> data) {
+		canvas.drawLineSegmentPacket(data); 
 	}
 
-	private void addRowToCurrentBoardsModel(final int tableNumber,
+	public void addRowToCurrentBoardsModel(final int tableNumber,
 			final String[] input) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
@@ -331,7 +332,7 @@ public class LobbyGUI extends JFrame {
 	}
 
 	// TODO
-	private void createCanvas() {
+	public void createCanvas() {
 		final String newBoardName = newBoardField.getText();
 
 		String requestString = ClientSideMessageMaker
@@ -346,7 +347,7 @@ public class LobbyGUI extends JFrame {
 		setVisible(false);
 	}
 
-	private void clearAllRows(final int tableNumber) {
+	public void clearAllRows(final int tableNumber) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				DefaultTableModel modelToClear = hashOfAllModels.get(tableNumber);
@@ -359,16 +360,13 @@ public class LobbyGUI extends JFrame {
 	}
 
 	// TODO
-	private void updateBoardUsers(final int whichUserTable) {
+	public void updateBoardUsers(final int whichUserTable) {
 		clearAllRows(whichUserTable);
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				String[] boardIDs = ClientSideMessageMaker
+				String requestString = ClientSideMessageMaker
 						.makeRequestStringGetBoardIDs();
 				out.println(requestString);
-				for (String boardID : boardIDs) {
-					addRowToCurrentBoardsModel(whichUserTable, new String[] { boardID });
-				}
 				;
 			}
 		});
@@ -408,6 +406,7 @@ public class LobbyGUI extends JFrame {
 							while (true) {
 								try {
 									while ((serverResponse = in.readLine()) != null) {
+//										System.out.println(serverResponse);
 										ClientSideResponseHandler
 												.handleResponse(serverResponse,
 														lobbyGUI);
@@ -456,10 +455,6 @@ public class LobbyGUI extends JFrame {
 
 		createButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String boardName = newBoardField.getText();
-				String requestString = ClientSideMessageMaker
-						.makeRequestStringCreateBoard(boardName);
-				out.println(requestString);
 				createCanvas();
 			}
 		});

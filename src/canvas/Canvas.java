@@ -23,7 +23,9 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import protocol.ClientSideMessageMaker;
 import ui.LobbyGUI;
+import adts.Line;
 
 /**
  * Canvas represents a drawing surface that allows the user to draw on it
@@ -545,16 +547,29 @@ public class Canvas extends JPanel {
 	 * Draw a line between two points (x1, y1) and (x2, y2), specified in pixels
 	 * relative to the upper-left corner of the drawing buffer.
 	 */
-	private void drawLineSegment(int x1, int y1, int x2, int y2) {
+	public synchronized void drawLineSegment(int x1, int y1, int x2, int y2, float stroke, int R, int G, int B, int ALPHA) {
 		Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
-		g.setStroke(new BasicStroke(this.lineStroke, 1, 1));
-		g.setColor(this.lineColor);
+		g.setStroke(new BasicStroke(stroke, 1, 1));
+		g.setColor(new Color(R,G,B,ALPHA));
 
-		String packetToSend = String.format("%d %d %d %d %f %d %d %d %d", x1,
-				y1, x2, y2, this.lineStroke, R, G, B, ALPHA);
+		String packetToSend = ClientSideMessageMaker.makeRequestStringDraw(new Line( x1,
+				y1, x2, y2, this.lineStroke, R, G, B, ALPHA));
 		lobby.sendPacketToServer(packetToSend);
-		g.drawLine(x1, y1, x2, y2);
+//		g.drawLine(x1, y1, x2, y2);
+
+		// IMPORTANT! every time we draw on the internal drawing buffer, we
+		// have to notify Swing to repaint this component on the screen.
+//		this.repaint();
+	}
+	
+	public synchronized void drawLineSegmentPacket(ArrayList<Integer> data) {
+		Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
+
+		g.setStroke(new BasicStroke(data.get(4), 1, 1));
+		g.setColor(new Color(data.get(5),data.get(6),data.get(7),data.get(8)));
+
+		g.drawLine(data.get(0),data.get(1),data.get(2),data.get(3));
 
 		// IMPORTANT! every time we draw on the internal drawing buffer, we
 		// have to notify Swing to repaint this component on the screen.
@@ -637,7 +652,7 @@ public class Canvas extends JPanel {
 			int x = pos[0];
 			int y = pos[1];
 
-			drawLineSegment(lastPos[0], lastPos[1], x, y);
+			drawLineSegment(lastPos[0], lastPos[1], x, y, lineStroke, R,G,B,ALPHA);
 			lastPos = adjustedPos(x, y);
 
 		}

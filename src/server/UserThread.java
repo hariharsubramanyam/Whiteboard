@@ -149,7 +149,6 @@ public class UserThread extends Thread {
 			for (String line = in.readLine(); line != null; line = in
 					.readLine()) {
 				out.println(line);
-				System.out.println(line);
 				MessageHandler.handleMessage(line, this, this.lobbyModel);
 			}
 		} finally {
