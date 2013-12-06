@@ -161,6 +161,7 @@ public class LobbyGUI extends JFrame implements Client{
 	                lstMdlBoards.addElement("Board " + boardID);
 	            }
                 lstMdlBoards.addElement("Create a new board...");
+                lstBoards.setSelectedIndex(lstMdlBoards.size()-1);
 	        }
 	    });
 	}
