@@ -125,7 +125,9 @@ public class MessageHandler {
         lobbyModel.userJoinBoard(userID, boardID);
         userThread.broadcast(MessageHandler.makeResponseBoardIDs(lobbyModel
                 .getWhiteboardIDs()));
-        userThread.output(MessageHandler.makeResponseDone());
+        userThread.output(MessageHandler.makeResponseBoardIDs(lobbyModel
+                .getWhiteboardIDs()));
+        
     }
 
     /**
