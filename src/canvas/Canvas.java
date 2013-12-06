@@ -542,29 +542,17 @@ public class Canvas extends JPanel implements Client{
 	 * Draw a line between two points (x1, y1) and (x2, y2), specified in pixels
 	 * relative to the upper-left corner of the drawing buffer.
 	 */
-	public synchronized void drawLineSegment(Line l) {
+	public synchronized void drawLineSegment(Line l, boolean withRepaint) {
 		Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
 		g.setStroke(new BasicStroke(l.getStrokeThickness(), 1, 1));
 		g.setColor(new Color(l.getR(),l.getG(),l.getB(),l.getA()));
 		
 		g.drawLine(l.getX1(), l.getY1(), l.getX2(), l.getY2());
-		this.repaint();
+		if(withRepaint){
+		    this.repaint();
+		}
 	}
-	
-	public synchronized void drawLineSegmentPacket(ArrayList<Integer> data) {
-		Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
-
-		g.setStroke(new BasicStroke(data.get(4), 1, 1));
-		g.setColor(new Color(data.get(5),data.get(6),data.get(7),data.get(8)));
-
-		g.drawLine(data.get(0),data.get(1),data.get(2),data.get(3));
-
-		// IMPORTANT! every time we draw on the internal drawing buffer, we
-		// have to notify Swing to repaint this component on the screen.
-		this.repaint();
-	}
-
 	/**
 	 * Set strokeWidth
 	 * 
@@ -757,8 +745,23 @@ public class Canvas extends JPanel implements Client{
         SwingUtilities.invokeLater(new Thread(){
             @Override
             public void run() {
-                drawLineSegment(line);
+                drawLineSegment(line, true);
             }    
+        });
+        
+    }
+
+    @Override
+    public void onReceiveBoardLines(List<Line> ls) {
+        final List<Line> lines = ls;
+        SwingUtilities.invokeLater(new Thread(){
+            @Override
+            public void run() {
+                for (Line line : lines){
+                    drawLineSegment(line, false);
+                }
+                repaint();
+            }
         });
         
     }

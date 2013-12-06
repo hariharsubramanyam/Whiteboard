@@ -210,18 +210,24 @@ public class LobbyGUI extends JFrame implements Client{
         @Override
         public void actionPerformed(ActionEvent e) {
             String selectedItem = (String)lstBoards.getSelectedValue();
+            canvas = new Canvas(1000, 1000, self, user.getName());
+            canvas.setVisible(true);
             if(selectedItem.equals("Create a new board...")){
                 out.println(MessageHandler.makeRequestStringCreateBoard("MyBoard"));
             }else{
                 out.println(MessageHandler.makeRequestStringJoinBoardID(Integer.parseInt(selectedItem.replace("Board ", ""))));
             }
-            canvas = new Canvas(1000, 1000, self, user.getName());
-            canvas.setVisible(true);
+            
         }
 	}
 
     @Override
     public void onReceiveDraw(Line l) {
         canvas.onReceiveDraw(l);
+    }
+
+    @Override
+    public void onReceiveBoardLines(List<Line> ls) {
+        canvas.onReceiveBoardLines(ls);
     }
 }

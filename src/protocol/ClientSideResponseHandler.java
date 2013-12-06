@@ -26,6 +26,8 @@ public class ClientSideResponseHandler {
 	        handleWelcome(tokens, userGUI);
 	    } else if (command.equals(MessageHandler.RESP_DRAW)){
 	        handleDraw(tokens,userGUI);
+	    } else if (command.equals(MessageHandler.RESP_BOARD_LINES)){
+	        handleBoardLines(tokens, userGUI);
 	    }
 	}
 	
@@ -58,4 +60,25 @@ public class ClientSideResponseHandler {
 	    Line l = new Line(x1, y1, x2, y2, strokeThickness, r, g, b, a);
         userGUI.onReceiveDraw(l);
     }
+	
+	public static void handleBoardLines(String[] tokens, LobbyGUI userGUI){
+	    List<Line> lines = new ArrayList<Line>();
+	    int i = 0;
+	    int x1, y1, x2, y2, r, g, b, a;
+	    float strokeThickness;
+	    while(i < tokens.length){
+	        x1 = Integer.parseInt(tokens[i]);
+	        y1 = Integer.parseInt(tokens[i+1]);
+	        x2 = Integer.parseInt(tokens[i+2]);
+	        y2 = Integer.parseInt(tokens[i+3]);
+	        strokeThickness = Float.parseFloat(tokens[i+4]);
+	        r = Integer.parseInt(tokens[i+5]);
+	        g = Integer.parseInt(tokens[i+6]);
+	        b = Integer.parseInt(tokens[i+7]);
+	        a = Integer.parseInt(tokens[i+8]);
+	        i = i + 9;
+	        lines.add(new Line(x1, y1, x2, y2, strokeThickness, r, g, b, a));
+	    }
+	    userGUI.onReceiveBoardLines(lines);
+	}
 }
