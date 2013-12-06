@@ -24,18 +24,12 @@ public class WhiteboardServer {
 		this.userThreads = new ArrayList<UserThread>();
 
 		this.boardIDs = new ArrayList<Integer>();
-		int id = this.lobbyModel.addBoard();
-		this.boardIDs.add(id);
-		id = this.lobbyModel.addBoard();
-		this.boardIDs.add(id);
 	}
 
 	public void serve() throws IOException {
 		while (true) {
 			final Socket socket = serverSocket.accept();
 			int userID = this.lobbyModel.addUser();
-			this.lobbyModel.userJoinBoard(userID,
-					this.boardIDs.get(userID % this.boardIDs.size()));
 			UserThread thread = new UserThread(socket, userID,
 					this.userThreads, this.lobbyModel);
 			this.userThreads.add(thread);

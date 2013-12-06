@@ -34,6 +34,8 @@ public class ClientSideResponseHandler {
 	private static void handleBoardIDs(String[] tokens, LobbyGUI userGUI){
 	    List<Integer> boardIDs = new ArrayList<Integer>();
 	    for (String token : tokens){
+	        if(token.equals(""))
+	            continue;
 	        boardIDs.add(Integer.parseInt(token));
 	    }
 	    userGUI.onReceiveBoardIDs(boardIDs);
