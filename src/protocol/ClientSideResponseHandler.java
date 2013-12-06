@@ -67,6 +67,8 @@ public class ClientSideResponseHandler {
 	    int x1, y1, x2, y2, r, g, b, a;
 	    float strokeThickness;
 	    while(i < tokens.length){
+	        if(tokens[0].equals(""))
+	            continue;
 	        x1 = Integer.parseInt(tokens[i]);
 	        y1 = Integer.parseInt(tokens[i+1]);
 	        x2 = Integer.parseInt(tokens[i+2]);
