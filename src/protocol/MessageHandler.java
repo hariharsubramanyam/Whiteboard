@@ -261,7 +261,7 @@ public class MessageHandler {
             int b = Integer.parseInt(splitInput[8]);
             int a = Integer.parseInt(splitInput[9]);
 
-            Line line = new Line(x1, y1, x2, y2, strokeThickness, a, r, g, b);
+            Line line = new Line(x1, y1, x2, y2, strokeThickness, r, g, b, a);
             lobbyModel.addLineToBoardID(line, boardID);
 
             Set<Integer> userIDsOfUsersInSameBoard = lobbyModel

@@ -143,10 +143,6 @@ public class Canvas extends JPanel {
 	private final Color buttonColor;
 	private Color textColor;
 	private Color lineColor;
-	private int R;
-	private int G;
-	private int B;
-	private int ALPHA;
 	private final Color windowBackground;
 	private Color boardColor;
 	private final List<Color> basicColors;
@@ -234,10 +230,6 @@ public class Canvas extends JPanel {
 		this.windowBackground = new Color(141, 233, 181, 255); // light green
 		this.textColor = new Color(0); // black
 		this.lineColor = Color.BLACK; // default to black
-		this.R = this.lineColor.getRed();
-		this.G = this.lineColor.getGreen();
-		this.B = this.lineColor.getBlue();
-		this.ALPHA = 180;
 		this.boardColor = Color.WHITE; // default to white
 		this.basicColors = Arrays.asList(Color.BLACK, Color.BLUE, Color.CYAN,
 				Color.DARK_GRAY, Color.GRAY, Color.GREEN, Color.MAGENTA,
@@ -547,20 +539,16 @@ public class Canvas extends JPanel {
 	 * Draw a line between two points (x1, y1) and (x2, y2), specified in pixels
 	 * relative to the upper-left corner of the drawing buffer.
 	 */
-	public synchronized void drawLineSegment(int x1, int y1, int x2, int y2, float stroke, int R, int G, int B, int ALPHA) {
+	public synchronized void drawLineSegment(int x1, int y1, int x2, int y2, float stroke, int rColor, int gColor, int bColor, int colorAlpha) {
 		Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
 		g.setStroke(new BasicStroke(stroke, 1, 1));
-		g.setColor(new Color(R,G,B,ALPHA));
+		g.setColor(new Color(rColor,gColor,bColor,colorAlpha));
 
+		
 		String packetToSend = ClientSideMessageMaker.makeRequestStringDraw(new Line( x1,
-				y1, x2, y2, this.lineStroke, R, G, B, ALPHA));
+				y1, x2, y2, this.lineStroke, rColor, gColor, bColor, colorAlpha));
 		lobby.sendPacketToServer(packetToSend);
-//		g.drawLine(x1, y1, x2, y2);
-
-		// IMPORTANT! every time we draw on the internal drawing buffer, we
-		// have to notify Swing to repaint this component on the screen.
-//		this.repaint();
 	}
 	
 	public synchronized void drawLineSegmentPacket(ArrayList<Integer> data) {
@@ -652,7 +640,7 @@ public class Canvas extends JPanel {
 			int x = pos[0];
 			int y = pos[1];
 
-			drawLineSegment(lastPos[0], lastPos[1], x, y, lineStroke, R,G,B,ALPHA);
+			drawLineSegment(lastPos[0], lastPos[1], x, y, lineStroke, lineColor.getRed(),lineColor.getGreen(),lineColor.getBlue(),lineColor.getAlpha());
 			lastPos = adjustedPos(x, y);
 
 		}
@@ -692,9 +680,6 @@ public class Canvas extends JPanel {
 			if (action.equals("Eraser")) {
 				lineStroke = 25;
 				lineColor = Color.WHITE;
-				R = lineColor.getRed();
-				G = lineColor.getGreen();
-				B = lineColor.getBlue();
 				createCurrentColorSquare(g);
 				repaint();
 			}
@@ -703,9 +688,6 @@ public class Canvas extends JPanel {
 				lineStroke = 1;
 				if (lineColor.equals(Color.WHITE)) {
 					lineColor = Color.BLACK;
-					R = lineColor.getRed();
-					G = lineColor.getGreen();
-					B = lineColor.getBlue();
 				}
 				createCurrentColorSquare(g);
 				repaint();
@@ -736,11 +718,9 @@ public class Canvas extends JPanel {
 
 			if (colorAction != null) {
 				lineColor = colorAction;
-				R = lineColor.getRed();
-				G = lineColor.getGreen();
-				B = lineColor.getBlue();
 				createCurrentColorSquare(g);
 				repaint();
+				
 			}
 
 		}

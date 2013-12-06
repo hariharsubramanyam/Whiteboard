@@ -314,12 +314,13 @@ public class LobbyGUI extends JFrame {
 		this.pack();
 	}
 
-	public void sendPacketToServer(String drawPacket) {
+	public void sendPacketToServer(final String drawPacket) {
 		out.println(drawPacket);
 	}
 
 	public void sendPacketToCanvas(ArrayList<Integer> data) {
-		canvas.drawLineSegmentPacket(data); 
+		canvas.drawLineSegmentPacket(data);
+		out.println("get_current_board_id");
 	}
 
 	public void addRowToCurrentBoardsModel(final int tableNumber,
@@ -332,13 +333,27 @@ public class LobbyGUI extends JFrame {
 	}
 
 	// TODO
-	public void createCanvas() {
-		final String newBoardName = newBoardField.getText();
-
-		String requestString = ClientSideMessageMaker
+	public void createCanvas(int boardID) {
+		String givenName = newBoardField.getText();
+		final String newBoardName;
+		if (givenName.equals("")) {
+			newBoardName = "[no name]";
+		}
+		else {
+			newBoardName = givenName;
+		}
+		
+		final String requestString;
+		
+		if (boardID == -1){
+		requestString = ClientSideMessageMaker
 				.makeRequestStringCreateBoard(newBoardName);
+		}
+		else {
+			requestString = ClientSideMessageMaker
+					.makeRequestStringJoinBoardID(boardID);
+		}
 		out.println(requestString);
-		// TODO: the incoming boards will set the boards table
 
 		newBoardField.setText("");
 		String newName = userNameLabel.getText();
@@ -348,15 +363,15 @@ public class LobbyGUI extends JFrame {
 	}
 
 	public void clearAllRows(final int tableNumber) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				DefaultTableModel modelToClear = hashOfAllModels.get(tableNumber);
-				int rowCount = modelToClear.getRowCount();
-				for (int i = 0; i < rowCount; i++) {
-					modelToClear.removeRow(i);
-				}
-			}
-		});
+//		SwingUtilities.invokeLater(new Runnable() {
+//			public void run() {
+//				DefaultTableModel modelToClear = hashOfAllModels.get(tableNumber);
+//				int rowCount = modelToClear.getRowCount();
+//				for (int i = 0; i < rowCount; i++) {
+//					modelToClear.removeRow(i);
+//				}
+//			}
+//		});
 	}
 
 	// TODO
@@ -406,7 +421,7 @@ public class LobbyGUI extends JFrame {
 							while (true) {
 								try {
 									while ((serverResponse = in.readLine()) != null) {
-//										System.out.println(serverResponse);
+//										System.out.println("Server Response: " + serverResponse);
 										ClientSideResponseHandler
 												.handleResponse(serverResponse,
 														lobbyGUI);
@@ -449,13 +464,13 @@ public class LobbyGUI extends JFrame {
 
 		newBoardField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				createCanvas();
+				createCanvas(-1);
 			}
 		});
 
 		createButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				createCanvas();
+				createCanvas(-1);
 			}
 		});
 
@@ -484,15 +499,16 @@ public class LobbyGUI extends JFrame {
 		});
 
 		boardsTable.addMouseListener(new MouseAdapter() {
-			public synchronized void mouseClicked(MouseEvent e) {
+			public void mouseClicked(MouseEvent e) {
 
 				JTable target = (JTable) e.getSource();
 				int row = target.getSelectedRow();
 
 				if (e.getClickCount() == 2 && row > 0) {
-					ClientSideMessageMaker
-							.makeRequestStringJoinBoardID(row - 1);
-					createCanvas();
+					int boardID = row-1;
+					out.println(ClientSideMessageMaker
+							.makeRequestStringJoinBoardID(boardID));
+					createCanvas(boardID);
 				}
 
 				else if (e.getClickCount() == 1 && row > 0) {

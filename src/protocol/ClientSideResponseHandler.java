@@ -22,8 +22,7 @@ public class ClientSideResponseHandler {
 
 	public static void handleResponse(String input, LobbyGUI userGUI) {
 		String responseType = input.split(" ")[0];
-		String[] data = input.replace(responseType, "").split(" ");
-		System.out.println(input);
+		String[] data = input.replace(responseType, "").trim().split(" ");
 
 		if (responseType.equals(MessageHandler.RESP_BOARD_IDS)) {
 			for (String boardID : data) {
@@ -37,7 +36,7 @@ public class ClientSideResponseHandler {
 				userGUI.addRowToCurrentBoardsModel(1, new String[] { user });
 			}
 		} else if (responseType.equals(MessageHandler.RESP_CURRENT_BOARD_ID)) {
-			// Do stuff
+			System.out.println(data[0]);
 		} else if (responseType.equals(MessageHandler.RESP_FAILED)) {
 			// Do stuff
 		} else if (responseType.equals(MessageHandler.RESP_DONE)) {
@@ -46,8 +45,12 @@ public class ClientSideResponseHandler {
 			// Do stuff
 		} else if (responseType.equals(MessageHandler.RESP_DRAW)) {
 			ArrayList<Integer> integerData = new ArrayList<Integer>();
-			for (String i : data){
-				integerData.add(Integer.valueOf(i));
+			for (int i = 0; i < 9; i++) {
+				if (i == 4) {
+					integerData.add(Float.valueOf(data[i]).intValue());
+				} else {
+					integerData.add(Integer.valueOf(data[i]));
+				}
 			}
 			userGUI.sendPacketToCanvas(integerData);
 		} else if (responseType.equals(MessageHandler.RESP_BOARD_LINES)) {
