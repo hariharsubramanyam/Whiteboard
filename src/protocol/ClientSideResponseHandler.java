@@ -25,8 +25,8 @@ public class ClientSideResponseHandler {
 		String[] data = input.replace(responseType, "").trim().split(" ");
 
 		if (responseType.equals(MessageHandler.RESP_BOARD_IDS)) {
+			userGUI.clearAllRows(0);
 			for (String boardID : data) {
-				userGUI.clearAllRows(0);
 				userGUI.addRowToCurrentBoardsModel(0, new String[] { boardID });
 			}
 

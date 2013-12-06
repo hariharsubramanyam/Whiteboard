@@ -23,6 +23,7 @@ import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
@@ -185,12 +186,17 @@ public class LobbyGUI extends JFrame {
 		 * Initialize the last row with the three tables inside their own
 		 * respective panes
 		 */
-		final String[] boardHeader = new String[] { "Board name" };
-		boardsModel.insertRow(0, boardHeader);
+		// final String[] boardHeader = new String[] { "Board name" };
+		// boardsModel.insertRow(0, boardHeader);
 		boardsTable = new JTable(boardsModel);
 		boardsTable.setName("boardsTable");
 		boardsPane = new JScrollPane(boardsTable);
 		boardsPane.setName("boardsPane");
+		JViewport a = new JViewport();
+		
+		boardsPane.setColumnHeaderView(a);
+
+		System.out.println(boardsPane.getColumnHeader());
 		// no lines
 		boardsTable.setShowHorizontalLines(false);
 		boardsTable.setShowVerticalLines(false);
@@ -247,11 +253,11 @@ public class LobbyGUI extends JFrame {
 								.addComponent(createButton, 130, 130, 130))
 				.addGroup(
 						layout.createSequentialGroup()
-								.addComponent(boardsTable, 250, 250,
+								.addComponent(boardsPane, 250, 250,
 										Short.MAX_VALUE)
-								.addComponent(boardUsersTable, 200, 200,
+								.addComponent(boardUsersPane, 200, 200,
 										Short.MAX_VALUE)
-								.addComponent(lobbyUsersTable, 200, 200,
+								.addComponent(lobbyUsersPane, 200, 200,
 										Short.MAX_VALUE)));
 
 		layout.setVerticalGroup(layout
@@ -274,11 +280,11 @@ public class LobbyGUI extends JFrame {
 								.addComponent(createButton, 25, 25, 25))
 				.addGroup(
 						layout.createParallelGroup()
-								.addComponent(boardsTable, 150, 150,
+								.addComponent(boardsPane, 150, 150,
 										Short.MAX_VALUE)
-								.addComponent(boardUsersTable, 150, 150,
+								.addComponent(boardUsersPane, 150, 150,
 										Short.MAX_VALUE)
-								.addComponent(lobbyUsersTable, 150, 150,
+								.addComponent(lobbyUsersPane, 150, 150,
 										Short.MAX_VALUE)));
 
 		setVisibility(false);
@@ -308,9 +314,9 @@ public class LobbyGUI extends JFrame {
 		newBoardField.setVisible(set);
 		userNameField.setVisible(set);
 		createButton.setVisible(set);
-		boardsTable.setVisible(set);
-		boardUsersTable.setVisible(set);
-		lobbyUsersTable.setVisible(set);
+		boardsPane.setVisible(set);
+		boardUsersPane.setVisible(set);
+		lobbyUsersPane.setVisible(set);
 		this.pack();
 	}
 
@@ -338,18 +344,16 @@ public class LobbyGUI extends JFrame {
 		final String newBoardName;
 		if (givenName.equals("")) {
 			newBoardName = "[no name]";
-		}
-		else {
+		} else {
 			newBoardName = givenName;
 		}
-		
+
 		final String requestString;
-		
-		if (boardID == -1){
-		requestString = ClientSideMessageMaker
-				.makeRequestStringCreateBoard(newBoardName);
-		}
-		else {
+
+		if (boardID == -1) {
+			requestString = ClientSideMessageMaker
+					.makeRequestStringCreateBoard(newBoardName);
+		} else {
 			requestString = ClientSideMessageMaker
 					.makeRequestStringJoinBoardID(boardID);
 		}
@@ -363,15 +367,16 @@ public class LobbyGUI extends JFrame {
 	}
 
 	public void clearAllRows(final int tableNumber) {
-//		SwingUtilities.invokeLater(new Runnable() {
-//			public void run() {
-//				DefaultTableModel modelToClear = hashOfAllModels.get(tableNumber);
-//				int rowCount = modelToClear.getRowCount();
-//				for (int i = 0; i < rowCount; i++) {
-//					modelToClear.removeRow(i);
-//				}
-//			}
-//		});
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				DefaultTableModel modelToClear = hashOfAllModels
+						.get(tableNumber);
+				int rowCount = modelToClear.getRowCount();
+				for (int i = 0; i < rowCount; i++) {
+					modelToClear.removeRow(i);
+				}
+			}
+		});
 	}
 
 	// TODO
@@ -421,7 +426,8 @@ public class LobbyGUI extends JFrame {
 							while (true) {
 								try {
 									while ((serverResponse = in.readLine()) != null) {
-//										System.out.println("Server Response: " + serverResponse);
+										// System.out.println("Server Response: "
+										// + serverResponse);
 										ClientSideResponseHandler
 												.handleResponse(serverResponse,
 														lobbyGUI);
@@ -436,12 +442,7 @@ public class LobbyGUI extends JFrame {
 					incomingStream.start();
 
 					// populate the boards table
-					// String[] boardIDs = ClientSideMessageMaker
-					// .makeRequestStringGetBoardIDs();
-					String[] boardIDs = new String[] { "0", "1", "2" };
-					for (String boardID : boardIDs) {
-						addRowToCurrentBoardsModel(0, new String[] { boardID });
-					}
+					ClientSideMessageMaker.makeRequestStringGetBoardIDs();
 
 				} catch (IOException ex) {
 					System.out.println("Couldn't connect");
@@ -505,7 +506,7 @@ public class LobbyGUI extends JFrame {
 				int row = target.getSelectedRow();
 
 				if (e.getClickCount() == 2 && row > 0) {
-					int boardID = row-1;
+					int boardID = row - 1;
 					out.println(ClientSideMessageMaker
 							.makeRequestStringJoinBoardID(boardID));
 					createCanvas(boardID);
