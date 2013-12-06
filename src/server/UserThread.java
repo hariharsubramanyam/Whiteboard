@@ -120,7 +120,7 @@ public class UserThread extends Thread {
 	@Override
 	public void run() {
 		try {
-			this.output(String.format("welcome %d", this.userID));
+			this.output(String.format("%s %d", MessageHandler.RESP_WELCOME, this.userID));
 			handleConnection();
 		} catch (Exception e) {
 		} finally {
@@ -148,8 +148,6 @@ public class UserThread extends Thread {
 		try {
 			for (String line = in.readLine(); line != null; line = in
 					.readLine()) {
-//				System.out.println("Received message: " + in.readLine());
-				out.println(line);
 				MessageHandler.handleMessage(line, this, this.lobbyModel);
 			}
 		} finally {

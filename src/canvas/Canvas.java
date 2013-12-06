@@ -548,7 +548,7 @@ public class Canvas extends JPanel {
 		
 		String packetToSend = ClientSideMessageMaker.makeRequestStringDraw(new Line( x1,
 				y1, x2, y2, this.lineStroke, rColor, gColor, bColor, colorAlpha));
-		lobby.sendPacketToServer(packetToSend);
+		//TODO: Send message to server
 	}
 	
 	public synchronized void drawLineSegmentPacket(ArrayList<Integer> data) {
@@ -708,7 +708,7 @@ public class Canvas extends JPanel {
 
 			if (action.equals("Clear board")) {
 				fillWithWhite();
-				lobby.sendPacketToServer("clear");
+				//TODO: Send Message here
 			}
 
 			if (action.equals("LEAVE BOARD")) {

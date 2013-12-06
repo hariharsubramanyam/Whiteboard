@@ -25,6 +25,7 @@ public class MessageHandler {
     public static final String REQ_CLEAR = "req_clear";
 
     public static final String RESP_BOARD_IDS = "board_ids";
+    public static final String RESP_USERNAME_CHANGED = "changed_username";
     public static final String RESP_USERS_FOR_BOARD = "users_for_board_id";
     public static final String RESP_CURRENT_BOARD_ID = "current_board_id";
     public static final String RESP_FAILED = "failed";
@@ -33,6 +34,7 @@ public class MessageHandler {
     public static final String RESP_DRAW = "draw";
     public static final String RESP_BOARD_LINES = "board_lines";
     public static final String RESP_CLEAR = "clear_board";
+    public static final String RESP_WELCOME = "welcome";
 
     public static void handleMessage(String input, UserThread userThread,
             LobbyModel lobbyModel) {
@@ -107,7 +109,7 @@ public class MessageHandler {
                 userNames);
         // userThread.broadcast(response, userIDsOfUsersInSameBoard);
         userThread.broadcast(response);
-        userThread.output(MessageHandler.makeResponseDone());
+        userThread.output(MessageHandler.makeResponseUsernameChanged(newName));
     }
 
     /**
@@ -317,6 +319,10 @@ public class MessageHandler {
      */
     private static String makeResponseLoggedOut() {
         return MessageHandler.RESP_LOGGED_OUT;
+    }
+    
+    private static String makeResponseUsernameChanged(String newName){
+        return String.format("%s %s", RESP_USERNAME_CHANGED, newName);
     }
 
     /**
