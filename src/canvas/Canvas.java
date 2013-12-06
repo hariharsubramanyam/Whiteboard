@@ -22,8 +22,11 @@ import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
+import protocol.Client;
 import protocol.ClientSideMessageMaker;
+import protocol.MessageHandler;
 import ui.LobbyGUI;
 import adts.Line;
 
@@ -31,7 +34,7 @@ import adts.Line;
  * Canvas represents a drawing surface that allows the user to draw on it
  * freehand, with the mouse.
  */
-public class Canvas extends JPanel {
+public class Canvas extends JPanel implements Client{
 	/**
 	 * This is the GUI acting as the View for a Whiteboard. It is drawn in such
 	 * a way that almost every component is dependent on the Constructor
@@ -539,16 +542,14 @@ public class Canvas extends JPanel {
 	 * Draw a line between two points (x1, y1) and (x2, y2), specified in pixels
 	 * relative to the upper-left corner of the drawing buffer.
 	 */
-	public synchronized void drawLineSegment(int x1, int y1, int x2, int y2, float stroke, int rColor, int gColor, int bColor, int colorAlpha) {
+	public synchronized void drawLineSegment(Line l) {
 		Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
-		g.setStroke(new BasicStroke(stroke, 1, 1));
-		g.setColor(new Color(rColor,gColor,bColor,colorAlpha));
-
+		g.setStroke(new BasicStroke(l.getStrokeThickness(), 1, 1));
+		g.setColor(new Color(l.getR(),l.getG(),l.getB(),l.getA()));
 		
-		String packetToSend = ClientSideMessageMaker.makeRequestStringDraw(new Line( x1,
-				y1, x2, y2, this.lineStroke, rColor, gColor, bColor, colorAlpha));
-		//TODO: Send message to server
+		g.drawLine(l.getX1(), l.getY1(), l.getX2(), l.getY2());
+		this.repaint();
 	}
 	
 	public synchronized void drawLineSegmentPacket(ArrayList<Integer> data) {
@@ -640,9 +641,9 @@ public class Canvas extends JPanel {
 			int x = pos[0];
 			int y = pos[1];
 
-			drawLineSegment(lastPos[0], lastPos[1], x, y, lineStroke, lineColor.getRed(),lineColor.getGreen(),lineColor.getBlue(),lineColor.getAlpha());
+			Line l = new Line(lastPos[0], lastPos[1], x, y, lineStroke, lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), lineColor.getAlpha());
+			lobby.makeRequest(ClientSideMessageMaker.makeRequestStringDraw(l));
 			lastPos = adjustedPos(x, y);
-
 		}
 
 		public void mouseMoved(MouseEvent e) {
@@ -734,4 +735,32 @@ public class Canvas extends JPanel {
 		public void mouseExited(MouseEvent e) {
 		}
 	}
+
+    @Override
+    public void onReceiveUsernameChanged(String rcvdName) {
+        return;
+    }
+
+    @Override
+    public void onReceiveBoardIDs(List<Integer> rcvdIDs) {
+        return;
+    }
+
+    @Override
+    public void onReceiveWelcome(int id) {
+        return;
+    }
+
+    @Override
+    public void onReceiveDraw(Line l) {
+        final Line line = l;
+        SwingUtilities.invokeLater(new Thread(){
+            @Override
+            public void run() {
+                drawLineSegment(line);
+            }    
+        });
+        
+    }
+
 }

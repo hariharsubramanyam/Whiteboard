@@ -3,6 +3,7 @@ package protocol;
 import java.util.ArrayList;
 import java.util.List;
 
+import adts.Line;
 import ui.LobbyGUI;
 
 /**
@@ -23,6 +24,8 @@ public class ClientSideResponseHandler {
 	        handleUsernameChanged(tokens, userGUI);
 	    } else if (command.equals(MessageHandler.RESP_WELCOME)){
 	        handleWelcome(tokens, userGUI);
+	    } else if (command.equals(MessageHandler.RESP_DRAW)){
+	        handleDraw(tokens,userGUI);
 	    }
 	}
 	
@@ -41,4 +44,18 @@ public class ClientSideResponseHandler {
 	private static void handleWelcome(String[] tokens, LobbyGUI userGUI){
 	    userGUI.onReceiveWelcome(Integer.parseInt(tokens[0]));
 	}
+	
+	private static void handleDraw(String[] tokens, LobbyGUI userGUI){
+	    int x1 = Integer.parseInt(tokens[0]);
+	    int y1 = Integer.parseInt(tokens[1]);
+	    int x2 = Integer.parseInt(tokens[2]);
+	    int y2 = Integer.parseInt(tokens[3]);
+	    float strokeThickness = Float.parseFloat(tokens[4]);
+	    int r = Integer.parseInt(tokens[5]);
+	    int g = Integer.parseInt(tokens[6]);
+	    int b = Integer.parseInt(tokens[7]);
+	    int a = Integer.parseInt(tokens[8]);
+	    Line l = new Line(x1, y1, x2, y2, strokeThickness, r, g, b, a);
+        userGUI.onReceiveDraw(l);
+    }
 }
