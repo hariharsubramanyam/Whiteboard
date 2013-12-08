@@ -16,17 +16,15 @@ public class WhiteboardServer {
 	private final LobbyModel lobbyModel;
 	private final List<UserThread> userThreads;
 
-	private final List<Integer> boardIDs;
 
 	public WhiteboardServer(int port) throws IOException {
 		this.serverSocket = new ServerSocket(port);
 		this.lobbyModel = new LobbyModel();
 		this.userThreads = new ArrayList<UserThread>();
 
-		this.boardIDs = new ArrayList<Integer>();
 	}
 
-	public void serve() throws IOException {
+	public  void serve() throws IOException {
 		while (true) {
 			final Socket socket = serverSocket.accept();
 			int userID = this.lobbyModel.addUser();
@@ -38,8 +36,9 @@ public class WhiteboardServer {
 
 	}
 
-	public void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		int port = 4444;
+		WhiteboardServer server = new WhiteboardServer(port);
 
 		Queue<String> arguments = new LinkedList<String>(Arrays.asList(args));
 		while (!arguments.isEmpty()) {
@@ -47,7 +46,7 @@ public class WhiteboardServer {
 		}
 
 		try {
-			runWhiteboardServer(port);
+			server.runWhiteboardServer(port);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
