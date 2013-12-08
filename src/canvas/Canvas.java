@@ -286,7 +286,7 @@ public class Canvas extends JPanel implements Client{
 	 * Make the drawing buffer's background. This includes a GRAY back rectangle
 	 * and the white "drawable canvas" on top.
 	 */
-	private void fillWithWhite() {
+	public void fillWithWhite() {
 		final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
 		/*
