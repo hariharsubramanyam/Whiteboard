@@ -215,6 +215,9 @@ public class LobbyGUI extends JFrame implements Client {
 				labelUserName.setText("User: " + newName);
 				JOptionPane.showMessageDialog(null, "Changed username to "
 						+ newName);
+				if(canvas != null){
+				    canvas.onReceiveUsernameChanged(newName);
+				}
 			}
 		});
 	}
@@ -254,11 +257,10 @@ public class LobbyGUI extends JFrame implements Client {
 		public void actionPerformed(ActionEvent e) {
 			String newBoard = JOptionPane
 					.showInputDialog("Enter new Whiteboard name");
-			canvas = new Canvas(1000, 1000, self, user.getName());
+			canvas = new Canvas(1000, 1000, self, user.getName(),-1);
 			canvas.setVisible(true);
 			setVisible(false);
-			out.println(ClientSideMessageMaker
-					.makeRequestStringCreateBoard(newBoard));
+			out.println(ClientSideMessageMaker.makeRequestStringCreateBoard(newBoard));
 		}
 	}
 
@@ -267,10 +269,11 @@ public class LobbyGUI extends JFrame implements Client {
 	    public void mouseClicked(MouseEvent e) {
 	        if(e.getClickCount() == 2){
 	            String selectedItem = (String) lstBoards.getSelectedValue();
-	            canvas = new Canvas(1000, 1000, self, user.getName());
+	            int boardID = Integer.parseInt(selectedItem.replace("Board ", ""));
+	            canvas = new Canvas(1000, 1000, self, user.getName(),boardID);
 	            canvas.setVisible(true);
 	            setVisible(false);
-	            out.println(MessageHandler.makeRequestStringJoinBoardID(Integer.parseInt(selectedItem.replace("Board ", ""))));
+	            out.println(MessageHandler.makeRequestStringJoinBoardID(boardID));
 	            
 	        }
 	    }
@@ -296,8 +299,14 @@ public class LobbyGUI extends JFrame implements Client {
     }
 
     @Override
-    public void onReceiveUsers(List<String> users) {
+    public void onReceiveUsers(int boardID, List<String> users) {
         if(canvas != null)
-            canvas.onReceiveUsers(users);
+            canvas.onReceiveUsers(boardID, users);
+    }
+
+    @Override
+    public void onReceiveCurrentBoardID(int boardID) {
+        if(canvas != null)
+            canvas.onReceiveCurrentBoardID(boardID);
     }
 }

@@ -33,13 +33,20 @@ public class ClientSideResponseHandler {
 	        handleClear(tokens, userGUI);
 	    } else if (command.equals(MessageHandler.RESP_USERS_FOR_BOARD)){
 	        handlerUsersForBoard(tokens, userGUI);
+	    } else if (command.equals(MessageHandler.RESP_CURRENT_BOARD_ID)){
+	        handleCurrentBoardID(tokens, userGUI);
 	    }
 	}
-	private static void handlerUsersForBoard(String[] tokens, LobbyGUI userGUI) {
+	private static void handleCurrentBoardID(String[] tokens, LobbyGUI userGUI) {
+        int boardID = Integer.parseInt(tokens[0]);
+        userGUI.onReceiveCurrentBoardID(boardID);
+    }
+    private static void handlerUsersForBoard(String[] tokens, LobbyGUI userGUI) {
 	    List<String> users = new ArrayList<String>();
+	    int boardID = Integer.parseInt(tokens[0]);
 	    for(int i = 1; i < tokens.length; i++)
 	        users.add(tokens[i]);
-	    userGUI.onReceiveUsers(users);
+	    userGUI.onReceiveUsers(boardID, users);
     }
     private static void handleClear(String[] tokens, LobbyGUI userGUI){
 	    userGUI.onReceiveClear();

@@ -127,6 +127,7 @@ public class MessageHandler {
                 .getWhiteboardIDs()));
         userThread.output(MessageHandler.makeResponseBoardIDs(lobbyModel
                 .getWhiteboardIDs()));
+        userThread.output(MessageHandler.makeResponseCurrentBoardID(boardID));
     }
 
     /**
