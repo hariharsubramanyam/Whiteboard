@@ -95,7 +95,7 @@ public class MessageHandler {
         String[] splitString = input.split(" ");
         int userID = userThread.getUserID();
         String newName = splitString[1];
-        lobbyModel.changeUserName(newName, userID);
+        newName = lobbyModel.changeUserName(newName, userID);
         int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userID);
         if (boardID != -1) {
             userIDsOfUsersInSameBoard = lobbyModel
