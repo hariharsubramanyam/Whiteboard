@@ -156,6 +156,7 @@ public class Canvas extends JPanel implements Client {
 	private final LobbyGUI lobby;
 
 	private String user;
+	private int boardID;
 
 	/**
 	 * Make a canvas.
@@ -170,11 +171,15 @@ public class Canvas extends JPanel implements Client {
 	 * @param user
 	 *            every Canvas must be instantiated with a user String which is
 	 *            the userName of the user who started it
+	 * @param boardID
+	 *             the ID of the current board
 	 */
-	public Canvas(int width, int height, LobbyGUI lobby, String user) {
-		this.userNames = new ArrayList<String>();
+
+	public Canvas(int width, int height, LobbyGUI lobby, String user, int boardID) {
+	    this.userNames = new ArrayList<String>();
 		this.lobby = lobby;
 		this.user = user;
+		this.boardID = boardID;
 
 		window = new JFrame("Freehand Canvas");
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -522,10 +527,13 @@ public class Canvas extends JPanel implements Client {
 		int startingY = yPos + tableHeight / 15 + 3 * margins;
 		int heightOfString = tableHeight / 15;
 		Collections.sort(userNames);
+		userNames.remove(this.user);
+		String tableEntry = String.valueOf(1) + ". " + this.user;
+        createText(g, tableEntry, xStringPos, startingY + heightOfString * (1), Color.RED, 1, 20);
 		for (int i = 0; i < userNames.size(); i++) {
-			String tableEntry = String.valueOf(i + 1) + ". " + userNames.get(i);
+			tableEntry = String.valueOf(i + 2) + ". " + userNames.get(i);
 			createText(g, tableEntry, xStringPos, startingY + heightOfString
-					* (i + 1), textColor, 1, 13);
+					* (i + 2), textColor, 1, 13);
 		}
 		this.repaint();
 	}
@@ -748,7 +756,7 @@ public class Canvas extends JPanel implements Client {
 
 	@Override
 	public void onReceiveUsernameChanged(String rcvdName) {
-		return;
+		this.user = rcvdName;
 	}
 
 	@Override
@@ -795,9 +803,16 @@ public class Canvas extends JPanel implements Client {
 		this.fillWithWhite();
 	}
 
-	@Override
-	public void onReceiveUsers(List<String> users) {
-		this.createUserList(users);
-	}
+    @Override
+    public void onReceiveUsers(int boardID, List<String> users) {
+        if(boardID != this.boardID)
+            return;
+        this.createUserList(users);
+    }
+
+    @Override
+    public void onReceiveCurrentBoardID(int boardID) {
+        this.boardID = boardID;
+    }
 
 }
