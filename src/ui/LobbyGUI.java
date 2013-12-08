@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.DefaultListModel;
 import javax.swing.GroupLayout;
@@ -232,7 +233,6 @@ public class LobbyGUI extends JFrame implements Client {
 					.makeRequestStringSetUsername(userName));
 		}
 	}
-
 	private class CreateWhiteboardListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -264,23 +264,29 @@ public class LobbyGUI extends JFrame implements Client {
 		}
 	}
 
-	@Override
-	public void onReceiveDraw(Line l) {
-		canvas.onReceiveDraw(l);
-	}
+    @Override
+    public void onReceiveDraw(Line l) {
+        if(canvas != null)
+            canvas.onReceiveDraw(l);
+    }
 
-	@Override
-	public void onReceiveBoardLines(List<Line> ls) {
-		canvas.onReceiveBoardLines(ls);
-	}
+    @Override
+    public void onReceiveBoardLines(List<Line> ls, Set<String> userNames) {
+        if(canvas != null){
+            System.out.println("Here I am ");
+            canvas.onReceiveBoardLines(ls, userNames);
+        }
+    }
 
-	@Override
-	public void onReceiveClear() {
-		canvas.onReceiveClear();
-	}
+    @Override
+    public void onReceiveClear() {
+        if(canvas != null)
+            canvas.onReceiveClear();
+    }
 
-	@Override
-	public void onReceiveUsers(List<String> users) {
-		canvas.onReceiveUsers(users);
-	}
+    @Override
+    public void onReceiveUsers(List<String> users) {
+        if(canvas != null)
+            canvas.onReceiveUsers(users);
+    }
 }

@@ -16,9 +16,12 @@ import java.awt.event.MouseMotionListener;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -252,7 +255,7 @@ public class Canvas extends JPanel implements Client {
 	 * @param users
 	 *            a String carray omposed of every username
 	 */
-	public void createUserList(List<String> users) {
+	public void createUserList(Collection<String> users) {
 		userNames = new ArrayList<String>();
 		for (String user : users) {
 			userNames.add(user);
@@ -283,7 +286,7 @@ public class Canvas extends JPanel implements Client {
 		drawingBuffer = createImage(getWidth(), getHeight());
 		fillWithWhite();
 		createButtonLayout();
-		List<String> oneUser = new ArrayList<String>();
+		Set<String> oneUser = new HashSet<String>();
 		oneUser.add(this.user);
 	    createUserList(oneUser);
 	}
@@ -712,6 +715,7 @@ public class Canvas extends JPanel implements Client {
 			if (action.equals("LEAVE BOARD")) {
 				window.dispose();
 				lobby.setVisible(true);
+				lobby.makeRequest(MessageHandler.makeRequestStringLeaveBoard());
 			}
 
 			if (colorAction != null) {
@@ -761,18 +765,20 @@ public class Canvas extends JPanel implements Client {
 	}
 
 	@Override
-	public void onReceiveBoardLines(List<Line> ls) {
+	public void onReceiveBoardLines(List<Line> ls, Set<String> uNames) {
 		final List<Line> lines = ls;
+		final Set<String> uN = uNames;
+		for(String u : uN)
+		    System.out.println("Got result: " + u);
 		SwingUtilities.invokeLater(new Thread() {
 			@Override
 			public void run() {
 				for (Line line : lines) {
 					drawLineSegment(line, false);
 				}
-				repaint();
+				createUserList(uN);
 			}
 		});
-
 	}
 
     @Override
@@ -782,6 +788,7 @@ public class Canvas extends JPanel implements Client {
 
     @Override
     public void onReceiveUsers(List<String> users) {
+        System.out.println("Sysout");
         this.createUserList(users);
     }
 
