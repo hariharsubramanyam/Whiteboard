@@ -38,7 +38,7 @@ public class WhiteboardServer {
 		}
 	}
 
-	public static void main(String[] args) {
+	public void main(String[] args) {
 		int port = 4444;
 
 		Queue<String> arguments = new LinkedList<String>(Arrays.asList(args));
@@ -53,12 +53,26 @@ public class WhiteboardServer {
 		}
 	}
 
-	public static void runWhiteboardServer(int port) throws IOException {
+	public void runWhiteboardServer(int port) throws IOException {
 		WhiteboardServer server;
 		try {
 			server = new WhiteboardServer(port);
 			server.serve();
 		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void killWhiteboardServer() {
+		// Kill the userThreads
+		for (UserThread thread: this.userThreads){
+			thread.cancel();
+		}
+		// Close the serverSocket
+		try {
+			this.serverSocket.close();
+		} catch (IOException e) {
+			// Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

@@ -113,6 +113,8 @@ public class UserThread extends Thread {
 			}
 		}
 	}
+	
+	public void cancel() { interrupt(); }
 
 	/**
 	 * Welcomes the user and handles all their input
