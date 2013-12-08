@@ -109,7 +109,7 @@ public class LobbyGUI extends JFrame implements Client {
 		this.serverMessagesThread.start();
 
 		// create the UI to view and change the username and new whiteboards
-		this.labelUserName = new JLabel("User: guest");
+		this.labelUserName = new JLabel("User: placeholder");
 		this.btnSetUserName = new JButton("Change Username");
 		this.btnSetUserName.addActionListener(new SetUserNameListener());
 		this.btnCreateBoard = new JButton("Create Whiteboard");
@@ -191,6 +191,20 @@ public class LobbyGUI extends JFrame implements Client {
 			}
 		});
 	}
+	
+	public void onReceiveUserIDs(List<Integer> rcvdIDs) {
+		final List<Integer> userIDs = rcvdIDs;
+		SwingUtilities.invokeLater(new Thread() {
+			@Override
+			public void run() {
+				lstMdlBoards.clear();
+				for (int boardID : userIDs) {
+					lstMdlBoards.addElement("Board " + boardID);
+				}
+				lstBoards.setSelectedIndex(lstMdlBoards.size() - 1);
+			}
+		});
+	}
 
 	public void onReceiveUsernameChanged(String rcvdName) {
 		final String newName = rcvdName;
@@ -208,6 +222,7 @@ public class LobbyGUI extends JFrame implements Client {
 	public void onReceiveWelcome(int id) {
 		System.out.println("Here");
 		this.user = new User(id);
+		labelUserName.setText("User: Guest_" + String.valueOf(id));
 	}
 
 	/**

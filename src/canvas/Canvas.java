@@ -206,8 +206,15 @@ public class Canvas extends JPanel implements Client {
 		 * Button properties: text, boundaries, color, margins
 		 */
 
+		/*
+		 * IMPORTANT: This array has a lot of power. Simply add a new entry and
+		 * not only will the button be properly inserted in its right place, but
+		 * its boundaries will also be set so go down to the click listener and
+		 * add a conditional to match this string and you're done.
+		 */
 		this.buttonText = Arrays.asList("Eraser", "Pencil", "Stroke Small",
 				"Stroke Med", "Stroke Large", "Clear board", "LEAVE BOARD");
+
 		this.numOfButtons = buttonText.size();
 		// leave 1 margin on either side
 		this.buttonW = windowW - 2 * margins;
