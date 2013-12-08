@@ -24,7 +24,7 @@ public class WhiteboardServer {
 
 	}
 
-	public  void serve() throws IOException {
+	public void serve() throws IOException {
 		while (true) {
 			final Socket socket = serverSocket.accept();
 			int userID = this.lobbyModel.addUser();
@@ -38,21 +38,19 @@ public class WhiteboardServer {
 
 	public static void main(String[] args) {
 		int port = 4444;
-		WhiteboardServer server;
 		Queue<String> arguments = new LinkedList<String>(Arrays.asList(args));
 		while (!arguments.isEmpty()) {
 			return;
 		}
 
 		try {
-		    server = new WhiteboardServer(port);
-            server.serve();
+		    runWhiteboardServer(port);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void runWhiteboardServer(int port) throws IOException {
+	public static void runWhiteboardServer(int port) throws IOException {
 		WhiteboardServer server;
 		try {
 			server = new WhiteboardServer(port);
