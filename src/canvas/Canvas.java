@@ -696,8 +696,7 @@ public class Canvas extends JPanel implements Client{
 			}
 
 			if (action.equals("Clear board")) {
-				fillWithWhite();
-				//TODO: Send Message here
+				lobby.makeRequest(ClientSideMessageMaker.makeRequestStringClear());
 			}
 
 			if (action.equals("LEAVE BOARD")) {
