@@ -235,7 +235,13 @@ public class LobbyGUI extends JFrame implements Client{
         canvas.onReceiveBoardLines(ls);
     }
 
+    @Override
     public void onReceiveClear() {
-        canvas.fillWithWhite();
+        canvas.onReceiveClear();
+    }
+
+    @Override
+    public void onReceiveUsers(List<String> users) {
+        canvas.onReceiveUsers(users);
     }
 }

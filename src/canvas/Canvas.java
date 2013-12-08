@@ -151,6 +151,8 @@ public class Canvas extends JPanel implements Client {
 	private final List<Color> basicColors;
 
 	private final LobbyGUI lobby;
+	
+	private String user;
 
 	/**
 	 * Make a canvas.
@@ -166,8 +168,10 @@ public class Canvas extends JPanel implements Client {
 	 *            every Canvas must be instantiated with a user String which is
 	 *            the userName of the user who started it
 	 */
-	public Canvas(int width, int height, LobbyGUI lobby, String[] users) {
+	public Canvas(int width, int height, LobbyGUI lobby, String user) {
+	    this.userNames = new ArrayList<String>();
 		this.lobby = lobby;
+		this.user = user;
 
 		window = new JFrame("Freehand Canvas");
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -180,9 +184,6 @@ public class Canvas extends JPanel implements Client {
 		// note: we can't call makeDrawingBuffer here, because it only
 		// works *after* this canvas has been added to a window. Have to
 		// wait until paintComponent() is first called.
-
-		// Initialize the user list
-		createUserList(users);
 
 		// set the size of the canvas
 		this.canvasW = width;
@@ -239,7 +240,10 @@ public class Canvas extends JPanel implements Client {
 
 		window.add(this, BorderLayout.CENTER);
 		window.pack();
+		// Initialize the user list
 		window.setVisible(true);
+		
+		
 	}
 
 	/**
@@ -248,14 +252,13 @@ public class Canvas extends JPanel implements Client {
 	 * @param users
 	 *            a String carray omposed of every username
 	 */
-	public void createUserList(String[] users) {
+	public void createUserList(List<String> users) {
 		userNames = new ArrayList<String>();
 		for (String user : users) {
 			userNames.add(user);
 		}
 
-		final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
-		createUserTable(g);
+		createUserTable();
 	}
 
 	/**
@@ -281,6 +284,9 @@ public class Canvas extends JPanel implements Client {
 		drawingBuffer = createImage(getWidth(), getHeight());
 		fillWithWhite();
 		createButtonLayout();
+		List<String> oneUser = new ArrayList<String>();
+		oneUser.add(this.user);
+	    createUserList(oneUser);
 	}
 
 	/**
@@ -487,10 +493,10 @@ public class Canvas extends JPanel implements Client {
 	 * information is handled by the function which the controller calls on to
 	 * add users.
 	 * 
-	 * @param g
-	 *            the Graphics2D object to work with
 	 */
-	private void createUserTable(Graphics2D g) {
+	private void createUserTable() {
+	    final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
+
 		int yPos = this.currentColorSquareY + windowW / 4;
 		int xPos = margins;
 		yPos = yPos + margins;
@@ -536,7 +542,7 @@ public class Canvas extends JPanel implements Client {
 		createButtonsAndText(g);
 		createColorPalate(g);
 		createCurrentColorSquare(g);
-		createUserTable(g);
+		createUserTable();
 	}
 
 	/*
@@ -769,5 +775,15 @@ public class Canvas extends JPanel implements Client {
 		});
 
 	}
+
+    @Override
+    public void onReceiveClear() {
+        this.fillWithWhite();
+    }
+
+    @Override
+    public void onReceiveUsers(List<String> users) {
+        this.createUserList(users);
+    }
 
 }

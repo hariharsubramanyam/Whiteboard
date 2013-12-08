@@ -127,7 +127,6 @@ public class MessageHandler {
                 .getWhiteboardIDs()));
         userThread.output(MessageHandler.makeResponseBoardIDs(lobbyModel
                 .getWhiteboardIDs()));
-        
     }
 
     /**
@@ -174,6 +173,7 @@ public class MessageHandler {
             List<Line> lines = lobbyModel.getLinesForBoardID(boardID);
             //userThread.broadcast(response, userIDsOfUsersInSameBoard);
             userThread.broadcast(response);
+            userThread.output(response);
             userThread.output(MessageHandler.makeResponseBoardLines(lines));
         } catch (Exception ex) {
             userThread.output(MessageHandler.makeResponseFailed());
@@ -208,8 +208,7 @@ public class MessageHandler {
      */
     private static void handleRequestGetUsersInMyBoard(String input,
             UserThread userThread, LobbyModel lobbyModel) {
-        int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread
-                .getUserID());
+        int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userThread.getUserID());
         if (boardID != -1) {
             Set<String> userNames = lobbyModel.getUserNamesForBoardID(boardID);
             userThread.output(MessageHandler.makeResponseUsersForBoardID(
