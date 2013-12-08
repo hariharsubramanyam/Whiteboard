@@ -87,7 +87,9 @@ public class LobbyGUI extends JFrame implements Client{
     	    this.socket = new Socket(hostName, 4444);
             this.out = new PrintWriter(socket.getOutputStream(), true);
             this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-	    }catch(Exception ex){}
+	    }catch(Exception ex){
+	        ex.printStackTrace();
+	    }
 	    
 	    // sets this current object
 	    this.self = this;
