@@ -155,7 +155,7 @@ public class Canvas extends JPanel implements Client {
 	private final List<Color> basicColors;
 
 	private final LobbyGUI lobby;
-	
+
 	private String user;
 
 	/**
@@ -173,7 +173,7 @@ public class Canvas extends JPanel implements Client {
 	 *            the userName of the user who started it
 	 */
 	public Canvas(int width, int height, LobbyGUI lobby, String user) {
-	    this.userNames = new ArrayList<String>();
+		this.userNames = new ArrayList<String>();
 		this.lobby = lobby;
 		this.user = user;
 
@@ -217,7 +217,7 @@ public class Canvas extends JPanel implements Client {
 		this.buttonArc = 30;
 		// for the color palate
 		this.sizeColorSquare = (int) ((windowW - 2 * margins) / 4f);
-		
+
 		// define boundaries of buttons
 		this.buttonBoundaries = new HashMap<String, List<Integer>>();
 		for (int i = 0; i < numOfButtons; ++i) {
@@ -246,15 +246,14 @@ public class Canvas extends JPanel implements Client {
 		window.pack();
 		// Initialize the user list
 		window.setVisible(true);
-		
-		
+
 	}
 
 	/**
-	 * Controller can use this function to add users to the board.
+	 * Controller can use this function to add/remove users from the board.
 	 * 
 	 * @param users
-	 *            a String carray omposed of every username
+	 *            a String array composed of every username
 	 */
 	public void createUserList(Collection<String> users) {
 		userNames = new ArrayList<String>();
@@ -289,7 +288,7 @@ public class Canvas extends JPanel implements Client {
 		createButtonLayout();
 		Set<String> oneUser = new HashSet<String>();
 		oneUser.add(this.user);
-	    createUserList(oneUser);
+		createUserList(oneUser);
 	}
 
 	/**
@@ -498,7 +497,7 @@ public class Canvas extends JPanel implements Client {
 	 * 
 	 */
 	private void createUserTable() {
-	    final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
+		final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
 		int yPos = this.currentColorSquareY + windowW / 4;
 		int xPos = margins;
@@ -549,9 +548,15 @@ public class Canvas extends JPanel implements Client {
 		createUserTable();
 	}
 
-	/*
+	/**
 	 * Draw a line between two points (x1, y1) and (x2, y2), specified in pixels
 	 * relative to the upper-left corner of the drawing buffer.
+	 * 
+	 * @param l
+	 *            Line to draw
+	 * @param withRepaint
+	 *            will repaint if true, wont otherwise
+	 * 
 	 */
 	public synchronized void drawLineSegment(Line l, boolean withRepaint) {
 		Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
@@ -576,8 +581,8 @@ public class Canvas extends JPanel implements Client {
 	}
 
 	/**
-	 * Since our button layout is part of the canvas, we have to make sure we
-	 * don't draw over it.
+	 * Creates a way to get correct coordinates for drawing since our button
+	 * layout is part of the canvas, we have to make sure we don't draw over it.
 	 * 
 	 * @param x
 	 *            an int representing the potential x position to draw on
@@ -604,7 +609,7 @@ public class Canvas extends JPanel implements Client {
 
 	}
 
-	/*
+	/**
 	 * Add the mouse listener that supports the user's freehand drawing.
 	 */
 	private void addDrawingController() {
@@ -613,14 +618,16 @@ public class Canvas extends JPanel implements Client {
 		addMouseMotionListener(controller);
 	}
 
-	/*
-	 * DrawingController handles the user's freehand drawing.
+	/**
+	 * DrawingController handles the user's freehand drawing. It includes all
+	 * the relevant listeners needed to press buttons and draw on the Canvas.
 	 */
 	private class DrawingController implements MouseListener,
 			MouseMotionListener {
-		// store the coordinates of the last mouse event, so we can
-		// draw a line segment from that last point to the point of the next
-		// mouse event.
+		/*
+		 * store the coordinates of the last mouse event, so we candraw a line
+		 * segment from that last point to the point of the nextmouse event.
+		 */
 		private int[] lastPos = new int[2];
 
 		/*
@@ -717,7 +724,7 @@ public class Canvas extends JPanel implements Client {
 			if (action.equals("LEAVE BOARD")) {
 				window.dispose();
 				lobby.setVisible(true);
-				lobby.makeRequest(MessageHandler.makeRequestStringLeaveBoard());
+				lobby.makeRequest(MessageHandler.makeRequOestStringLeaveBoard());
 			}
 
 			if (colorAction != null) {
@@ -783,14 +790,14 @@ public class Canvas extends JPanel implements Client {
 		});
 	}
 
-    @Override
-    public void onReceiveClear() {
-        this.fillWithWhite();
-    }
+	@Override
+	public void onReceiveClear() {
+		this.fillWithWhite();
+	}
 
-    @Override
-    public void onReceiveUsers(List<String> users) {
-        this.createUserList(users);
-    }
+	@Override
+	public void onReceiveUsers(List<String> users) {
+		this.createUserList(users);
+	}
 
 }

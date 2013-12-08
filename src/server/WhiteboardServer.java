@@ -36,7 +36,6 @@ public class WhiteboardServer {
 
 	}
 
-
 	public static void main(String[] args) {
 		int port = 4444;
 		Queue<String> arguments = new LinkedList<String>(Arrays.asList(args));
