@@ -213,7 +213,7 @@ public class Canvas extends JPanel implements Client {
 		this.buttonArc = 30;
 		// for the color palate
 		this.sizeColorSquare = (int) ((windowW - 2 * margins) / 4f);
-
+		
 		// define boundaries of buttons
 		this.buttonBoundaries = new HashMap<String, List<Integer>>();
 		for (int i = 0; i < numOfButtons; ++i) {
@@ -257,7 +257,6 @@ public class Canvas extends JPanel implements Client {
 		for (String user : users) {
 			userNames.add(user);
 		}
-
 		createUserTable();
 	}
 
