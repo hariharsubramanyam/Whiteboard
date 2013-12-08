@@ -150,11 +150,24 @@ public class LobbyModel {
      * @throws IllegalArgumentException
      *             if the userID does not exist
      */
-    public synchronized void changeUserName(String newName, int userID) {
+    public synchronized String changeUserName(String newName, int userID) {
         if (!(this.userForID.keySet().contains(userID)))
             throw new IllegalArgumentException(String.format(
                     "userID=%d does not exist!", userID));
-        this.userForID.get(userID).setName(newName);
+        Set<String> names = new HashSet<String>();
+        for(Integer u : this.userForID.keySet()){
+            names.add(this.userForID.get(u).getName());
+        }
+        if(!names.contains(newName)){
+            this.userForID.get(userID).setName(newName);
+            return newName;
+        }
+        int incrementer = 1;
+        String formattedName = "%s(%d)";
+        while(names.contains(String.format(formattedName, newName,incrementer)))
+            incrementer++;
+        this.userForID.get(userID).setName(String.format(formattedName, newName,incrementer));
+        return String.format(formattedName, newName,incrementer);
     }
 
     /**
@@ -192,6 +205,7 @@ public class LobbyModel {
     public synchronized int addUser() {
         int id = this.uniqueUserID.getAndIncrement();
         this.userForID.put(id, new User(id));
+        this.changeUserName(this.userForID.get(id).getName(), id);
         return id;
     }
 

@@ -28,9 +28,21 @@ public class ClientSideResponseHandler {
 	        handleDraw(tokens,userGUI);
 	    } else if (command.equals(MessageHandler.RESP_BOARD_LINES)){
 	        handleBoardLines(tokens, userGUI);
+	    } else if (command.equals(MessageHandler.RESP_CLEAR)){
+	        handleClear(tokens, userGUI);
+	    } else if (command.equals(MessageHandler.RESP_USERS_FOR_BOARD)){
+	        handlerUsersForBoard(tokens, userGUI);
 	    }
 	}
-	
+	private static void handlerUsersForBoard(String[] tokens, LobbyGUI userGUI) {
+	    List<String> users = new ArrayList<String>();
+	    for(int i = 1; i < tokens.length; i++)
+	        users.add(tokens[i]);
+	    userGUI.onReceiveUsers(users);
+    }
+    private static void handleClear(String[] tokens, LobbyGUI userGUI){
+	    userGUI.onReceiveClear();
+	}
 	private static void handleBoardIDs(String[] tokens, LobbyGUI userGUI){
 	    List<Integer> boardIDs = new ArrayList<Integer>();
 	    for (String token : tokens){

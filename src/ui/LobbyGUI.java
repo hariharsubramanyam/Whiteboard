@@ -87,7 +87,9 @@ public class LobbyGUI extends JFrame implements Client{
     	    this.socket = new Socket(hostName, 4444);
             this.out = new PrintWriter(socket.getOutputStream(), true);
             this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-	    }catch(Exception ex){}
+	    }catch(Exception ex){
+	        ex.printStackTrace();
+	    }
 	    
 	    // sets this current object
 	    this.self = this;
@@ -213,6 +215,7 @@ public class LobbyGUI extends JFrame implements Client{
             String selectedItem = (String)lstBoards.getSelectedValue();
             canvas = new Canvas(1000, 1000, self, user.getName());
             canvas.setVisible(true);
+            setVisible(false);
             if(selectedItem.equals("Create a new board...")){
                 out.println(MessageHandler.makeRequestStringCreateBoard("MyBoard"));
             }else{
@@ -230,5 +233,15 @@ public class LobbyGUI extends JFrame implements Client{
     @Override
     public void onReceiveBoardLines(List<Line> ls) {
         canvas.onReceiveBoardLines(ls);
+    }
+
+    @Override
+    public void onReceiveClear() {
+        canvas.onReceiveClear();
+    }
+
+    @Override
+    public void onReceiveUsers(List<String> users) {
+        canvas.onReceiveUsers(users);
     }
 }

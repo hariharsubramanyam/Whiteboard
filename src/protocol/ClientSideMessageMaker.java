@@ -13,6 +13,7 @@ public class ClientSideMessageMaker {
     public static final String REQ_GET_USERS_IN_MY_BOARD = "get_users_in_my_board";
     public static final String REQ_LEAVE_BOARD = "leave_board";
     public static final String REQ_DRAW = "req_draw";
+    public static final String REQ_CLEAR = "req_clear";
 
     public static final String RESP_BOARD_IDS = "board_ids";
     public static final String RESP_USERS_FOR_BOARD = "users_for_board_id";
@@ -66,6 +67,10 @@ public class ClientSideMessageMaker {
     public static String makeRequestStringDraw(Line line) {
         return String.format("%s %s", ClientSideMessageMaker.REQ_DRAW,
                 line.toString());
+    }
+    
+    public static String makeRequestStringClear() {
+        return String.format("%s", ClientSideMessageMaker.REQ_CLEAR);
     }
 
 }

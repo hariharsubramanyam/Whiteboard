@@ -10,5 +10,6 @@ public interface Client {
     public void onReceiveWelcome(int id);
     public void onReceiveDraw(Line l);
     public void onReceiveBoardLines(List<Line> ls);
-    
+    public void onReceiveClear();
+    public void onReceiveUsers(List<String> users);
 }

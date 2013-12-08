@@ -34,7 +34,7 @@ import adts.Line;
  * Canvas represents a drawing surface that allows the user to draw on it
  * freehand, with the mouse.
  */
-public class Canvas extends JPanel implements Client{
+public class Canvas extends JPanel implements Client {
 	/**
 	 * This is the GUI acting as the View for a Whiteboard. It is drawn in such
 	 * a way that almost every component is dependent on the Constructor
@@ -151,6 +151,8 @@ public class Canvas extends JPanel implements Client{
 	private final List<Color> basicColors;
 
 	private final LobbyGUI lobby;
+	
+	private String user;
 
 	/**
 	 * Make a canvas.
@@ -167,7 +169,9 @@ public class Canvas extends JPanel implements Client{
 	 *            the userName of the user who started it
 	 */
 	public Canvas(int width, int height, LobbyGUI lobby, String user) {
+	    this.userNames = new ArrayList<String>();
 		this.lobby = lobby;
+		this.user = user;
 
 		window = new JFrame("Freehand Canvas");
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -180,10 +184,6 @@ public class Canvas extends JPanel implements Client{
 		// note: we can't call makeDrawingBuffer here, because it only
 		// works *after* this canvas has been added to a window. Have to
 		// wait until paintComponent() is first called.
-
-		// Initialize the user list
-		userNames = new ArrayList<String>();
-		userNames.add(user);
 
 		// set the size of the canvas
 		this.canvasW = width;
@@ -240,21 +240,25 @@ public class Canvas extends JPanel implements Client{
 
 		window.add(this, BorderLayout.CENTER);
 		window.pack();
+		// Initialize the user list
 		window.setVisible(true);
+		
+		
 	}
 
 	/**
 	 * Controller can use this function to add users to the board.
 	 * 
-	 * @param newUsers
-	 *            a String composed of every username separated by white spaces
+	 * @param users
+	 *            a String carray omposed of every username
 	 */
-	public void addUser(String newUsers) {
-		String[] users = newUsers.split(" ");
+	public void createUserList(List<String> users) {
 		userNames = new ArrayList<String>();
-		for (String newUser : users) {
-			userNames.add(newUser);
+		for (String user : users) {
+			userNames.add(user);
 		}
+
+		createUserTable();
 	}
 
 	/**
@@ -280,13 +284,16 @@ public class Canvas extends JPanel implements Client{
 		drawingBuffer = createImage(getWidth(), getHeight());
 		fillWithWhite();
 		createButtonLayout();
+		List<String> oneUser = new ArrayList<String>();
+		oneUser.add(this.user);
+	    createUserList(oneUser);
 	}
 
 	/**
 	 * Make the drawing buffer's background. This includes a GRAY back rectangle
 	 * and the white "drawable canvas" on top.
 	 */
-	private void fillWithWhite() {
+	public void fillWithWhite() {
 		final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
 		/*
@@ -486,10 +493,10 @@ public class Canvas extends JPanel implements Client{
 	 * information is handled by the function which the controller calls on to
 	 * add users.
 	 * 
-	 * @param g
-	 *            the Graphics2D object to work with
 	 */
-	private void createUserTable(Graphics2D g) {
+	private void createUserTable() {
+	    final Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
+
 		int yPos = this.currentColorSquareY + windowW / 4;
 		int xPos = margins;
 		yPos = yPos + margins;
@@ -518,7 +525,7 @@ public class Canvas extends JPanel implements Client{
 			createText(g, tableEntry, xStringPos, startingY + heightOfString
 					* (i + 1), textColor, 1, 13);
 		}
-
+		this.repaint();
 	}
 
 	/**
@@ -535,7 +542,7 @@ public class Canvas extends JPanel implements Client{
 		createButtonsAndText(g);
 		createColorPalate(g);
 		createCurrentColorSquare(g);
-		createUserTable(g);
+		createUserTable();
 	}
 
 	/*
@@ -546,13 +553,14 @@ public class Canvas extends JPanel implements Client{
 		Graphics2D g = (Graphics2D) drawingBuffer.getGraphics();
 
 		g.setStroke(new BasicStroke(l.getStrokeThickness(), 1, 1));
-		g.setColor(new Color(l.getR(),l.getG(),l.getB(),l.getA()));
-		
+		g.setColor(new Color(l.getR(), l.getG(), l.getB(), l.getA()));
+
 		g.drawLine(l.getX1(), l.getY1(), l.getX2(), l.getY2());
-		if(withRepaint){
-		    this.repaint();
+		if (withRepaint) {
+			this.repaint();
 		}
 	}
+
 	/**
 	 * Set strokeWidth
 	 * 
@@ -629,7 +637,9 @@ public class Canvas extends JPanel implements Client{
 			int x = pos[0];
 			int y = pos[1];
 
-			Line l = new Line(lastPos[0], lastPos[1], x, y, lineStroke, lineColor.getRed(), lineColor.getGreen(), lineColor.getBlue(), lineColor.getAlpha());
+			Line l = new Line(lastPos[0], lastPos[1], x, y, lineStroke,
+					lineColor.getRed(), lineColor.getGreen(),
+					lineColor.getBlue(), lineColor.getAlpha());
 			lobby.makeRequest(ClientSideMessageMaker.makeRequestStringDraw(l));
 			lastPos = adjustedPos(x, y);
 		}
@@ -696,8 +706,8 @@ public class Canvas extends JPanel implements Client{
 			}
 
 			if (action.equals("Clear board")) {
-				fillWithWhite();
-				//TODO: Send Message here
+				lobby.makeRequest(ClientSideMessageMaker
+						.makeRequestStringClear());
 			}
 
 			if (action.equals("LEAVE BOARD")) {
@@ -709,7 +719,7 @@ public class Canvas extends JPanel implements Client{
 				lineColor = colorAction;
 				createCurrentColorSquare(g);
 				repaint();
-				
+
 			}
 
 		}
@@ -724,46 +734,56 @@ public class Canvas extends JPanel implements Client{
 		}
 	}
 
+	@Override
+	public void onReceiveUsernameChanged(String rcvdName) {
+		return;
+	}
+
+	@Override
+	public void onReceiveBoardIDs(List<Integer> rcvdIDs) {
+		return;
+	}
+
+	@Override
+	public void onReceiveWelcome(int id) {
+		return;
+	}
+
+	@Override
+	public void onReceiveDraw(Line l) {
+		final Line line = l;
+		SwingUtilities.invokeLater(new Thread() {
+			@Override
+			public void run() {
+				drawLineSegment(line, true);
+			}
+		});
+
+	}
+
+	@Override
+	public void onReceiveBoardLines(List<Line> ls) {
+		final List<Line> lines = ls;
+		SwingUtilities.invokeLater(new Thread() {
+			@Override
+			public void run() {
+				for (Line line : lines) {
+					drawLineSegment(line, false);
+				}
+				repaint();
+			}
+		});
+
+	}
+
     @Override
-    public void onReceiveUsernameChanged(String rcvdName) {
-        return;
+    public void onReceiveClear() {
+        this.fillWithWhite();
     }
 
     @Override
-    public void onReceiveBoardIDs(List<Integer> rcvdIDs) {
-        return;
-    }
-
-    @Override
-    public void onReceiveWelcome(int id) {
-        return;
-    }
-
-    @Override
-    public void onReceiveDraw(Line l) {
-        final Line line = l;
-        SwingUtilities.invokeLater(new Thread(){
-            @Override
-            public void run() {
-                drawLineSegment(line, true);
-            }    
-        });
-        
-    }
-
-    @Override
-    public void onReceiveBoardLines(List<Line> ls) {
-        final List<Line> lines = ls;
-        SwingUtilities.invokeLater(new Thread(){
-            @Override
-            public void run() {
-                for (Line line : lines){
-                    drawLineSegment(line, false);
-                }
-                repaint();
-            }
-        });
-        
+    public void onReceiveUsers(List<String> users) {
+        this.createUserList(users);
     }
 
 }
