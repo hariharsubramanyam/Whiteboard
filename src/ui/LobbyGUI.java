@@ -192,16 +192,16 @@ public class LobbyGUI extends JFrame implements Client {
 		});
 	}
 	
-	public void onReceiveUserIDs(List<Integer> rcvdIDs) {
-		final List<Integer> userIDs = rcvdIDs;
+	public void onReceiveUserIDs(List<String> rcvdNames) {
+		final List<String> userNames = rcvdNames;
 		SwingUtilities.invokeLater(new Thread() {
 			@Override
 			public void run() {
-				lstMdlBoards.clear();
-				for (int boardID : userIDs) {
-					lstMdlBoards.addElement("Board " + boardID);
+				lstMdlUsers.clear();
+				for (String userName : userNames) {
+					lstMdlUsers.addElement(userName);
 				}
-				lstBoards.setSelectedIndex(lstMdlBoards.size() - 1);
+				lstUsers.setSelectedIndex(lstMdlUsers.size() - 1);
 			}
 		});
 	}
