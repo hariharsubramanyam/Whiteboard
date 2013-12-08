@@ -30,7 +30,6 @@ import javax.swing.SwingUtilities;
 
 import protocol.Client;
 import protocol.ClientSideMessageMaker;
-import protocol.MessageHandler;
 import ui.LobbyGUI;
 import adts.Line;
 
@@ -724,7 +723,8 @@ public class Canvas extends JPanel implements Client {
 			if (action.equals("LEAVE BOARD")) {
 				window.dispose();
 				lobby.setVisible(true);
-				lobby.makeRequest(MessageHandler.makeRequOestStringLeaveBoard());
+				lobby.makeRequest(ClientSideMessageMaker
+						.makeRequestStringLeaveBoard());
 			}
 
 			if (colorAction != null) {
@@ -777,8 +777,8 @@ public class Canvas extends JPanel implements Client {
 	public void onReceiveBoardLines(List<Line> ls, Set<String> uNames) {
 		final List<Line> lines = ls;
 		final Set<String> uN = uNames;
-		for(String u : uN)
-		    System.out.println("Got result: " + u);
+		for (String u : uN)
+			System.out.println("Got result: " + u);
 		SwingUtilities.invokeLater(new Thread() {
 			@Override
 			public void run() {

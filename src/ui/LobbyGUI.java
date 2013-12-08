@@ -20,7 +20,6 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import protocol.Client;
@@ -69,14 +68,14 @@ public class LobbyGUI extends JFrame implements Client {
 	private final JButton btnCreateBoard;
 
 	// list of current boards
-	private final JList lstBoards;
+	private final JList<String> lstBoards;
 	private final JScrollPane scrollLstBoards;
-	private final DefaultListModel lstMdlBoards;
+	private final DefaultListModel<String> lstMdlBoards;
 
 	// list of all users
-	private final JList lstUsers;
+	private final JList<String> lstUsers;
 	private final JScrollPane scrollLstUsers;
-	private final DefaultListModel lstMdlUsers;
+	private final DefaultListModel<String> lstMdlUsers;
 
 	// layout manager
 	private final GroupLayout layout;
@@ -110,7 +109,7 @@ public class LobbyGUI extends JFrame implements Client {
 		this.serverMessagesThread.start();
 
 		// create the UI to view and change the username and new whiteboards
-		this.labelUserName = new JLabel("User: " + this.user);
+		this.labelUserName = new JLabel("User: guest");
 		this.btnSetUserName = new JButton("Change Username");
 		this.btnSetUserName.addActionListener(new SetUserNameListener());
 		this.btnCreateBoard = new JButton("Create Whiteboard");
@@ -199,7 +198,7 @@ public class LobbyGUI extends JFrame implements Client {
 			@Override
 			public void run() {
 				user.setName(newName);
-				labelUserName.setText(newName);
+				labelUserName.setText("User: " + newName);
 				JOptionPane.showMessageDialog(null, "Changed username to "
 						+ newName);
 			}
@@ -231,9 +230,8 @@ public class LobbyGUI extends JFrame implements Client {
 		public void actionPerformed(ActionEvent e) {
 			String newUser = JOptionPane.showInputDialog("Enter new user name");
 			user.setName(newUser);
-			String userName = user.getName();
 			makeRequest(ClientSideMessageMaker
-					.makeRequestStringSetUsername(userName));
+					.makeRequestStringSetUsername(newUser));
 		}
 	}
 	private class CreateWhiteboardListener implements ActionListener {
@@ -252,7 +250,6 @@ public class LobbyGUI extends JFrame implements Client {
 	private class JoinBoardListener extends MouseAdapter {
 	    @Override
 	    public void mouseClicked(MouseEvent e) {
-	        JList list = (JList)e.getSource();
 	        if(e.getClickCount() == 2){
 	            String selectedItem = (String) lstBoards.getSelectedValue();
 	            canvas = new Canvas(1000, 1000, self, user.getName());
