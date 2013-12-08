@@ -3,11 +3,14 @@ package ui;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.DefaultListModel;
 import javax.swing.GroupLayout;
@@ -117,12 +120,14 @@ public class LobbyGUI extends JFrame implements Client {
 		this.lstMdlBoards = new DefaultListModel<String>();
 		this.lstBoards = new JList<String>(this.lstMdlBoards);
 		this.lstBoards.setSelectedIndex(0);
+		this.lstBoards.addMouseListener(new JoinBoardListener());
 		this.scrollLstBoards = new JScrollPane(this.lstBoards);
 
 		// create the list of users
 		this.lstMdlUsers = new DefaultListModel<String>();
 		this.lstUsers = new JList<String>(this.lstMdlUsers);
 		this.lstUsers.setSelectedIndex(0);
+		
 		this.scrollLstUsers = new JScrollPane(this.lstUsers);
 
 		Container contentPane = this.getContentPane();
@@ -183,7 +188,6 @@ public class LobbyGUI extends JFrame implements Client {
 				for (int boardID : boardIDs) {
 					lstMdlBoards.addElement("Board " + boardID);
 				}
-				lstMdlBoards.addElement("Create a new board...");
 				lstBoards.setSelectedIndex(lstMdlBoards.size() - 1);
 			}
 		});
@@ -232,7 +236,6 @@ public class LobbyGUI extends JFrame implements Client {
 					.makeRequestStringSetUsername(userName));
 		}
 	}
-
 	private class CreateWhiteboardListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -246,41 +249,43 @@ public class LobbyGUI extends JFrame implements Client {
 		}
 	}
 
-	private class JoinBoardListener implements ActionListener {
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			String selectedItem = (String) lstBoards.getSelectedValue();
-			canvas = new Canvas(1000, 1000, self, user.getName());
-			canvas.setVisible(true);
-			setVisible(false);
-			if (selectedItem.equals("Create a new board...")) {
-				out.println(MessageHandler
-						.makeRequestStringCreateBoard("MyBoard"));
-			} else {
-				out.println(MessageHandler.makeRequestStringJoinBoardID(Integer
-						.parseInt(selectedItem.replace("Board ", ""))));
-			}
-
-		}
+	private class JoinBoardListener extends MouseAdapter {
+	    @Override
+	    public void mouseClicked(MouseEvent e) {
+	        JList list = (JList)e.getSource();
+	        if(e.getClickCount() == 2){
+	            String selectedItem = (String) lstBoards.getSelectedValue();
+	            canvas = new Canvas(1000, 1000, self, user.getName());
+	            canvas.setVisible(true);
+	            setVisible(false);
+	            out.println(MessageHandler.makeRequestStringJoinBoardID(Integer.parseInt(selectedItem.replace("Board ", ""))));
+	            
+	        }
+	    }
 	}
 
-	@Override
-	public void onReceiveDraw(Line l) {
-		canvas.onReceiveDraw(l);
-	}
+    @Override
+    public void onReceiveDraw(Line l) {
+        if(canvas != null)
+            canvas.onReceiveDraw(l);
+    }
 
-	@Override
-	public void onReceiveBoardLines(List<Line> ls) {
-		canvas.onReceiveBoardLines(ls);
-	}
+    @Override
+    public void onReceiveBoardLines(List<Line> ls, Set<String> userNames) {
+        if(canvas != null){
+            canvas.onReceiveBoardLines(ls, userNames);
+        }
+    }
 
-	@Override
-	public void onReceiveClear() {
-		canvas.onReceiveClear();
-	}
+    @Override
+    public void onReceiveClear() {
+        if(canvas != null)
+            canvas.onReceiveClear();
+    }
 
-	@Override
-	public void onReceiveUsers(List<String> users) {
-		canvas.onReceiveUsers(users);
-	}
+    @Override
+    public void onReceiveUsers(List<String> users) {
+        if(canvas != null)
+            canvas.onReceiveUsers(users);
+    }
 }

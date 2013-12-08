@@ -1,7 +1,9 @@
 package protocol;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import adts.Line;
 import ui.LobbyGUI;
@@ -17,7 +19,6 @@ public class ClientSideResponseHandler {
 	   
 	    String command = input.split(" ")[0];
 	    String[] tokens = input.replace(command, "").trim().split(" ");
-	    
 	    if(command.equals(MessageHandler.RESP_BOARD_IDS)){
 	        handleBoardIDs(tokens, userGUI);
 	    } else if (command.equals(MessageHandler.RESP_USERNAME_CHANGED)){
@@ -77,12 +78,15 @@ public class ClientSideResponseHandler {
 	
 	public static void handleBoardLines(String[] tokens, LobbyGUI userGUI){
 	    List<Line> lines = new ArrayList<Line>();
+	    Set<String> userNames = new HashSet<String>();
+	    int numUsers = Integer.parseInt(tokens[0]);
 	    int i = 0;
+	    for(i = 2; i < numUsers+2; i++){
+	        userNames.add(tokens[i]);
+	    }
 	    int x1, y1, x2, y2, r, g, b, a;
 	    float strokeThickness;
 	    while(i < tokens.length){
-	        if(tokens[0].equals(""))
-	            continue;
 	        x1 = Integer.parseInt(tokens[i]);
 	        y1 = Integer.parseInt(tokens[i+1]);
 	        x2 = Integer.parseInt(tokens[i+2]);
@@ -95,6 +99,6 @@ public class ClientSideResponseHandler {
 	        i = i + 9;
 	        lines.add(new Line(x1, y1, x2, y2, strokeThickness, r, g, b, a));
 	    }
-	    userGUI.onReceiveBoardLines(lines);
+	    userGUI.onReceiveBoardLines(lines, userNames);
 	}
 }

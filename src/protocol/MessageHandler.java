@@ -173,8 +173,7 @@ public class MessageHandler {
             List<Line> lines = lobbyModel.getLinesForBoardID(boardID);
             //userThread.broadcast(response, userIDsOfUsersInSameBoard);
             userThread.broadcast(response);
-            userThread.output(response);
-            userThread.output(MessageHandler.makeResponseBoardLines(lines));
+            userThread.output(MessageHandler.makeResponseBoardLines(lines,userNames));
         } catch (Exception ex) {
             userThread.output(MessageHandler.makeResponseFailed());
         }
@@ -388,9 +387,14 @@ public class MessageHandler {
      *         [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1] [x2] [y2]
      *         [strokeThickness] [r] [g] [b] [a]...
      */
-    private static String makeResponseBoardLines(List<Line> lines) {
+    private static String makeResponseBoardLines(List<Line> lines, Set<String> userNames) {
         StringBuilder response = new StringBuilder();
         response.append(MessageHandler.RESP_BOARD_LINES);
+        response.append(" " + userNames.size());
+        response.append(" " + lines.size());
+        for (String userName : userNames){
+            response.append(" " + userName);
+        }
         for (Line line : lines) {
             response.append(" " + line.toString());
         }

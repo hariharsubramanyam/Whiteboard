@@ -16,9 +16,13 @@ import java.awt.event.MouseMotionListener;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -26,6 +30,7 @@ import javax.swing.SwingUtilities;
 
 import protocol.Client;
 import protocol.ClientSideMessageMaker;
+import protocol.MessageHandler;
 import ui.LobbyGUI;
 import adts.Line;
 
@@ -250,7 +255,7 @@ public class Canvas extends JPanel implements Client {
 	 * @param users
 	 *            a String array composed of every username
 	 */
-	public void createUserList(List<String> users) {
+	public void createUserList(Collection<String> users) {
 		userNames = new ArrayList<String>();
 		for (String user : users) {
 			userNames.add(user);
@@ -281,7 +286,7 @@ public class Canvas extends JPanel implements Client {
 		drawingBuffer = createImage(getWidth(), getHeight());
 		fillWithWhite();
 		createButtonLayout();
-		List<String> oneUser = new ArrayList<String>();
+		Set<String> oneUser = new HashSet<String>();
 		oneUser.add(this.user);
 		createUserList(oneUser);
 	}
@@ -517,6 +522,7 @@ public class Canvas extends JPanel implements Client {
 		// insert the active users supplied by the controller
 		int startingY = yPos + tableHeight / 15 + 3 * margins;
 		int heightOfString = tableHeight / 15;
+		Collections.sort(userNames);
 		for (int i = 0; i < userNames.size(); i++) {
 			String tableEntry = String.valueOf(i + 1) + ". " + userNames.get(i);
 			createText(g, tableEntry, xStringPos, startingY + heightOfString
@@ -718,6 +724,7 @@ public class Canvas extends JPanel implements Client {
 			if (action.equals("LEAVE BOARD")) {
 				window.dispose();
 				lobby.setVisible(true);
+				lobby.makeRequest(MessageHandler.makeRequOestStringLeaveBoard());
 			}
 
 			if (colorAction != null) {
@@ -767,18 +774,20 @@ public class Canvas extends JPanel implements Client {
 	}
 
 	@Override
-	public void onReceiveBoardLines(List<Line> ls) {
+	public void onReceiveBoardLines(List<Line> ls, Set<String> uNames) {
 		final List<Line> lines = ls;
+		final Set<String> uN = uNames;
+		for(String u : uN)
+		    System.out.println("Got result: " + u);
 		SwingUtilities.invokeLater(new Thread() {
 			@Override
 			public void run() {
 				for (Line line : lines) {
 					drawLineSegment(line, false);
 				}
-				repaint();
+				createUserList(uN);
 			}
 		});
-
 	}
 
 	@Override
