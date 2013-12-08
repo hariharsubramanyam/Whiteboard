@@ -36,17 +36,18 @@ public class WhiteboardServer {
 
 	}
 
-	public static void main(String[] args) throws IOException {
-		int port = 4444;
-		WhiteboardServer server = new WhiteboardServer(port);
 
+	public static void main(String[] args) {
+		int port = 4444;
+		WhiteboardServer server;
 		Queue<String> arguments = new LinkedList<String>(Arrays.asList(args));
 		while (!arguments.isEmpty()) {
 			return;
 		}
 
 		try {
-			server.runWhiteboardServer(port);
+		    server = new WhiteboardServer(port);
+            server.serve();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

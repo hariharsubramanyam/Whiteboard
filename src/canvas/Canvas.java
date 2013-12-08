@@ -17,6 +17,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -522,6 +523,7 @@ public class Canvas extends JPanel implements Client {
 		// insert the active users supplied by the controller
 		int startingY = yPos + tableHeight / 15 + 3 * margins;
 		int heightOfString = tableHeight / 15;
+		Collections.sort(userNames);
 		for (int i = 0; i < userNames.size(); i++) {
 			String tableEntry = String.valueOf(i + 1) + ". " + userNames.get(i);
 			createText(g, tableEntry, xStringPos, startingY + heightOfString
@@ -788,7 +790,6 @@ public class Canvas extends JPanel implements Client {
 
     @Override
     public void onReceiveUsers(List<String> users) {
-        System.out.println("Sysout");
         this.createUserList(users);
     }
 
