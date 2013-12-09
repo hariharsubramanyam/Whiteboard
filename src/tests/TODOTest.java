@@ -6,25 +6,16 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-import javax.swing.JOptionPane;
-
-import ui.LobbyGUI;
-import ui.LobbyGUIBackgroundThread;
-import server.WhiteboardServer;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
 
 import protocol.ClientSideMessageMaker;
+import server.WhiteboardServer;
+
+
 
 /**
- * This is the test suite for TODO . It starts by testing to make sure all the
- * equals(), toString(), and hashCode() methods work correctly as they are the
- * foundation for the entire project. It ends by testing the more specific
- * methods for each class. Must supply valid inputs for the tests as defined by
- * the preconditions in each class to pass these tests.
+ * Description of test suite (what it tests, etc.) TODO
  */
 
 public class TODOTest {
@@ -34,7 +25,7 @@ public class TODOTest {
 	 * 
 	 * Goal: make sure every TODO method works correctly
 	 * 
-	 * Strategy: Run a WhiteboardServer, create three instances 
+	 * Strategy: Run a WhiteboardServer, create three instances TODO
 	 *           of LobbyGUI and test various requests/responses.
 	 *           
 	 */
@@ -46,21 +37,74 @@ public class TODOTest {
 	String testHost = "127.0.0.1";   //localhost, can be replaced to test remote servers
 	
 	@Test(timeout=1000) // time out in 1 second, in case test does not complete
-	public void test_get_board_ids() throws IOException, InterruptedException {
-		// Initialize server and client1
+	public void multiple_clients_create_and_get_board_ids_test() throws IOException {
+	
+		String createBoardReq = ClientSideMessageMaker.makeRequestStringCreateBoard("newBoard");
+		String getBoardIDsReq = ClientSideMessageMaker.makeRequestStringGetBoardIDs();
+		
+		// Initialize server and client1, client2.
 		WhiteboardServer server = new WhiteboardServer(port);
 		server.serve();
 		SimpleClient client1 = new SimpleClient(testHost);
+		SimpleClient client2 = new SimpleClient(testHost);
+				
+		client1.checkResponse("welcome 0");   // userID starts at 0
+		client2.checkResponse("welcome 1");
 		
-		// Have client1 create a board named "Board1".
-		String createBoardReq = ClientSideMessageMaker.makeRequestStringCreateBoard("Board1");
-		client1.makeRequest(createBoardReq);
-
-		Thread.sleep(10);  // Sleep for 10 ms to give server time to respond.
-		client1.checkResponse("welcome 0");  // The first connector gets a userID of 0.
+		client1.sendReqAndCheckResponse(getBoardIDsReq, "board_ids"); // no boards yet.
+		
+		// Have client1 create a board named "newBoard".
+		// client1.sendReqAndCheckResponse(createBoardReq,"done"); // The first board is board 0"
+		
+		// client2 should have been notified that client1 made a board
+		// client2.checkResponse("board_ids 0");
+		
+		// client 3 connects and makes a board.
+		SimpleClient client3 = new SimpleClient(testHost);
+		client3.checkResponse("welcome 2"); // userID is 2.
+		// client3.sendReqAndCheckResponse(createBoardReq,"board_ids 0 1");
+		// client1.checkResponse("board_ids 0 1");
+		// client2.checkResponse("board_ids 0 1");
+		
+	}	
+	
+	@Test(timeout=1000) // time out in 1 second, in case test does not complete
+	public void multiple_clients_test1() throws IOException {
+		
 	}
 	
+	@Test(timeout=1000) // time out in 1 second, in case test does not complete
+	public void multiple_clients_test2() throws IOException {
+		
+	}
+	
+	@Test(timeout=1000) // time out in 1 second, in case test does not complete
+	public void multiple_clients_test3() throws IOException {
+		
+	}
+	
+	@Test(timeout=1000) // time out in 1 second, in case test does not complete
+	public void multiple_clients_test4() throws IOException {
+		
+	}
+	
+	@Test(timeout=1000) // time out in 1 second, in case test does not complete
+	public void multiple_clients_test5() throws IOException {
+		
+	}
+	
+	
 }
+
+
+
+
+
+
+
+
+
+
 class SimpleClient {
 	String host;
 	Socket socket;
@@ -107,6 +151,17 @@ class SimpleClient {
 
 	public void checkResponse(String expected) {
 		assertEquals(expected, this.getResponse());
+	}
+	
+	public void sendReqAndCheckResponse(String req, String expectedResponse) {
+		this.makeRequest(req);
+
+		try {
+			Thread.sleep(1); // Sleep for 1 ms to give server time to respond.
+		} catch (InterruptedException e) {
+			System.out.println("Error waiting in sendReqAndCheckResponse.");}  
+		
+		this.checkResponse(expectedResponse); 
 	}
 	
 }
