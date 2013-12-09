@@ -516,7 +516,7 @@ public class Canvas extends JPanel implements Client {
 		int tableWidth = windowW - 2 * margins;
 		int tableHeight = windowH - yPos - margins;
 
-		g.setColor(Color.CYAN);
+		g.setColor(new Color(0,102,204));
 		// the background of the table
 		g.fillRect(xPos, yPos, tableWidth, tableHeight);
 
@@ -528,7 +528,7 @@ public class Canvas extends JPanel implements Client {
 		g.drawRect(xPos, yPos, tableWidth, tableHeight / 10);
 		int xStringPos = 3 * margins;
 		int yStringPos = yPos + tableHeight / 15;
-		createText(g, "Active Users", xStringPos, yStringPos, textColor, 1, 15);
+		createText(g, "Active Users", xStringPos, yStringPos, Color.WHITE, 1, 15);
 
 		// insert the active users supplied by the controller
 		int startingY = yPos + tableHeight / 15 + 3 * margins;
@@ -536,11 +536,11 @@ public class Canvas extends JPanel implements Client {
 		Collections.sort(userNames);
 		userNames.remove(this.user);
 		String tableEntry = String.valueOf(1) + ". " + this.user;
-        createText(g, tableEntry, xStringPos, startingY + heightOfString * (1), Color.RED, 1, 20);
+        createText(g, tableEntry, xStringPos, startingY + heightOfString * (1), Color.YELLOW, 1, 20);
 		for (int i = 0; i < userNames.size(); i++) {
 			tableEntry = String.valueOf(i + 2) + ". " + userNames.get(i);
 			createText(g, tableEntry, xStringPos, startingY + heightOfString
-					* (i + 2), textColor, 1, 13);
+					* (i + 2), Color.WHITE, 1, 13);
 		}
 		this.repaint();
 	}
