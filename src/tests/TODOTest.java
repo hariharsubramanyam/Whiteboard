@@ -23,30 +23,36 @@ public class TODOTest {
 	/*
 	 * Testing strategy
 	 * 
-	 * Goal: make sure every TODO method works correctly
+	 * Goal: Make sure the server responds correctly to various requests
 	 * 
-	 * Strategy: Run a WhiteboardServer, create three instances TODO
-	 *           of LobbyGUI and test various requests/responses.
-	 *           
+	 * Strategy: For most of the request/response types, we will create four clients. 
+	 *           Two of them will join a board, one of them will join another board, and
+	 *           one of them will not be in any boards. This way, when we do an action, we can 
+	 *           see it from all relevant perspectives:
+	 *           	-Self
+	 *           	-Other users in my board
+	 *           	-Other users in other boards
+	 *           	-Other users not in any boards
 	 */
 
 	/*
 	 * Test TODO objects for the equals methods by TODO
 	 */
-	int port = 4444;
+	int port;
 	String testHost = "127.0.0.1";   //localhost, can be replaced to test remote servers
 	
 	@Test(timeout=1000) // time out in 1 second, in case test does not complete
-	public void multiple_clients_create_and_get_board_ids_test() throws IOException {
-	
+	public void boardIDtests() throws IOException {
+		port = 4444;
+		
 		String createBoardReq = ClientSideMessageMaker.makeRequestStringCreateBoard("newBoard");
 		String getBoardIDsReq = ClientSideMessageMaker.makeRequestStringGetBoardIDs();
 		
 		// Initialize server and client1, client2.
 		WhiteboardServer server = new WhiteboardServer(port);
 		server.serve();
-		SimpleClient client1 = new SimpleClient(testHost);
-		SimpleClient client2 = new SimpleClient(testHost);
+		SimpleClient client1 = new SimpleClient(testHost, port);
+		SimpleClient client2 = new SimpleClient(testHost, port);
 				
 		client1.checkResponse("welcome 0");   // userID starts at 0
 		client2.checkResponse("welcome 1");
@@ -54,7 +60,7 @@ public class TODOTest {
 		client1.sendReqAndCheckResponse(getBoardIDsReq, "board_ids"); // no boards yet.
 		
 		// Have client1 create a board named "newBoard".
-		client1.sendReqAndCheckResponse(createBoardReq, "done"); // This isn't working.
+		client1.sendReqAndCheckResponse(createBoardReq, "board_ids 0"); // This isn't working.
 		
 		// client2 should have been notified that client1 made a board
 		// client2.checkResponse("board_ids 0");
@@ -69,12 +75,38 @@ public class TODOTest {
 	}	
 	
 	@Test(timeout=1000) // time out in 1 second, in case test does not complete
-	public void multiple_clients_test1() throws IOException {
-
+	public void usernameTests() throws IOException {
+		port = 4446;
+		
+		// Initialize server and client1
+		WhiteboardServer server = new WhiteboardServer(port);
+		server.serve();
+		SimpleClient client1 = new SimpleClient(testHost, port);
+		SimpleClient client2 = new SimpleClient(testHost, port);
+		client1.checkResponse("welcome 0");   // userID starts at 0
+		client2.checkResponse("welcome 1");
 	}
 	
 	@Test(timeout=1000) // time out in 1 second, in case test does not complete
-	public void multiple_clients_test2() throws IOException {
+	public void create_join_leave_logout_tests() throws IOException {
+		port = 4445;
+		
+		// Initialize server and clients 1-4.
+		WhiteboardServer server = new WhiteboardServer(port);
+		server.serve();
+		
+		SimpleClient client1 = new SimpleClient(testHost, port);
+		SimpleClient client2 = new SimpleClient(testHost, port);
+		SimpleClient client3 = new SimpleClient(testHost, port);
+		SimpleClient client4 = new SimpleClient(testHost, port);
+			
+		// Check that the clients are greeted with their userIDs
+		client1.checkResponse("welcome 0");   // userID starts at 0
+		client2.checkResponse("welcome 1");
+		client3.checkResponse("welcome 2");   
+		client4.checkResponse("welcome 3");
+			
+		// client1 makes a board ...
 		
 	}
 	
@@ -113,10 +145,10 @@ class SimpleClient {
 	BufferedReader in;
 	String serverResponse;
 	
-	public SimpleClient(String host) {
+	public SimpleClient(String host, int port) {
 		try{
 		    this.host = host;
-		    this.socket = new Socket(host, 4444);
+		    this.socket = new Socket(host, port);
 		    this.out = new PrintWriter(socket.getOutputStream(), true);
 		    this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		}catch(Exception ex){}
