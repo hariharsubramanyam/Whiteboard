@@ -11,6 +11,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.DefaultListModel;
 import javax.swing.GroupLayout;
@@ -22,6 +24,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
+import logger.Log;
 import protocol.Client;
 import protocol.ClientSideMessageMaker;
 import protocol.MessageHandler;
@@ -48,6 +51,9 @@ import canvas.Canvas;
  * 
  */
 public class LobbyGUI extends JFrame implements Client {
+
+	// use the classname for the logger, this way you can refactor
+	private final static Logger LOGGER = Logger.getLogger(Log.class.getName());
 
 	private static final long serialVersionUID = 1L;
 
@@ -88,17 +94,23 @@ public class LobbyGUI extends JFrame implements Client {
 
 	public LobbyGUI() {
 		// get the hostname and create the socket
-		try {
-			String hostName = JOptionPane
-					.showInputDialog(
-							"Enter the hostname of the whiteboard server:",
-							"localhost");
-			this.socket = new Socket(hostName, 4444);
-			this.out = new PrintWriter(socket.getOutputStream(), true);
-			this.in = new BufferedReader(new InputStreamReader(
-					socket.getInputStream()));
-		} catch (Exception ex) {
-			ex.printStackTrace();
+		LOGGER.setLevel(Level.FINEST);
+		while (this.in == null) {
+			try {
+				String hostName = JOptionPane.showInputDialog(
+						"Enter the hostname of the whiteboard server:",
+						"localhost");
+				LOGGER.finest("Hostname (IP) inputted: " + hostName);
+				this.socket = new Socket(hostName, 4444);
+				this.out = new PrintWriter(socket.getOutputStream(), true);
+				this.in = new BufferedReader(new InputStreamReader(
+						socket.getInputStream()));
+			} catch (Exception ex) {
+
+				LOGGER.severe("Failed to connect to server ");
+
+				// ex.printStackTrace();
+			} 
 		}
 
 		// sets this current object
@@ -126,7 +138,7 @@ public class LobbyGUI extends JFrame implements Client {
 		this.lstMdlUsers = new DefaultListModel<String>();
 		this.lstUsers = new JList<String>(this.lstMdlUsers);
 		this.lstUsers.setSelectedIndex(0);
-		
+
 		this.scrollLstUsers = new JScrollPane(this.lstUsers);
 
 		Container contentPane = this.getContentPane();
@@ -191,7 +203,7 @@ public class LobbyGUI extends JFrame implements Client {
 			}
 		});
 	}
-	
+
 	public void onReceiveUserIDs(List<String> rcvdNames) {
 		final List<String> userNames = rcvdNames;
 		SwingUtilities.invokeLater(new Thread() {
@@ -215,14 +227,17 @@ public class LobbyGUI extends JFrame implements Client {
 				labelUserName.setText("User: " + newName);
 				JOptionPane.showMessageDialog(null, "Changed username to "
 						+ newName);
-				if(canvas != null){
-				    canvas.onReceiveUsernameChanged(newName);
+				if (canvas != null) {
+					canvas.onReceiveUsernameChanged(newName);
 				}
 			}
 		});
 	}
 
 	public void onReceiveWelcome(int id) {
+
+		LOGGER.info("Successful connection to server");
+
 		this.user = new User(id);
 		labelUserName.setText("User: Guest_" + String.valueOf(id));
 	}
@@ -251,66 +266,72 @@ public class LobbyGUI extends JFrame implements Client {
 					.makeRequestStringSetUsername(newUser));
 		}
 	}
+
 	private class CreateWhiteboardListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			String newBoard = JOptionPane
 					.showInputDialog("Enter new Whiteboard name");
 			String canvasName = newBoard;
-			if (canvasName.equals("")){
+			if (canvasName.equals("")) {
 				canvasName = "[No name]";
 			}
-			canvas = new Canvas(1000, 1000, self, user.getName(),-1, canvasName);
+			canvas = new Canvas(1000, 1000, self, user.getName(), -1,
+					canvasName);
 			canvas.setVisible(true);
 			setVisible(false);
-			out.println(ClientSideMessageMaker.makeRequestStringCreateBoard(newBoard));
+			out.println(ClientSideMessageMaker
+					.makeRequestStringCreateBoard(newBoard));
 		}
 	}
 
 	private class JoinBoardListener extends MouseAdapter {
-	    @Override
-	    public void mouseClicked(MouseEvent e) {
-	        if(e.getClickCount() == 2){
-	            String selectedItem = (String) lstBoards.getSelectedValue();
-	            int boardID = Integer.parseInt(selectedItem.replace("Board ", ""));
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			if (e.getClickCount() == 2) {
+				String selectedItem = (String) lstBoards.getSelectedValue();
+				int boardID = Integer.parseInt(selectedItem.replace("Board ",
+						""));
 				String canvasName = selectedItem;
-	            canvas = new Canvas(1000, 1000, self, user.getName(),boardID, canvasName);
-	            canvas.setVisible(true);
-	            setVisible(false);
-	            out.println(MessageHandler.makeRequestStringJoinBoardID(boardID));
-	            
-	        }
-	    }
+				canvas = new Canvas(1000, 1000, self, user.getName(), boardID,
+						canvasName);
+				canvas.setVisible(true);
+				setVisible(false);
+				out.println(MessageHandler
+						.makeRequestStringJoinBoardID(boardID));
+
+			}
+		}
 	}
 
-    @Override
-    public void onReceiveDraw(Line l) {
-        if(canvas != null)
-            canvas.onReceiveDraw(l);
-    }
+	@Override
+	public void onReceiveDraw(Line l) {
+		if (canvas != null)
+			canvas.onReceiveDraw(l);
+	}
 
-    @Override
-    public void onReceiveBoardLines(List<Line> ls, Set<String> userNames) {
-        if(canvas != null){
-            canvas.onReceiveBoardLines(ls, userNames);
-        }
-    }
+	@Override
+	public void onReceiveBoardLines(List<Line> ls, Set<String> userNames) {
+		if (canvas != null) {
+			canvas.onReceiveBoardLines(ls, userNames);
+		}
+	}
 
-    @Override
-    public void onReceiveClear() {
-        if(canvas != null)
-            canvas.onReceiveClear();
-    }
+	@Override
+	public void onReceiveClear() {
+		if (canvas != null)
+			canvas.onReceiveClear();
+	}
 
-    @Override
-    public void onReceiveUsers(int boardID, List<String> users) {
-        if(canvas != null)
-            canvas.onReceiveUsers(boardID, users);
-    }
+	@Override
+	public void onReceiveUsers(int boardID, List<String> users) {
+		if (canvas != null)
+			canvas.onReceiveUsers(boardID, users);
+	}
 
-    @Override
-    public void onReceiveCurrentBoardID(int boardID) {
-        if(canvas != null)
-            canvas.onReceiveCurrentBoardID(boardID);
-    }
+	@Override
+	public void onReceiveCurrentBoardID(int boardID) {
+		if (canvas != null)
+			canvas.onReceiveCurrentBoardID(boardID);
+	}
 }

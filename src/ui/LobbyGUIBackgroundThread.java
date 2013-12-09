@@ -2,11 +2,15 @@ package ui;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.logging.Logger;
 
+import logger.Log;
 import protocol.ClientSideResponseHandler;
 
 public class LobbyGUIBackgroundThread extends Thread{
 
+	private final static Logger LOGGER = Logger.getLogger(Log.class.getName());
+	
     private final LobbyGUI gui;
     private final BufferedReader in;
     public LobbyGUIBackgroundThread(LobbyGUI gui, BufferedReader in){
@@ -19,6 +23,7 @@ public class LobbyGUIBackgroundThread extends Thread{
         String serverResponse;
         try {
             while ((serverResponse = in.readLine()) != null) {
+            	LOGGER.finest(serverResponse);
                 ClientSideResponseHandler.handleResponse(serverResponse,this.gui);
             }
         } catch (IOException e) {e.printStackTrace();}
