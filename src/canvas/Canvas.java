@@ -23,6 +23,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -47,6 +49,13 @@ public class Canvas extends JPanel implements Client {
 
 	// image where the user's drawing is stored
 	private Image drawingBuffer;
+
+	/**
+	 * Logger for Canvas. Level 0.
+	 */
+	// assumes the current class is called logger
+	private final static Logger LOGGER = Logger.getLogger(Canvas.class
+			.getName());
 
 	/*
 	 * Dimensions defined by their component name followed by X, x-coordinate,
@@ -172,16 +181,22 @@ public class Canvas extends JPanel implements Client {
 	 *            every Canvas must be instantiated with a user String which is
 	 *            the userName of the user who started it
 	 * @param boardID
-	 *             the ID of the current board
+	 *            the ID of the current board
+	 * @param boardName
+	 *            String name given to the Canvas
 	 */
 
-	public Canvas(int width, int height, LobbyGUI lobby, String user, int boardID) {
-	    this.userNames = new ArrayList<String>();
+	public Canvas(int width, int height, LobbyGUI lobby, String user,
+			int boardID, String boardName) {
+
+		this.userNames = new ArrayList<String>();
 		this.lobby = lobby;
 		this.user = user;
 		this.boardID = boardID;
 
-		window = new JFrame("Freehand Canvas");
+		LOGGER.setLevel(Level.SEVERE);
+
+		window = new JFrame(boardName);
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		window.setLayout(new BorderLayout());
 
@@ -516,7 +531,7 @@ public class Canvas extends JPanel implements Client {
 		int tableWidth = windowW - 2 * margins;
 		int tableHeight = windowH - yPos - margins;
 
-		g.setColor(new Color(0,102,204));
+		g.setColor(new Color(0, 102, 204));
 		// the background of the table
 		g.fillRect(xPos, yPos, tableWidth, tableHeight);
 
@@ -528,7 +543,8 @@ public class Canvas extends JPanel implements Client {
 		g.drawRect(xPos, yPos, tableWidth, tableHeight / 10);
 		int xStringPos = 3 * margins;
 		int yStringPos = yPos + tableHeight / 15;
-		createText(g, "Active Users", xStringPos, yStringPos, Color.WHITE, 1, 15);
+		createText(g, "Active Users", xStringPos, yStringPos, Color.WHITE, 1,
+				15);
 
 		// insert the active users supplied by the controller
 		int startingY = yPos + tableHeight / 15 + 3 * margins;
@@ -536,7 +552,8 @@ public class Canvas extends JPanel implements Client {
 		Collections.sort(userNames);
 		userNames.remove(this.user);
 		String tableEntry = String.valueOf(1) + ". " + this.user;
-        createText(g, tableEntry, xStringPos, startingY + heightOfString * (1), Color.YELLOW, 1, 20);
+		createText(g, tableEntry, xStringPos, startingY + heightOfString * (1),
+				Color.YELLOW, 1, 20);
 		for (int i = 0; i < userNames.size(); i++) {
 			tableEntry = String.valueOf(i + 2) + ". " + userNames.get(i);
 			createText(g, tableEntry, xStringPos, startingY + heightOfString
@@ -810,16 +827,16 @@ public class Canvas extends JPanel implements Client {
 		this.fillWithWhite();
 	}
 
-    @Override
-    public void onReceiveUsers(int boardID, List<String> users) {
-        if(boardID != this.boardID)
-            return;
-        this.createUserList(users);
-    }
+	@Override
+	public void onReceiveUsers(int boardID, List<String> users) {
+		if (boardID != this.boardID)
+			return;
+		this.createUserList(users);
+	}
 
-    @Override
-    public void onReceiveCurrentBoardID(int boardID) {
-        this.boardID = boardID;
-    }
+	@Override
+	public void onReceiveCurrentBoardID(int boardID) {
+		this.boardID = boardID;
+	}
 
 }

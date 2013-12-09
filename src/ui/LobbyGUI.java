@@ -257,7 +257,11 @@ public class LobbyGUI extends JFrame implements Client {
 		public void actionPerformed(ActionEvent e) {
 			String newBoard = JOptionPane
 					.showInputDialog("Enter new Whiteboard name");
-			canvas = new Canvas(1000, 1000, self, user.getName(),-1);
+			String canvasName = newBoard;
+			if (canvasName.equals("")){
+				canvasName = "[No name]";
+			}
+			canvas = new Canvas(1000, 1000, self, user.getName(),-1, canvasName);
 			canvas.setVisible(true);
 			setVisible(false);
 			out.println(ClientSideMessageMaker.makeRequestStringCreateBoard(newBoard));
@@ -270,7 +274,8 @@ public class LobbyGUI extends JFrame implements Client {
 	        if(e.getClickCount() == 2){
 	            String selectedItem = (String) lstBoards.getSelectedValue();
 	            int boardID = Integer.parseInt(selectedItem.replace("Board ", ""));
-	            canvas = new Canvas(1000, 1000, self, user.getName(),boardID);
+				String canvasName = selectedItem;
+	            canvas = new Canvas(1000, 1000, self, user.getName(),boardID, canvasName);
 	            canvas.setVisible(true);
 	            setVisible(false);
 	            out.println(MessageHandler.makeRequestStringJoinBoardID(boardID));
