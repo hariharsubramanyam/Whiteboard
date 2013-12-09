@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import logger.Log;
+import LOGGER.Log;
 import protocol.ClientSideResponseHandler;
 
 public class LobbyGUIBackgroundThread extends Thread{
@@ -23,7 +23,7 @@ public class LobbyGUIBackgroundThread extends Thread{
         String serverResponse;
         try {
             while ((serverResponse = in.readLine()) != null) {
-            	LOGGER.finest(serverResponse);
+            	LOGGER.config(serverResponse);
                 ClientSideResponseHandler.handleResponse(serverResponse,this.gui);
             }
         } catch (IOException e) {e.printStackTrace();}

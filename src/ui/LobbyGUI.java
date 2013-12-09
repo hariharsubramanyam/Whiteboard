@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -24,10 +25,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
-import logger.Log;
 import protocol.Client;
 import protocol.ClientSideMessageMaker;
 import protocol.MessageHandler;
+import LOGGER.BoardLogger;
 import adts.Line;
 import adts.User;
 import canvas.Canvas;
@@ -38,22 +39,42 @@ import canvas.Canvas;
  * between the user View of the Canvas and the Server and Model. These
  * Controllers are independent instances given unique IDs by the Model.
  * 
+ * IMPORTANT LOGGER INFO: The logger is initialized at the beginning of the file
+ * to start collecting logs. Logs are put into levels based on their importance.
+ * All exceptions are SEVERE while many of the other smaller logs like server
+ * responses are INFO.
+ * 
  * Testing strategy:
  * 
  * Because of its hard-to-test nature, all testing must be done by manually
  * using the GUI itself. The way this was done is as follows and in this order:
  * 
- * @category general aesthetics: make sure the labels, boxes, and buttons are in
- *           the correct order and that resizing the window causes the two
- *           textboxes to get wider (but not taller), with no upperbound, and
- *           that the table gets wider (no upperbound) and taller (upperbound of
- *           500 pixels).
+ * @caregory the first GUI is the JOptionPane used to connect to a given server
+ *           IP. Test that it correctly connects (when there is a running server
+ *           at the given IP) and that incorrect IPs return a JOptionPane
+ *           showing the failure to connect. Also check that the Cancel button
+ *           and red X will cause the entire program to exit. (verify with the
+ *           Logger's WARNING: Exiting Lobby)
+ * @category the second GUI is the main LobbyGUI. Start by testing the general
+ *           aesthetics: make sure the labels, lists, boxes, and buttons are in
+ *           the correct order and that no resizing of the window is allowed.
+ *           Also make sure the tables auto-scroll by adding enough boards or
+ *           users until there is an overflow.
+ * @category test the username button by entering a string and watching it
+ *           change the username lable.
+ * @category test the create whiteboard button and expect to be automatically
+ *           taken to a Canvas. Then leave the board and test that a new board
+ *           is now listed in the table.
+ * @category Finish testing by adding multiple users to the same LobbyModel and
+ *           assuring their actions of creating boards/changing their usernames,
+ *           are reflected here.
  * 
  */
 public class LobbyGUI extends JFrame implements Client {
 
 	// use the classname for the logger, this way you can refactor
-	private final static Logger LOGGER = Logger.getLogger(Log.class.getName());
+	private final static Logger LOGGER = Logger.getLogger(LobbyGUI.class
+			.getName());
 
 	private static final long serialVersionUID = 1L;
 
@@ -93,14 +114,20 @@ public class LobbyGUI extends JFrame implements Client {
 	private User user;
 
 	public LobbyGUI() {
+
+		setupLogger(Level.ALL);
+
 		// get the hostname and create the socket
-		LOGGER.setLevel(Level.FINEST);
 		while (this.in == null) {
 			try {
 				String hostName = JOptionPane.showInputDialog(
 						"Enter the hostname of the whiteboard server:",
 						"localhost");
-				LOGGER.finest("Hostname (IP) inputted: " + hostName);
+				if (hostName == null) {
+					LOGGER.warning("Exiting Lobby");
+					System.exit(0);
+				}
+				LOGGER.info("Hostname (IP) inputted: " + hostName);
 				this.socket = new Socket(hostName, 4444);
 				this.out = new PrintWriter(socket.getOutputStream(), true);
 				this.in = new BufferedReader(new InputStreamReader(
@@ -108,9 +135,11 @@ public class LobbyGUI extends JFrame implements Client {
 			} catch (Exception ex) {
 
 				LOGGER.severe("Failed to connect to server ");
+				JOptionPane.showMessageDialog(this,
+						"Could not connect to given hostname. Try again.");
 
 				// ex.printStackTrace();
-			} 
+			}
 		}
 
 		// sets this current object
@@ -183,11 +212,24 @@ public class LobbyGUI extends JFrame implements Client {
 
 		this.makeRequest(ClientSideMessageMaker.makeRequestStringGetBoardIDs());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setLocationRelativeTo(null);
+
+	}
+
+	private void setupLogger(Level level) {
+		try {
+			BoardLogger.setup();
+			LOGGER.setLevel(level);
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Problems with creating the log files");
+		}
+
 	}
 
 	public void makeRequest(String req) {
 		out.println(req);
-		System.out.println("REQ: " + req);
+		LOGGER.info("REQ: " + req);
 	}
 
 	public void onReceiveBoardIDs(List<Integer> rcvdIDs) {

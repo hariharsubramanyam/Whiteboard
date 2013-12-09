@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
+import LOGGER.Log;
 import adts.Line;
 import ui.LobbyGUI;
 
@@ -14,8 +16,10 @@ import ui.LobbyGUI;
  */
 public class ClientSideResponseHandler {
 
+	private final static Logger LOGGER = Logger.getLogger(Log.class.getName());
+	
 	public static void handleResponse(String input, LobbyGUI userGUI) {
-	    System.out.println("RESP: " + input);
+	    LOGGER.finest("RESP: " + input);
 	   
 	    String command = input.split(" ")[0];
 	    String[] tokens = input.replace(command, "").trim().split(" ");
