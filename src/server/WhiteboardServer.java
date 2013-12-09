@@ -12,21 +12,39 @@ import java.util.Queue;
 import adts.LobbyModel;
 
 public class WhiteboardServer {
+	private Socket socket;
 	private final ServerSocket serverSocket;
 	private final LobbyModel lobbyModel;
 	private final List<UserThread> userThreads;
+	private final Thread serverThread;
+	private final WhiteboardServer thisServer;
 
 
 	public WhiteboardServer(int port) throws IOException {
 		this.serverSocket = new ServerSocket(port);
 		this.lobbyModel = new LobbyModel();
 		this.userThreads = new ArrayList<UserThread>();
-
+		this.thisServer = this;
+		this.serverThread = new Thread(new Runnable() {
+			public void run() {
+				try {
+					thisServer.singleThreadedServe();
+				} catch (IOException e) {
+					// Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+		});
 	}
-
+	
 	public void serve() throws IOException {
+		this.serverThread.start();
+	}
+	
+	public void singleThreadedServe() throws IOException {
 		while (true) {
-			final Socket socket = serverSocket.accept();
+			socket = serverSocket.accept();
 			int userID = this.lobbyModel.addUser();
 			UserThread thread = new UserThread(socket, userID,
 					this.userThreads, this.lobbyModel);
@@ -60,17 +78,4 @@ public class WhiteboardServer {
 		}
 	}
 	
-	public void killWhiteboardServer() {
-		// Kill the userThreads
-		for (UserThread thread: this.userThreads){
-			thread.cancel();
-		}
-		// Close the serverSocket
-		try {
-			this.serverSocket.close();
-		} catch (IOException e) {
-			// Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
 }

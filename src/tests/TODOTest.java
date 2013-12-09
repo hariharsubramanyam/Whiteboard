@@ -44,39 +44,20 @@ public class TODOTest {
 	 */
 	int port = 4444;
 	String testHost = "127.0.0.1";   //localhost, can be replaced to test remote servers
-	WhiteboardServer server;
-	SimpleClient client1;
-	SimpleClient client2;
-	SimpleClient client3;
 	
-	
-	public void initializeServerAndClients() throws IOException {
-		// Initialize a WhiteboardServer locally on port (4444 by default)
-		server = new WhiteboardServer(port);
+	@Test(timeout=1000) // time out in 1 second, in case test does not complete
+	public void test_get_board_ids() throws IOException, InterruptedException {
+		// Initialize server and client1
+		WhiteboardServer server = new WhiteboardServer(port);
 		server.serve();
+		SimpleClient client1 = new SimpleClient(testHost);
 		
-		// Initialize clients, connecting them to server
-		//client1 = new SimpleClient(testHost);
-		//client2 = new SimpleClient(testHost);
-		//client3 = new SimpleClient(testHost);
-		//terminateServerAndClients();
-		
-	}
-	
-	public void terminateServerAndClients() {
-		server.killWhiteboardServer();
-	}
+		// Have client1 create a board named "Board1".
+		String createBoardReq = ClientSideMessageMaker.makeRequestStringCreateBoard("Board1");
+		client1.makeRequest(createBoardReq);
 
-
-	@Test
-	public void test_get_board_ids() throws IOException {
-		this.initializeServerAndClients();
-		// Have client1 create a board named "Board1"
-		// String createBoardReq = ClientSideMessageMaker.makeRequestStringCreateBoard("Board1");
-		//client1.makeRequest(createBoardReq);
-		// client1.checkResponse("welcome 0");  // The first connector gets a userID of 0.
-		
-		//this.terminateServerAndClients();
+		Thread.sleep(10);  // Sleep for 10 ms to give server time to respond.
+		client1.checkResponse("welcome 0");  // The first connector gets a userID of 0.
 	}
 	
 }
@@ -94,7 +75,12 @@ class SimpleClient {
 		    this.out = new PrintWriter(socket.getOutputStream(), true);
 		    this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		}catch(Exception ex){}
-
+	}
+	
+	public void disconnect() throws IOException {
+		this.out.close();
+		this.in.close();
+		this.socket.close();	
 	}
 	
 	public void makeRequest(String req){
@@ -103,7 +89,6 @@ class SimpleClient {
 	}
 	
 	/**
-	 * 
 	 * @return The earliest response received that was not 
 	 * 		   already returned from an earlier getResponse(). 
 	 * 		   If no response was received, returns the String "No response yet."
@@ -116,7 +101,7 @@ class SimpleClient {
             else {return "No response yet.";}
         } 
 		catch (IOException e) {
-			return "Error reading in.readLine of SimpleClient."; 
+			return "Error reading in.readLine() of SimpleClient."; 
 		}
 	}
 
