@@ -223,7 +223,6 @@ public class LobbyGUI extends JFrame implements Client {
 	}
 
 	public void onReceiveWelcome(int id) {
-		System.out.println("Here");
 		this.user = new User(id);
 		labelUserName.setText("User: Guest_" + String.valueOf(id));
 	}
