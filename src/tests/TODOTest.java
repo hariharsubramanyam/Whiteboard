@@ -54,14 +54,14 @@ public class TODOTest {
 		client1.sendReqAndCheckResponse(getBoardIDsReq, "board_ids"); // no boards yet.
 		
 		// Have client1 create a board named "newBoard".
-		// client1.sendReqAndCheckResponse(createBoardReq,"done"); // The first board is board 0"
+		client1.sendReqAndCheckResponse(createBoardReq, "done"); // This isn't working.
 		
 		// client2 should have been notified that client1 made a board
 		// client2.checkResponse("board_ids 0");
 		
 		// client 3 connects and makes a board.
-		SimpleClient client3 = new SimpleClient(testHost);
-		client3.checkResponse("welcome 2"); // userID is 2.
+		// SimpleClient client3 = new SimpleClient(testHost);
+		// client3.checkResponse("welcome 2"); // userID is 2.
 		// client3.sendReqAndCheckResponse(createBoardReq,"board_ids 0 1");
 		// client1.checkResponse("board_ids 0 1");
 		// client2.checkResponse("board_ids 0 1");
@@ -70,7 +70,7 @@ public class TODOTest {
 	
 	@Test(timeout=1000) // time out in 1 second, in case test does not complete
 	public void multiple_clients_test1() throws IOException {
-		
+
 	}
 	
 	@Test(timeout=1000) // time out in 1 second, in case test does not complete
@@ -95,6 +95,7 @@ public class TODOTest {
 	
 	
 }
+
 
 
 
