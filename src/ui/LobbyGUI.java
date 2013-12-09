@@ -235,7 +235,9 @@ public class LobbyGUI extends JFrame implements Client {
 	}
 
 	public void onReceiveWelcome(int id) {
+
 		LOGGER.info("Successful connection to server");
+
 		this.user = new User(id);
 		labelUserName.setText("User: Guest_" + String.valueOf(id));
 	}

@@ -809,8 +809,6 @@ public class Canvas extends JPanel implements Client {
 	public void onReceiveBoardLines(List<Line> ls, Set<String> uNames) {
 		final List<Line> lines = ls;
 		final Set<String> uN = uNames;
-		for (String u : uN)
-			System.out.println("Got result: " + u);
 		SwingUtilities.invokeLater(new Thread() {
 			@Override
 			public void run() {
