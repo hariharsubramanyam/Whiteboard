@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import LOGGER.Log;
-import adts.Line;
 import ui.LobbyGUI;
+import adts.Line;
 
 /**
  * Is used by LobbyGUI to process responses from the server and update the GUI
@@ -16,7 +15,7 @@ import ui.LobbyGUI;
  */
 public class ClientSideResponseHandler {
 
-	private final static Logger LOGGER = Logger.getLogger(Log.class.getName());
+	private final static Logger LOGGER = Logger.getLogger(ClientSideResponseHandler.class.getName());
 	
 	public static void handleResponse(String input, LobbyGUI userGUI) {
 	    LOGGER.finest("RESP: " + input);

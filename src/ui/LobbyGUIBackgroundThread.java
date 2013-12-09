@@ -4,12 +4,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import LOGGER.Log;
 import protocol.ClientSideResponseHandler;
 
 public class LobbyGUIBackgroundThread extends Thread{
 
-	private final static Logger LOGGER = Logger.getLogger(Log.class.getName());
+	private final static Logger LOGGER = Logger.getLogger(LobbyGUIBackgroundThread.class.getName());
 	
     private final LobbyGUI gui;
     private final BufferedReader in;
