@@ -157,7 +157,9 @@ public class LobbyModel {
                     "userID=%d does not exist!", userID));
         Set<String> names = new HashSet<String>();
         for(Integer u : this.userForID.keySet()){
-            names.add(this.userForID.get(u).getName());
+            if(u != userID){
+                names.add(this.userForID.get(u).getName());
+            }
         }
         if(!names.contains(newName)){
             this.userForID.get(userID).setName(newName);
