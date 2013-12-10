@@ -54,18 +54,18 @@ public class TODOTest {
 			.makeRequestStringGetUsersInMyBoard();
 
 	public void initialize(int port) throws IOException {
-		server = new WhiteboardServer(port);
-		server.serve();
+		this.server = new WhiteboardServer(port);
+		this.server.serve();
 
-		client1 = new SimpleClient(testHost, port);
-		client2 = new SimpleClient(testHost, port);
-		client3 = new SimpleClient(testHost, port);
-		client4 = new SimpleClient(testHost, port);
+		this.client1 = new SimpleClient(testHost, port);
+		this.client2 = new SimpleClient(testHost, port);
+		this.client3 = new SimpleClient(testHost, port);
+		this.client4 = new SimpleClient(testHost, port);
 
-		client1.checkResponse("welcome 0"); // userID starts at 0
-		client2.checkResponse("welcome 1");
-		client3.checkResponse("welcome 2");
-		client4.checkResponse("welcome 3");
+		this.client1.checkResponse("welcome 0"); // userID starts at 0
+		this.client2.checkResponse("welcome 1");
+		this.client3.checkResponse("welcome 2");
+		this.client4.checkResponse("welcome 3");
 	}
 
 	@Test(timeout = 1000)
@@ -74,13 +74,13 @@ public class TODOTest {
 		this.initialize(port = 4444);
 
 		// make the first board
-		// TODO client1.sendReqAndCheckResponse(createBoardReq, "board_ids 0");
-		// TODO client2.checkResponse("board_ids 0");
+		// TODO this.client1.sendReqAndCheckResponse(createBoardReq, "board_ids 0");
+		// TODO this.client2.checkResponse("board_ids 0");
 
 		// make the second board
-		// TODO client2.sendReqAndCheckResponse(createBoardReq,
+		// TODO this.client2.sendReqAndCheckResponse(createBoardReq,
 		// "board_ids 0 1");
-		// TODO client1.checkResponse("board_ids 0 1");
+		// TODO this.client1.checkResponse("board_ids 0 1");
 	}
 
 	@Test(timeout = 1000)
@@ -89,42 +89,42 @@ public class TODOTest {
 		this.initialize(port = 4445);
 
 		// Make the first board
-		client1.sendReqAndCheckResponse(createBoardReq, "board_ids 0");
-		client2.checkResponse("board_ids 0");
+		this.client1.sendReqAndCheckResponse(createBoardReq, "board_ids 0");
+		this.client2.checkResponse("board_ids 0");
 
-		// client1 joins the board
-		client1.makeRequest(ClientSideMessageMaker
+		// this.client1 joins the board
+		this.client1.makeRequest(ClientSideMessageMaker
 				.makeRequestStringJoinBoardID(0));
-		client1.getResponse();
+		this.client1.getResponse();
 		
-		// Check that client1 is in board 0, client2 is not in a board.
-		// client1.sendReqAndCheckResponse(getCurrentBoardReq,
+		// Check that this.client1 is in board 0, this.client2 is not in a board.
+		// this.client1.sendReqAndCheckResponse(getCurrentBoardReq,
 		//		"current_board_id 0");
-		// TODO client2.sendReqAndCheckResponse(getCurrentBoardReq,
+		// TODO this.client2.sendReqAndCheckResponse(getCurrentBoardReq,
 		// "current_board_id -1");
 
 		// Make the second board
-		//client2.makeRequest(createBoardReq);
-		//client2.getResponse();
-		// client2 joins the new board
-		//client2.makeRequest(ClientSideMessageMaker
+		//this.client2.makeRequest(createBoardReq);
+		//this.client2.getResponse();
+		// this.client2 joins the new board
+		//this.client2.makeRequest(ClientSideMessageMaker
 		//		.makeRequestStringJoinBoardID(1));
-		//client2.getResponse();
-		// Check that client1 is in board 0, client2 is in board 1
-		//client1.sendReqAndCheckResponse(getCurrentBoardReq,
+		//this.client2.getResponse();
+		// Check that this.client1 is in board 0, this.client2 is in board 1
+		//this.client1.sendReqAndCheckResponse(getCurrentBoardReq,
 		//								  "current_board_id 0");
-		//client2.sendReqAndCheckResponse(getCurrentBoardReq,
+		//this.client2.sendReqAndCheckResponse(getCurrentBoardReq,
 		//		"current_board_id 1");
 
-		// Move client1 to a new board
-		// client1.makeRequest(createBoardReq);
-		// client1.makeRequest(ClientSideMessageMaker
+		// Move this.client1 to a new board
+		// this.client1.makeRequest(createBoardReq);
+		// this.client1.makeRequest(ClientSideMessageMaker
 		//		.makeRequestStringJoinBoardID(2));
 
-		// Check that client1 is in board 0, client2 is in board 1
-		//client1.sendReqAndCheckResponse(getCurrentBoardReq,
+		// Check that this.client1 is in board 0, this.client2 is in board 1
+		//this.client1.sendReqAndCheckResponse(getCurrentBoardReq,
 		//		"current_board_id 2");
-		//client2.sendReqAndCheckResponse(getCurrentBoardReq,
+		//this.client2.sendReqAndCheckResponse(getCurrentBoardReq,
 		//		"current_board_id 1");
 
 	}
