@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 
 import ui.LobbyGUI;
 import adts.Line;
+import adts.LobbyModel;
 
 /**
  * Is used by LobbyGUI to process responses from the server and update the GUI
@@ -64,7 +65,8 @@ public class ClientSideResponseHandler {
 	    
 	    int i = 0;
 	    while(i < tokens.length){
-	        boardNameForID.put(Integer.parseInt(tokens[i]), tokens[i+1]);
+	        if(Integer.parseInt(tokens[i]) != LobbyModel.LOBBY_ID)
+	            boardNameForID.put(Integer.parseInt(tokens[i]), tokens[i+1]);
 	        i = i + 2;
 	    }
 	    userGUI.onReceiveBoardIDs(boardNameForID);
