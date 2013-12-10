@@ -27,7 +27,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
-import logger.BoardLogger;
+import LOGGER.BoardLogger;
 import protocol.BoardListItem;
 import protocol.Client;
 import protocol.ClientSideMessageMaker;
