@@ -1,12 +1,14 @@
 package tests;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
-
-import static org.junit.Assert.assertEquals;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -83,37 +85,10 @@ public class Server_Client_protocolTests {
 	String getUsersInyMyBoardReq = ClientSideMessageMaker
 			.makeRequestStringGetUsersInMyBoard();
 
-	/**
-	 * Helper function to start up a server on a given port, and four clients,
-	 * all on localhost. Uses the checkResponse() helper function to assert the
-	 * clients connected to the server.
-	 * 
-	 * @param port
-	 *            given socket number on which to open the server/connect the
-	 *            clinets to.
-	 * @throws IOException
-	 *             if there is a connection timeout, an IOException is thrown.
-	 */
-	public void initialize(int port) throws IOException {
-
-		this.server = new WhiteboardServer(port);
-		this.server.serve();
-
-		this.client1 = new SimpleClient(testHost, port);
-		this.client2 = new SimpleClient(testHost, port);
-		this.client3 = new SimpleClient(testHost, port);
-		this.client4 = new SimpleClient(testHost, port);
-
-		this.client1.checkResponse("welcome 0"); // userID starts at 0
-		this.client2.checkResponse("welcome 1");
-		this.client3.checkResponse("welcome 2");
-		this.client4.checkResponse("welcome 3");
-	}
-
 	@Test(timeout = 1000)
 	// time out in 1 second, in case test does not complete
 	public void create_board_test() throws IOException {
-		this.initialize(port = 4444);
+		this.initialize();
 
 		// make the first board
 		// TODO this.client1.sendReqAndCheckResponse(createBoardReq,
@@ -129,7 +104,7 @@ public class Server_Client_protocolTests {
 	@Test(timeout = 1000)
 	// time out in 1 second, in case test does not complete
 	public void get_current_board_id_test() throws IOException {
-		this.initialize(port = 4445);
+		this.initialize();
 
 		// Make the first board
 		this.client1.sendReqAndCheckResponse(createBoardReq, "board_ids 0");
@@ -176,7 +151,7 @@ public class Server_Client_protocolTests {
 	@Test(timeout = 1000)
 	// time out in 1 second, in case test does not complete
 	public void get_users_for_board_id_test() throws IOException {
-		this.initialize(port = 4446);
+		this.initialize();
 
 		// Make boards
 	}
@@ -197,6 +172,79 @@ public class Server_Client_protocolTests {
 	// time out in 1 second, in case test does not complete
 	public void multiple_clients_test5() throws IOException {
 
+	}
+
+	/**
+	 * Randomly finds an open port and returns it if it is available.
+	 */
+	private int getAvailablePort() throws IOException {
+		int port = 0;
+		Random RANDOM = new Random();
+		do {
+			port = RANDOM.nextInt(20000) + 1000;
+		} while (!isPortAvailable(port));
+
+		return port;
+	}
+
+	/**
+	 * Given a port number, it checks to see if it is in use. It returns true if
+	 * it is not in use.
+	 * 
+	 * @param port
+	 *            integer port number to check
+	 */
+	private boolean isPortAvailable(final int port) throws IOException {
+		ServerSocket ss = null;
+		try {
+			ss = new ServerSocket(port);
+			ss.setReuseAddress(true);
+			return true;
+		} catch (final IOException e) {
+		} finally {
+			if (ss != null) {
+				ss.close();
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Helper function to start up a server on a given port, and four clients,
+	 * all on localhost. Uses the checkResponse() helper function to assert the
+	 * clients connected to the server.
+	 * 
+	 * Thread-safety:
+	 * 
+	 * Since we are first checking for an open port and then creating it based
+	 * off of that integer value, there is a possibility of this socket getting
+	 * used before actualling connecting to it. However, this goes beyond the
+	 * scope of this project and if in the future it is a nessesary feature,
+	 * simply return an available socket and connect to it directly.
+	 * 
+	 * @param port
+	 *            given socket number on which to open the server/connect the
+	 *            clinets to.
+	 * @throws IOException
+	 *             if there is a connection timeout, an IOException is thrown.
+	 */
+	public void initialize() throws IOException {
+		int port = getAvailablePort();
+		System.out.println(port);
+
+		this.server = new WhiteboardServer(port);
+		this.server.serve();
+
+		this.client1 = new SimpleClient(testHost, port);
+		this.client2 = new SimpleClient(testHost, port);
+		this.client3 = new SimpleClient(testHost, port);
+		this.client4 = new SimpleClient(testHost, port);
+
+		this.client1.checkResponse("welcome 0"); // userID starts at 0
+		this.client2.checkResponse("welcome 1");
+		this.client3.checkResponse("welcome 2");
+		this.client4.checkResponse("welcome 3");
 	}
 
 }
