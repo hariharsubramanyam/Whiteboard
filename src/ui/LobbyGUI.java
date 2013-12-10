@@ -49,6 +49,10 @@ import canvas.Canvas;
  * All exceptions are SEVERE while many of the other smaller logs like server
  * responses are INFO.
  * 
+ * Thread-safety:
+ * 
+ * 
+ * 
  * Testing strategy:
  * 
  * Because of its hard-to-test nature, all testing must be done by manually
@@ -182,6 +186,7 @@ public class LobbyGUI extends JFrame implements Client {
 		contentPane.setLayout(this.layout);
 		this.layout.setAutoCreateGaps(true);
 		this.layout.setAutoCreateContainerGaps(true);
+		
 		this.layout
 				.setHorizontalGroup(this.layout
 						.createParallelGroup()
@@ -217,6 +222,7 @@ public class LobbyGUI extends JFrame implements Client {
 		this.setSize(500, 300);
 		this.setResizable(false);
 
+		
 		this.makeRequest(ClientSideMessageMaker.makeRequestStringGetBoardIDs());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLocationRelativeTo(null);
@@ -365,7 +371,6 @@ public class LobbyGUI extends JFrame implements Client {
 										.getBoardID()));
 					}
 				}
-
 			}
 		}
 	}
