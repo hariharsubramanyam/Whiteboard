@@ -30,14 +30,13 @@ public class WhiteboardServer {
 				try {
 					thisServer.singleThreadedServe();
 				} catch (IOException e) {
-					// Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
 			
 		});
 	}
-	
+	Exception e = new Exception();
 	public void serve() throws IOException {
 		this.serverThread.start();
 	}

@@ -82,6 +82,7 @@ public class LobbyGUI extends JFrame implements Client {
 	private static final long serialVersionUID = 1L;
 
 	// socket and its input and output streams
+	private final int port;
 	private Socket socket;
 	private PrintWriter out;
 	private BufferedReader in;
@@ -119,7 +120,8 @@ public class LobbyGUI extends JFrame implements Client {
 	private List<BoardListItem> boardListItems;
 
 	public LobbyGUI() {
-
+		
+		this.port = 4444;
 		setupLogger(Level.ALL);
 
 		// get the hostname and create the socket
@@ -133,7 +135,7 @@ public class LobbyGUI extends JFrame implements Client {
 					System.exit(0);
 				}
 				LOGGER.info("Hostname (IP) inputted: " + hostName);
-				this.socket = new Socket(hostName, 4444);
+				this.socket = new Socket(hostName, this.port);
 				this.out = new PrintWriter(socket.getOutputStream(), true);
 				this.in = new BufferedReader(new InputStreamReader(
 						socket.getInputStream()));
@@ -142,8 +144,6 @@ public class LobbyGUI extends JFrame implements Client {
 				LOGGER.severe("Failed to connect to server ");
 				JOptionPane.showMessageDialog(this,
 						"Could not connect to given hostname. Try again.");
-
-				// ex.printStackTrace();
 			}
 		}
 
@@ -234,7 +234,7 @@ public class LobbyGUI extends JFrame implements Client {
 
 	public void makeRequest(String req) {
 		out.println(req);
-		LOGGER.info("REQ: " + req);
+		LOGGER.fine("REQ: " + req);
 	}
 
 	public void onReceiveUserIDs(List<String> rcvdNames) {
@@ -275,26 +275,15 @@ public class LobbyGUI extends JFrame implements Client {
 		labelUserName.setText("User: Guest_" + String.valueOf(id));
 	}
 
-	/**
-	 * This is the main function.
-	 * 
-	 * @param args
-	 */
-	public static void main(final String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				// the GUI needs to be instantiated with the Controller given ID
-				LobbyGUI main = new LobbyGUI();
-				main.setVisible(true);
-			}
-		});
-	}
-
 	private class SetUserNameListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			String newUser = JOptionPane.showInputDialog("Enter new user name");
 			user.setName(newUser);
+			if(newUser == null){
+				LOGGER.warning("No username set on exit of JOptionPane");
+				return;
+			}
 			makeRequest(ClientSideMessageMaker
 					.makeRequestStringSetUsername(newUser));
 		}
@@ -305,6 +294,11 @@ public class LobbyGUI extends JFrame implements Client {
 		public void actionPerformed(ActionEvent e) {
 			String newBoard = JOptionPane
 					.showInputDialog("Enter new Whiteboard name");
+			if(newBoard == null){
+				LOGGER.warning("No canvas created on exit of JOptionPane");
+				return;
+			}
+			
 			String canvasName = newBoard;
 			if (canvasName.equals("")) {
 				canvasName = "[No name]";
@@ -321,6 +315,7 @@ public class LobbyGUI extends JFrame implements Client {
 	private class JoinBoardListener extends MouseAdapter {
 		@Override
 		public void mouseClicked(MouseEvent e) {
+			System.out.println(e.getButton());
 			if (e.getClickCount() == 2) {
 				int selectedIndex = lstBoards.getSelectedIndex();
 				for (BoardListItem boardListItem : boardListItems) {
@@ -389,6 +384,21 @@ public class LobbyGUI extends JFrame implements Client {
 					lstMdlBoards.addElement(boardListItem.getBoardName());
 					;
 				}
+			}
+		});
+	}
+
+	/**
+	 * This is the main function.
+	 * 
+	 * @param args
+	 */
+	public static void main(final String[] args) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				// the GUI needs to be instantiated with the Controller given ID
+				LobbyGUI main = new LobbyGUI();
+				main.setVisible(true);
 			}
 		});
 	}
