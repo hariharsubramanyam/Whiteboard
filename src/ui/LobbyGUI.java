@@ -10,7 +10,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,6 +27,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
+import protocol.BoardListItem;
 import protocol.Client;
 import protocol.ClientSideMessageMaker;
 import protocol.MessageHandler;
@@ -49,7 +52,7 @@ import canvas.Canvas;
  * Because of its hard-to-test nature, all testing must be done by manually
  * using the GUI itself. The way this was done is as follows and in this order:
  * 
- * @caregory the first GUI is the JOptionPane used to connect to a given server
+ * @category the first GUI is the JOptionPane used to connect to a given server
  *           IP. Test that it correctly connects (when there is a running server
  *           at the given IP) and that incorrect IPs return a JOptionPane
  *           showing the failure to connect. Also check that the Cancel button
@@ -112,6 +115,8 @@ public class LobbyGUI extends JFrame implements Client {
 
 	// this user object
 	private User user;
+	
+	private List<BoardListItem> boardListItems;
 
 	public LobbyGUI() {
 
@@ -231,21 +236,6 @@ public class LobbyGUI extends JFrame implements Client {
 		out.println(req);
 		LOGGER.info("REQ: " + req);
 	}
-
-	public void onReceiveBoardIDs(List<Integer> rcvdIDs) {
-		final List<Integer> boardIDs = rcvdIDs;
-		SwingUtilities.invokeLater(new Thread() {
-			@Override
-			public void run() {
-				lstMdlBoards.clear();
-				for (int boardID : boardIDs) {
-					lstMdlBoards.addElement("Board " + boardID);
-				}
-				lstBoards.setSelectedIndex(lstMdlBoards.size() - 1);
-			}
-		});
-	}
-
 	public void onReceiveUserIDs(List<String> rcvdNames) {
 		final List<String> userNames = rcvdNames;
 		SwingUtilities.invokeLater(new Thread() {
@@ -328,52 +318,72 @@ public class LobbyGUI extends JFrame implements Client {
 	}
 
 	private class JoinBoardListener extends MouseAdapter {
-		@Override
-		public void mouseClicked(MouseEvent e) {
-			if (e.getClickCount() == 2) {
-				String selectedItem = (String) lstBoards.getSelectedValue();
-				int boardID = Integer.parseInt(selectedItem.replace("Board ",
-						""));
-				String canvasName = selectedItem;
-				canvas = new Canvas(1000, 1000, self, user.getName(), boardID,
-						canvasName);
-				canvas.setVisible(true);
-				setVisible(false);
-				out.println(MessageHandler
-						.makeRequestStringJoinBoardID(boardID));
-
-			}
-		}
+	    @Override
+	    public void mouseClicked(MouseEvent e) {
+	        if(e.getClickCount() == 2){
+	            int selectedIndex = lstBoards.getSelectedIndex();
+	            for(BoardListItem boardListItem : boardListItems){
+	                if(boardListItem.getBoardIndex() == selectedIndex){
+	                    canvas = new Canvas(1000,1000,self, user.getName(), boardListItem.getBoardID(), boardListItem.getBoardName());
+	                    canvas.setVisible(true);
+	                    setVisible(false);
+	                    out.println(MessageHandler.makeRequestStringJoinBoardID(boardListItem.getBoardID()));
+	                }
+	            }
+	            
+	            
+	        }
+	    }
 	}
 
-	@Override
-	public void onReceiveDraw(Line l) {
-		if (canvas != null)
-			canvas.onReceiveDraw(l);
-	}
+    @Override
+    public void onReceiveDraw(Line l) {
+        if(canvas != null)
+            canvas.onReceiveDraw(l);
+    }
 
-	@Override
-	public void onReceiveBoardLines(List<Line> ls, Set<String> userNames) {
-		if (canvas != null) {
-			canvas.onReceiveBoardLines(ls, userNames);
-		}
-	}
+    @Override
+    public void onReceiveBoardLines(List<Line> ls, Set<String> userNames) {
+        if(canvas != null){
+            canvas.onReceiveBoardLines(ls, userNames);
+        }
+    }
 
-	@Override
-	public void onReceiveClear() {
-		if (canvas != null)
-			canvas.onReceiveClear();
-	}
+    @Override
+    public void onReceiveClear() {
+        if(canvas != null)
+            canvas.onReceiveClear();
+    }
 
-	@Override
-	public void onReceiveUsers(int boardID, List<String> users) {
-		if (canvas != null)
-			canvas.onReceiveUsers(boardID, users);
-	}
+    @Override
+    public void onReceiveUsers(int boardID, List<String> users) {
+        if(canvas != null)
+            canvas.onReceiveUsers(boardID, users);
+    }
 
-	@Override
-	public void onReceiveCurrentBoardID(int boardID) {
-		if (canvas != null)
-			canvas.onReceiveCurrentBoardID(boardID);
-	}
+    @Override
+    public void onReceiveCurrentBoardID(int boardID) {
+        if(canvas != null)
+            canvas.onReceiveCurrentBoardID(boardID);
+    }
+
+    @Override
+    public void onReceiveBoardIDs(Map<Integer, String> rcvdBoardNameForID) {
+        final Map<Integer, String> boardNameForID = rcvdBoardNameForID;
+        SwingUtilities.invokeLater(new Thread(){
+            @Override
+            public void run() {
+                boardListItems = new ArrayList<BoardListItem>();
+                int i = 0;
+                for(int boardID : boardNameForID.keySet()){
+                    boardListItems.add(new BoardListItem(boardNameForID.get(boardID), i, boardID));
+                    i++;
+                }
+                lstMdlBoards.clear();
+                for(BoardListItem boardListItem : boardListItems){
+                    lstMdlBoards.addElement(boardListItem.getBoardName());;
+                }
+            }
+        });
+    }
 }

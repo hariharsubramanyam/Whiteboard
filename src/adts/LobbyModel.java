@@ -1,5 +1,6 @@
 package adts;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -222,8 +223,21 @@ public class LobbyModel {
      */
     public synchronized int addBoard(String name, int width, int height) {
         int id = this.uniqueBoardID.getAndIncrement();
-        this.boardForID.put(id, new Whiteboard(id, name, width, height));
+        Whiteboard board = new Whiteboard(id, name, width, height);
         this.userIDsForBoardID.put(id, new HashSet<Integer>());
+        Set<String> userNames = new HashSet<String>();
+        for(Whiteboard brd: this.boardForID.values()){
+            userNames.add(brd.getBoardName());
+        }
+        if(!userNames.contains(name)){
+            this.boardForID.put(id, board);
+            return id;
+        }
+        int incrementer = 1;
+        while(userNames.contains(String.format("%s(%d)",name,incrementer))){
+            incrementer++;
+        }
+        this.boardForID.get(id).setBoardName(String.format("%s(%d)",name,incrementer));
         return id;
     }
 
@@ -235,11 +249,7 @@ public class LobbyModel {
      * @return the id of the board that was added
      */
     public synchronized int addBoard(String name) {
-        int id = this.uniqueBoardID.getAndIncrement();
-        this.boardForID.put(id, new Whiteboard(id, name,
-                Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT));
-        this.userIDsForBoardID.put(id, new HashSet<Integer>());
-        return id;
+        return this.addBoard(name, Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT);
     }
 
     /**
@@ -249,11 +259,7 @@ public class LobbyModel {
      * @return the id of the board that was added
      */
     public synchronized int addBoard() {
-        int id = this.uniqueBoardID.getAndIncrement();
-        this.boardForID.put(id, new Whiteboard(id, Whiteboard.DEFAULT_WIDTH,
-                Whiteboard.DEFAULT_HEIGHT));
-        this.userIDsForBoardID.put(id, new HashSet<Integer>());
-        return id;
+        return this.addBoard("Board", Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT);
     }
 
     /**
@@ -454,5 +460,12 @@ public class LobbyModel {
      */
     public void clearBoard(int boardID){
         this.boardForID.get(boardID).clearBoard();
+    }
+  
+    /**
+     * @return the whiteboards
+     */
+    public Collection<Whiteboard> getWhiteboards(){
+        return this.boardForID.values();
     }
 }

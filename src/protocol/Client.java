@@ -1,13 +1,14 @@
 package protocol;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import adts.Line;
 
 public interface Client {
     public void onReceiveUsernameChanged(String rcvdName);
-    public void onReceiveBoardIDs(List<Integer> rcvdIDs);
+    public void onReceiveBoardIDs(Map<Integer, String> boardNameForID);
     public void onReceiveWelcome(int id);
     public void onReceiveDraw(Line l);
     public void onReceiveBoardLines(List<Line> ls, Set<String> userNames);

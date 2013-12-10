@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -784,7 +785,7 @@ public class Canvas extends JPanel implements Client {
 	}
 
 	@Override
-	public void onReceiveBoardIDs(List<Integer> rcvdIDs) {
+	public void onReceiveBoardIDs(Map<Integer, String> boardNameForID) {
 		return;
 	}
 

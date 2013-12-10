@@ -1,8 +1,10 @@
 package protocol;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -55,13 +57,17 @@ public class ClientSideResponseHandler {
 	    userGUI.onReceiveClear();
 	}
 	private static void handleBoardIDs(String[] tokens, LobbyGUI userGUI){
-	    List<Integer> boardIDs = new ArrayList<Integer>();
-	    for (String token : tokens){
-	        if(token.equals(""))
-	            continue;
-	        boardIDs.add(Integer.parseInt(token));
+	    if(tokens.length <= 1)
+	        return;
+	    
+	    Map<Integer, String> boardNameForID = new HashMap<Integer, String>();
+	    
+	    int i = 0;
+	    while(i < tokens.length){
+	        boardNameForID.put(Integer.parseInt(tokens[i]), tokens[i+1]);
+	        i = i + 2;
 	    }
-	    userGUI.onReceiveBoardIDs(boardIDs);
+	    userGUI.onReceiveBoardIDs(boardNameForID);
 	}
 	
 	private static void handleUsernameChanged(String[] tokens, LobbyGUI userGUI){
