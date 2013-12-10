@@ -25,10 +25,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
+import logger.BoardLogger;
 import protocol.Client;
 import protocol.ClientSideMessageMaker;
 import protocol.MessageHandler;
-import LOGGER.BoardLogger;
 import adts.Line;
 import adts.User;
 import canvas.Canvas;
