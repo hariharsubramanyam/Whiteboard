@@ -1,11 +1,13 @@
 package protocol;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import adts.Line;
 import adts.LobbyModel;
+import adts.Whiteboard;
 import server.UserThread;
 
 /**
@@ -78,8 +80,7 @@ public class MessageHandler {
      */
     private static void handleRequestGetBoardIDs(String input,
             UserThread userThread, LobbyModel lobbyModel) {
-        userThread.output(MessageHandler.makeResponseBoardIDs(lobbyModel
-                .getWhiteboardIDs()));
+            userThread.output(MessageHandler.makeResponseBoardIDs(lobbyModel.getWhiteboards()));
     }
 
     /**
@@ -124,9 +125,9 @@ public class MessageHandler {
         int boardID = lobbyModel.addBoard(boardName);
         lobbyModel.userJoinBoard(userID, boardID);
         userThread.broadcast(MessageHandler.makeResponseBoardIDs(lobbyModel
-                .getWhiteboardIDs()));
+                .getWhiteboards()));
         userThread.output(MessageHandler.makeResponseBoardIDs(lobbyModel
-                .getWhiteboardIDs()));
+                .getWhiteboards()));
         userThread.output(MessageHandler.makeResponseCurrentBoardID(boardID));
     }
 
@@ -339,13 +340,13 @@ public class MessageHandler {
     /**
      * @param boardIDs
      *            the set of IDs
-     * @return 'board_ids [id1] [id2] [id3]...'
+     * @return 'board_ids [id1] [username1] [id2] [username2] [id3] [username3]...'
      */
-    private static String makeResponseBoardIDs(Set<Integer> boardIDs) {
+    private static String makeResponseBoardIDs(Collection<Whiteboard> boards) {
         StringBuilder response = new StringBuilder();
         response.append(MessageHandler.RESP_BOARD_IDS);
-        for (int id : boardIDs) {
-            response.append(" " + id);
+        for(Whiteboard board : boards){
+            response.append(" " + board.getBoardID() + " " + board.getBoardName());
         }
         return response.toString();
     }

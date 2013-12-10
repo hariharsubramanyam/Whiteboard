@@ -1,5 +1,7 @@
 package adts;
 
+import java.rmi.UnexpectedException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,6 +44,8 @@ public class LobbyModel {
      */
     private final Map<Integer, Set<Integer>> userIDsForBoardID;
 
+    public static final int LOBBY_ID = -1;
+    
     public LobbyModel() {
         uniqueUserID = new AtomicInteger(0);
         uniqueBoardID = new AtomicInteger(0);
@@ -50,6 +54,9 @@ public class LobbyModel {
                 .synchronizedMap(new HashMap<Integer, Whiteboard>());
         userIDsForBoardID = Collections
                 .synchronizedMap(new HashMap<Integer, Set<Integer>>());
+        
+        this.boardForID.put(LOBBY_ID, new Whiteboard(LOBBY_ID, "Lobby", Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT));
+        this.userIDsForBoardID.put(LOBBY_ID, new HashSet<Integer>());
     }
 
     /**
@@ -87,7 +94,7 @@ public class LobbyModel {
         }
         return userIDs;
     }
-
+    
     /**
      * @param userID
      *            the id of the user
@@ -95,12 +102,16 @@ public class LobbyModel {
      *         in, or -1 if the user is not in any board
      */
     public synchronized int getBoardIDThatUserIDIsIn(int userID) {
+        if(!this.userForID.keySet().contains(userID)){
+            throw new IllegalArgumentException(String.format(
+                    "userID=%d does not exist!", userID));
+        }
         for (int boardID : this.boardForID.keySet()) {
             if (this.userIDsForBoardID.get(boardID).contains(userID)) {
                 return boardID;
             }
         }
-        return -1;
+        return LOBBY_ID;
     }
 
     public synchronized String getUserNameForUserID(int userID) {
@@ -128,19 +139,6 @@ public class LobbyModel {
     }
 
     /**
-     * Returns the user names for the given boardName
-     * 
-     * @param boardName
-     *            the name of the board
-     * @return the set of users in the given board
-     * @throws IllegalArgumentException
-     *             if the boardName does not exist
-     */
-    public synchronized Set<String> getUserNamesForBoardName(String boardName) {
-        return getUserNamesForBoardID(getBoardIDForBoardName(boardName));
-    }
-
-    /**
      * Change the username for a user with the given userID
      * 
      * @param newName
@@ -156,7 +154,9 @@ public class LobbyModel {
                     "userID=%d does not exist!", userID));
         Set<String> names = new HashSet<String>();
         for(Integer u : this.userForID.keySet()){
-            names.add(this.userForID.get(u).getName());
+            if(u != userID){
+                names.add(this.userForID.get(u).getName());
+            }
         }
         if(!names.contains(newName)){
             this.userForID.get(userID).setName(newName);
@@ -171,20 +171,6 @@ public class LobbyModel {
     }
 
     /**
-     * Change the username for a user with the given userName
-     * 
-     * @param newName
-     *            the name that we should change to
-     * @param userName
-     *            the name of the user
-     * @throws IllegalArgumentException
-     *             if the userName does not exist
-     */
-    public synchronized void changeUserName(String newName, String userName) {
-        changeUserName(newName, getUserIDForUserName(userName));
-    }
-
-    /**
      * Adds a user to the lobby
      * 
      * @param name
@@ -194,6 +180,7 @@ public class LobbyModel {
     public synchronized int addUser(String name) {
         int id = this.uniqueUserID.getAndIncrement();
         this.userForID.put(id, new User(id, name));
+        this.userJoinBoard(id, LOBBY_ID);
         return id;
     }
 
@@ -206,6 +193,7 @@ public class LobbyModel {
         int id = this.uniqueUserID.getAndIncrement();
         this.userForID.put(id, new User(id));
         this.changeUserName(this.userForID.get(id).getName(), id);
+        this.userJoinBoard(id, LOBBY_ID);
         return id;
     }
 
@@ -222,8 +210,21 @@ public class LobbyModel {
      */
     public synchronized int addBoard(String name, int width, int height) {
         int id = this.uniqueBoardID.getAndIncrement();
-        this.boardForID.put(id, new Whiteboard(id, name, width, height));
+        Whiteboard board = new Whiteboard(id, name, width, height);
         this.userIDsForBoardID.put(id, new HashSet<Integer>());
+        Set<String> userNames = new HashSet<String>();
+        for(Whiteboard brd: this.boardForID.values()){
+            userNames.add(brd.getBoardName());
+        }
+        if(!userNames.contains(name)){
+            this.boardForID.put(id, board);
+            return id;
+        }
+        int incrementer = 1;
+        while(userNames.contains(String.format("%s(%d)",name,incrementer))){
+            incrementer++;
+        }
+        this.boardForID.get(id).setBoardName(String.format("%s(%d)",name,incrementer));
         return id;
     }
 
@@ -235,11 +236,7 @@ public class LobbyModel {
      * @return the id of the board that was added
      */
     public synchronized int addBoard(String name) {
-        int id = this.uniqueBoardID.getAndIncrement();
-        this.boardForID.put(id, new Whiteboard(id, name,
-                Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT));
-        this.userIDsForBoardID.put(id, new HashSet<Integer>());
-        return id;
+        return this.addBoard(name, Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT);
     }
 
     /**
@@ -249,11 +246,7 @@ public class LobbyModel {
      * @return the id of the board that was added
      */
     public synchronized int addBoard() {
-        int id = this.uniqueBoardID.getAndIncrement();
-        this.boardForID.put(id, new Whiteboard(id, Whiteboard.DEFAULT_WIDTH,
-                Whiteboard.DEFAULT_HEIGHT));
-        this.userIDsForBoardID.put(id, new HashSet<Integer>());
-        return id;
+        return this.addBoard("Board", Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT);
     }
 
     /**
@@ -285,30 +278,6 @@ public class LobbyModel {
     }
 
     /**
-     * Adds the user with the given userID to the board with the given boardName
-     * 
-     * @param userID
-     *            the id of the user to be added
-     * @param boardName
-     *            the name of the board that the user should be added to
-     * @throws IllegalArgumentException
-     *             if the userID or boardName do not exist
-     */
-    public synchronized void userJoinBoard(int userID, String boardName) {
-        if (!(this.userForID.keySet().contains(userID)))
-            throw new IllegalArgumentException(String.format(
-                    "userID=%d does not exist!", userID));
-        int boardID = getBoardIDForBoardName(boardName);
-        for (int bID : this.boardForID.keySet()) {
-            if (this.userIDsForBoardID.get(bID).contains(userID)) {
-                this.userLeaveBoard(userID, bID);
-            }
-        }
-        Set<Integer> userIDs = this.userIDsForBoardID.get(boardID);
-        userIDs.add(userID);
-    }
-
-    /**
      * Removes the user with the given userID from the board with the given
      * boardID
      * 
@@ -326,73 +295,10 @@ public class LobbyModel {
         if (!(this.userForID.keySet().contains(userID)))
             throw new IllegalArgumentException(String.format(
                     "userID=%d does not exist!", userID));
-        Set<Integer> userIDs = this.userIDsForBoardID.get(boardID);
-        userIDs.remove(userID);
+        this.userIDsForBoardID.get(boardID).remove(userID);
+        this.userJoinBoard(userID, LOBBY_ID);
     }
 
-    /**
-     * Removes the user with the given userID to the board with the given
-     * boardName
-     * 
-     * @param userID
-     *            the id of the user to be added
-     * @param boardName
-     *            the name of the board that the user should be removed from
-     * @throws IllegalArgumentException
-     *             if the userID or boardName do not exist
-     */
-    public synchronized void userLeaveBoard(int userID, String boardName) {
-        if (!(this.userForID.keySet().contains(userID)))
-            throw new IllegalArgumentException(String.format(
-                    "userID=%d does not exist!", userID));
-        int boardID = getBoardIDForBoardName(boardName);
-        Set<Integer> userIDs = this.userIDsForBoardID.get(boardID);
-        userIDs.remove(userID);
-    }
-
-    /**
-     * Returns the boardID for the given boardName
-     * 
-     * @param boardName
-     *            the name of the board
-     * @return the id of the board with the given name
-     * @throws IllegalArgument
-     *             exception if the boardName does not exist
-     */
-    private int getBoardIDForBoardName(String boardName) {
-        int boardID = -1;
-        for (Whiteboard wb : this.boardForID.values()) {
-            if (wb.getBoardName().equals(boardName)) {
-                boardID = wb.getBoardID();
-            }
-        }
-        if (boardID == -1)
-            throw new IllegalArgumentException(String.format(
-                    "the board name = %s does not exist!", boardName));
-        return boardID;
-    }
-
-    /**
-     * Returns the userID for the given userName
-     * 
-     * @param userName
-     *            the name of the user
-     * @return the id of the user with the given name
-     * @throws IllegalArgument
-     *             exception if the userName does not exist
-     */
-    private int getUserIDForUserName(String userName) {
-        int userID = -1;
-        for (User user : this.userForID.values()) {
-            if (user.getName().equals(userName)) {
-                userID = user.getID();
-            }
-        }
-        if (userID == -1)
-            throw new IllegalArgumentException(String.format(
-                    "the user name = %s does not exist!", userName));
-        return userID;
-    }
 
     /**
      * Delete user from set of users and remove the user from all the boards
@@ -454,5 +360,12 @@ public class LobbyModel {
      */
     public void clearBoard(int boardID){
         this.boardForID.get(boardID).clearBoard();
+    }
+  
+    /**
+     * @return the whiteboards
+     */
+    public Collection<Whiteboard> getWhiteboards(){
+        return this.boardForID.values();
     }
 }

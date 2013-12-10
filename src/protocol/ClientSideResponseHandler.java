@@ -1,13 +1,16 @@
 package protocol;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import ui.LobbyGUI;
 import adts.Line;
+import adts.LobbyModel;
 
 /**
  * Is used by LobbyGUI to process responses from the server and update the GUI
@@ -55,13 +58,18 @@ public class ClientSideResponseHandler {
 	    userGUI.onReceiveClear();
 	}
 	private static void handleBoardIDs(String[] tokens, LobbyGUI userGUI){
-	    List<Integer> boardIDs = new ArrayList<Integer>();
-	    for (String token : tokens){
-	        if(token.equals(""))
-	            continue;
-	        boardIDs.add(Integer.parseInt(token));
+	    if(tokens.length <= 1)
+	        return;
+	    
+	    Map<Integer, String> boardNameForID = new HashMap<Integer, String>();
+	    
+	    int i = 0;
+	    while(i < tokens.length){
+	        if(Integer.parseInt(tokens[i]) != LobbyModel.LOBBY_ID)
+	            boardNameForID.put(Integer.parseInt(tokens[i]), tokens[i+1]);
+	        i = i + 2;
 	    }
-	    userGUI.onReceiveBoardIDs(boardIDs);
+	    userGUI.onReceiveBoardIDs(boardNameForID);
 	}
 	
 	private static void handleUsernameChanged(String[] tokens, LobbyGUI userGUI){
