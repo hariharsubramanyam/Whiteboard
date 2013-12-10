@@ -13,7 +13,10 @@ import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.geom.RoundRectangle2D;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,6 +34,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import logger.BoardLogger;
 import protocol.Client;
 import protocol.ClientSideMessageMaker;
 import ui.LobbyGUI;
@@ -189,13 +193,13 @@ public class Canvas extends JPanel implements Client {
 
 	public Canvas(int width, int height, LobbyGUI lobby, String user,
 			int boardID, String boardName) {
+		
+		setupLogger(Level.ALL);
 
 		this.userNames = new ArrayList<String>();
 		this.lobby = lobby;
 		this.user = user;
 		this.boardID = boardID;
-
-		LOGGER.setLevel(Level.SEVERE);
 
 		window = new JFrame(boardName);
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -273,7 +277,19 @@ public class Canvas extends JPanel implements Client {
 		window.pack();
 		// Initialize the user list
 		window.setVisible(true);
+		// Add windowListener
+		window.addWindowListener(new WindowListen());
 
+	}
+
+	private void setupLogger(Level level) {
+		try {
+			BoardLogger.setup();
+			LOGGER.setLevel(level);
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Problems with creating the log files");
+		}
 	}
 
 	/**
@@ -776,6 +792,40 @@ public class Canvas extends JPanel implements Client {
 		}
 
 		public void mouseExited(MouseEvent e) {
+		}
+	}
+
+	private class WindowListen implements WindowListener {
+
+		@Override
+		public void windowActivated(WindowEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void windowClosing(WindowEvent e) {
+			LOGGER.warning("Active Canvas closed");
+		}
+
+		@Override
+		public void windowClosed(WindowEvent e) {
+		}
+
+		@Override
+		public void windowDeactivated(WindowEvent e) {
+		}
+
+		@Override
+		public void windowDeiconified(WindowEvent e) {
+		}
+
+		@Override
+		public void windowIconified(WindowEvent e) {
+		}
+
+		@Override
+		public void windowOpened(WindowEvent e) {
 		}
 	}
 

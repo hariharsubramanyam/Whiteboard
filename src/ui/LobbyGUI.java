@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -218,7 +220,42 @@ public class LobbyGUI extends JFrame implements Client {
 		this.makeRequest(ClientSideMessageMaker.makeRequestStringGetBoardIDs());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLocationRelativeTo(null);
+		this.addWindowListener(new WindowListen());
 
+	}
+
+	private class WindowListen implements WindowListener {
+
+		@Override
+		public void windowActivated(WindowEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void windowClosing(WindowEvent e) {
+			LOGGER.warning("Active LobbyGUI closed");
+		}
+
+		@Override
+		public void windowClosed(WindowEvent e) {
+		}
+
+		@Override
+		public void windowDeactivated(WindowEvent e) {
+		}
+
+		@Override
+		public void windowDeiconified(WindowEvent e) {
+		}
+
+		@Override
+		public void windowIconified(WindowEvent e) {
+		}
+
+		@Override
+		public void windowOpened(WindowEvent e) {
+		}
 	}
 
 	private void setupLogger(Level level) {
@@ -229,7 +266,6 @@ public class LobbyGUI extends JFrame implements Client {
 			e.printStackTrace();
 			throw new RuntimeException("Problems with creating the log files");
 		}
-
 	}
 
 	public void makeRequest(String req) {
