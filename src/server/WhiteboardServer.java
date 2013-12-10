@@ -20,7 +20,6 @@ public class WhiteboardServer {
 	private final Thread serverThread;
 	private final WhiteboardServer thisServer;
 
-
 	public WhiteboardServer(int port) throws IOException {
 		this.serverSocket = new ServerSocket(port);
 

@@ -35,6 +35,7 @@ import protocol.Client;
 import protocol.ClientSideMessageMaker;
 import protocol.MessageHandler;
 import adts.Line;
+import adts.LobbyModel;
 import adts.User;
 import canvas.Canvas;
 
@@ -224,6 +225,7 @@ public class LobbyGUI extends JFrame implements Client {
 
 		
 		this.makeRequest(ClientSideMessageMaker.makeRequestStringGetBoardIDs());
+		this.makeRequest(ClientSideMessageMaker.makeRequestStringGetUsersForBoardID(LobbyModel.LOBBY_ID));
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.addWindowListener(new WindowListen());
@@ -398,6 +400,20 @@ public class LobbyGUI extends JFrame implements Client {
 	public void onReceiveUsers(int boardID, List<String> users) {
 		if (canvas != null)
 			canvas.onReceiveUsers(boardID, users);
+		final int finalBoardID = boardID;
+		final List<String> finalUsers = users;
+		SwingUtilities.invokeLater(new Thread(){
+		    @Override
+		    public void run() {
+		        if(finalBoardID == LobbyModel.LOBBY_ID){
+		            lstMdlUsers.clear();
+		            for(String user : finalUsers){
+		                lstMdlUsers.addElement(user);
+		            }
+		        }
+		    };
+		});
+		
 	}
 
 	@Override
