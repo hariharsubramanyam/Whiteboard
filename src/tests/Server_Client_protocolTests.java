@@ -90,28 +90,37 @@ public class Server_Client_protocolTests {
 	public void create_board_test() throws IOException {
 		this.initialize();
 
+		// DEBUGGING: first check that client2 doesn't have any responses (e.g. from earlier tests)
+		//            its latest response should be "welcome 1" from connecting to the server.
+		System.out.println(this.client2.getResponse());
+		
 		// make the first board
-		this.client1.sendReqAndCheckResponse(createBoardReq,"board_ids 0");
+		this.client1.sendReqAndCheckResponse(createBoardReq,"current_board_id 0");
 		this.client2.checkResponse("board_ids 0");
 
+		System.out.println("This won't get printed because client2's checkResponse fails");
+		// END DEBUGGING
+		
 		// make the second board
 		this.client2.sendReqAndCheckResponse(createBoardReq,"board_ids 0 1");
 		this.client1.checkResponse("board_ids 0 1");
 	}
 
-	@Test(timeout = 1000)
+	@Test (timeout = 1000)
 	// time out in 1 second, in case test does not complete
 	public void get_current_board_id_test() throws IOException {
 		this.initialize();
 
 		// this.client1 makes the first board and joins it
 		this.client1.makeRequest(createBoardReq);
-		this.client1.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
 
+		this.client1.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
+		System.out.println("JOINEEEEEEEDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDd");
 		// Check that this.client1 is in board 0, this.client2 is not in a
 		// board.
 		this.client1.sendReqAndCheckResponse(getCurrentBoardReq,
 											 "current_board_id 0");
+		System.out.println("CHECKEDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
 		this.client2.sendReqAndCheckResponse(getCurrentBoardReq,
 											 "current_board_id -1");
 
@@ -227,21 +236,15 @@ public class Server_Client_protocolTests {
 	 *             if there is a connection timeout, an IOException is thrown.
 	 */
 	public void initialize() throws IOException {
-		int port = getAvailablePort();
-		System.out.println(port);
+		port = getAvailablePort();
 
 		this.server = new WhiteboardServer(port);
 		this.server.serve();
-
+		
 		this.client1 = new SimpleClient(testHost, port);
 		this.client2 = new SimpleClient(testHost, port);
 		this.client3 = new SimpleClient(testHost, port);
 		this.client4 = new SimpleClient(testHost, port);
-
-		this.client1.checkResponse("welcome 0"); // userID starts at 0
-		this.client2.checkResponse("welcome 1");
-		this.client3.checkResponse("welcome 2");
-		this.client4.checkResponse("welcome 3");
 	}
 
 }
@@ -275,7 +278,16 @@ class SimpleClient {
 	}
 
 	public void makeRequest(String req) {
+		
 		out.println(req);
+		System.out.println("Making request: " + req);
+		
+		try {
+			Thread.sleep(10); // Sleep for 10 ms to give server time to respond.
+		} catch (InterruptedException e) {
+			System.out.println("Error waiting in makeRequest.");
+		}
+
 	}
 
 	/**
@@ -283,36 +295,36 @@ class SimpleClient {
 	 * 		   If no response was received, returns the String "No response yet."
 	 */
 	public String getResponse() {
+		System.out.println("getting Response");
 		String latest = null;
 		try {
-			while ((serverResponse = in.readLine()) != null) {
-				 latest = serverResponse;
+			while (in.ready()) {
+				 latest = in.readLine();
 			}
 			if (latest != null) {
+				 System.out.println("Response was " + latest);
 				 return latest;
 			}
 			
 			else {
+				System.out.println("No response yet.");
 				return "No response yet.";
 			}
 		} catch (IOException e) {
+			System.out.println("exception");
 			return "Error reading in.readLine() of SimpleClient.";
 		}
 	}
 
 	public void checkResponse(String expected) {
-		assertEquals(expected, this.getResponse());
+		String resp = this.getResponse();
+		System.out.println("checkResponse is comparing " + expected + " with the actual response: " + resp);
+		assertEquals(expected, resp);
 	}
 
 	public void sendReqAndCheckResponse(String req, String expectedResponse) {
 		this.makeRequest(req);
-
-		try {
-			Thread.sleep(10); // Sleep for 10 ms to give server time to respond.
-		} catch (InterruptedException e) {
-			System.out.println("Error waiting in sendReqAndCheckResponse.");
-		}
-
+		System.out.println("Checking response");
 		this.checkResponse(expectedResponse);
 	}
 
