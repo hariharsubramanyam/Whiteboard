@@ -123,6 +123,7 @@ public class UserThread extends Thread {
 	public void run() {
 		try {
 			this.output(String.format("%s %d", MessageHandler.RESP_WELCOME, this.userID));
+			MessageHandler.notifyLobbyUsers(this, lobbyModel, true, LobbyModel.LOBBY_ID);
 			handleConnection();
 		} catch (Exception e) {
 		} finally {

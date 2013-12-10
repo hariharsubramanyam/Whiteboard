@@ -190,10 +190,9 @@ public class Canvas extends JPanel implements Client {
 	 * @param boardName
 	 *            String name given to the Canvas
 	 */
-
 	public Canvas(int width, int height, LobbyGUI lobby, String user,
 			int boardID, String boardName) {
-		
+
 		setupLogger(Level.ALL);
 
 		this.userNames = new ArrayList<String>();
@@ -282,6 +281,13 @@ public class Canvas extends JPanel implements Client {
 
 	}
 
+	/**
+	 * Creates the logger and sets the requested level of priority.
+	 * 
+	 * @param level
+	 *            default to ALL to see all messages. Set to INFO or above to
+	 *            see most relevant messages.
+	 */
 	private void setupLogger(Level level) {
 		try {
 			BoardLogger.setup();
@@ -688,7 +694,8 @@ public class Canvas extends JPanel implements Client {
 		}
 
 		/*
-		 * When mouse moves while a button is pressed down, draw a line segment.
+		 * When mouse moves while a button is pressed down, send the server a
+		 * line segment.
 		 */
 		public void mouseDragged(MouseEvent e) {
 
@@ -707,7 +714,7 @@ public class Canvas extends JPanel implements Client {
 		}
 
 		/*
-		 * This is used for button selection. It gives buttons actions.
+		 * This is used for button selection. It gives buttons their actions.
 		 */
 		public void mouseClicked(MouseEvent e) {
 			int x = e.getX();

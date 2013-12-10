@@ -12,6 +12,11 @@ import java.util.Random;
 
 import adts.LobbyModel;
 
+/**
+ * Creates a new WhiteboardServer instance which is bound to a socket and will
+ * multi-thread to handle multiple clients. Its main method allows for a
+ * connection to socket number 4444.
+ */
 public class WhiteboardServer {
 	private Socket socket;
 	private final ServerSocket serverSocket;
@@ -20,7 +25,14 @@ public class WhiteboardServer {
 	private final Thread serverThread;
 	private final WhiteboardServer thisServer;
 
-
+	/**
+	 * Initializes a server by binding it to its port, creating an array of
+	 * incoming userThreads. Will serve with a single thread.
+	 * 
+	 * @param port
+	 *            the socket port to connect to
+	 * @throws IOException
+	 */
 	public WhiteboardServer(int port) throws IOException {
 		this.serverSocket = new ServerSocket(port);
 
@@ -35,15 +47,23 @@ public class WhiteboardServer {
 					e.printStackTrace();
 				}
 			}
-			
+
 		});
 	}
-	
-	Exception e = new Exception();
+
+	/**
+	 * Begins a server thread.
+	 */
 	public void serve() throws IOException {
 		this.serverThread.start();
 	}
-	
+
+	/**
+	 * Begins a server without threading. Once started, it will listen in for
+	 * new user connections and create a new thread for each successful one.
+	 * 
+	 * @throws IOException
+	 */
 	public void singleThreadedServe() throws IOException {
 		while (true) {
 			socket = serverSocket.accept();
@@ -56,6 +76,9 @@ public class WhiteboardServer {
 
 	}
 
+	/**
+	 * This is the main method.
+	 */
 	public static void main(String[] args) {
 		int port = 4444;
 		Queue<String> arguments = new LinkedList<String>(Arrays.asList(args));
@@ -64,12 +87,19 @@ public class WhiteboardServer {
 		}
 
 		try {
-		    runWhiteboardServer(port);
+			runWhiteboardServer(port);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
+	/**
+	 * Method used by the main method to start a server.
+	 * 
+	 * @param port
+	 *            socket integer to connect to.
+	 * @throws IOException
+	 */
 	public static void runWhiteboardServer(int port) throws IOException {
 		WhiteboardServer server;
 		try {
@@ -79,5 +109,5 @@ public class WhiteboardServer {
 			e.printStackTrace();
 		}
 	}
-	
+
 }
