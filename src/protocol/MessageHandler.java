@@ -98,7 +98,7 @@ public class MessageHandler {
         String newName = splitString[1];
         newName = lobbyModel.changeUserName(newName, userID);
         int boardID = lobbyModel.getBoardIDThatUserIDIsIn(userID);
-        if (boardID != -1) {
+        if (boardID != LobbyModel.LOBBY_ID) {
             userIDsOfUsersInSameBoard = lobbyModel
                     .getUserIDsOfUsersInSameBoardAsGivenUserID(userID);
             for (int uID : userIDsOfUsersInSameBoard) {
@@ -111,6 +111,10 @@ public class MessageHandler {
         // userThread.broadcast(response, userIDsOfUsersInSameBoard);
         userThread.broadcast(response);
         userThread.output(MessageHandler.makeResponseUsernameChanged(newName));
+        userThread.output("" + boardID);
+        if(boardID == LobbyModel.LOBBY_ID){
+            notifyLobbyUsers(userThread, lobbyModel, true, boardID);
+        }
     }
 
     /**
@@ -129,6 +133,7 @@ public class MessageHandler {
         userThread.output(MessageHandler.makeResponseBoardIDs(lobbyModel
                 .getWhiteboards()));
         userThread.output(MessageHandler.makeResponseCurrentBoardID(boardID));
+        notifyLobbyUsers(userThread, lobbyModel, true, boardID);
     }
 
     /**
@@ -176,6 +181,7 @@ public class MessageHandler {
             //userThread.broadcast(response, userIDsOfUsersInSameBoard);
             userThread.broadcast(response);
             userThread.output(MessageHandler.makeResponseBoardLines(lines,userNames));
+            notifyLobbyUsers(userThread, lobbyModel, true, boardID);
         } catch (Exception ex) {
             userThread.output(MessageHandler.makeResponseFailed());
         }
@@ -199,6 +205,7 @@ public class MessageHandler {
             userThread.broadcast(response);
             //userThread.broadcast(response, userIDsOfUsersInSameBoard);
         }
+        notifyLobbyUsers(userThread, lobbyModel, true, boardID);
         userThread.output(MessageHandler.makeResponseLoggedOut());
         userThread.closeSocket();
     }
@@ -237,6 +244,7 @@ public class MessageHandler {
             userThread.broadcast(response);
             //userThread.broadcast(response, userIDsOfUsersInSameBoard);
         }
+        notifyLobbyUsers(userThread, lobbyModel, true, boardID);
         userThread.output(MessageHandler.makeResponseDone());
     }
 
@@ -300,6 +308,20 @@ public class MessageHandler {
         }
     }
 
+    /**
+     * Sends a users_for_board_id response to all users in the lobby
+     * @param userThread a thread to use for broadcasting
+     * @param lobbyModel the lobby model
+     */
+    public static void notifyLobbyUsers(UserThread userThread, LobbyModel lobbyModel,boolean includingSelf, int userThreadsBoardID){
+        Set<Integer> userIDs = lobbyModel.getUserIDsForBoardID(LobbyModel.LOBBY_ID);
+        Set<String> userNames = lobbyModel.getUserNamesForBoardID(LobbyModel.LOBBY_ID);
+        String response = MessageHandler.makeResponseUsersForBoardID(LobbyModel.LOBBY_ID, userNames);
+        userThread.broadcast(response, userIDs);
+        if(includingSelf && userThreadsBoardID==LobbyModel.LOBBY_ID){
+            userThread.output(response);
+        }
+    }
     /*************************************************************/
 
     /**
@@ -406,7 +428,7 @@ public class MessageHandler {
     private static String makeResponseClearBoard() {
         return MessageHandler.RESP_CLEAR;
     }
-
+    
     /*************************************************************/
 
     public static String makeRequestStringGetBoardIDs() {

@@ -22,6 +22,7 @@ public class ClientSideResponseHandler {
 	
 	public static void handleResponse(String input, LobbyGUI userGUI) {
 	    LOGGER.finest("RESP: " + input);
+	    System.out.println("RESP: " + input); 
 	   
 	    String command = input.split(" ")[0];
 	    String[] tokens = input.replace(command, "").trim().split(" ");
