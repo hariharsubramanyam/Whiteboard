@@ -116,14 +116,12 @@ public class Server_Client_protocolTests {
 		this.initialize(port = 4444);
 
 		// make the first board
-		// TODO this.client1.sendReqAndCheckResponse(createBoardReq,
-		// "board_ids 0");
-		// TODO this.client2.checkResponse("board_ids 0");
+		this.client1.sendReqAndCheckResponse(createBoardReq,"board_ids 0");
+		this.client2.checkResponse("board_ids 0");
 
 		// make the second board
-		// TODO this.client2.sendReqAndCheckResponse(createBoardReq,
-		// "board_ids 0 1");
-		// TODO this.client1.checkResponse("board_ids 0 1");
+		this.client2.sendReqAndCheckResponse(createBoardReq,"board_ids 0 1");
+		this.client1.checkResponse("board_ids 0 1");
 	}
 
 	@Test(timeout = 1000)
@@ -131,45 +129,36 @@ public class Server_Client_protocolTests {
 	public void get_current_board_id_test() throws IOException {
 		this.initialize(port = 4445);
 
-		// Make the first board
-		this.client1.sendReqAndCheckResponse(createBoardReq, "board_ids 0");
-		this.client2.checkResponse("board_ids 0");
-
-		// this.client1 joins the board
-		this.client1.makeRequest(ClientSideMessageMaker
-				.makeRequestStringJoinBoardID(0));
-		this.client1.getResponse();
+		// this.client1 makes the first board and joins it
+		this.client1.makeRequest(createBoardReq);
+		this.client1.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
 
 		// Check that this.client1 is in board 0, this.client2 is not in a
 		// board.
-		// this.client1.sendReqAndCheckResponse(getCurrentBoardReq,
-		// "current_board_id 0");
-		// TODO this.client2.sendReqAndCheckResponse(getCurrentBoardReq,
-		// "current_board_id -1");
+		this.client1.sendReqAndCheckResponse(getCurrentBoardReq,
+											 "current_board_id 0");
+		this.client2.sendReqAndCheckResponse(getCurrentBoardReq,
+											 "current_board_id -1");
 
-		// Make the second board
-		// this.client2.makeRequest(createBoardReq);
-		// this.client2.getResponse();
-		// this.client2 joins the new board
-		// this.client2.makeRequest(ClientSideMessageMaker
-		// .makeRequestStringJoinBoardID(1));
-		// this.client2.getResponse();
+		// this.client2 makes the second board and joins it
+		this.client2.makeRequest(createBoardReq);
+		this.client2.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(1));
+		
 		// Check that this.client1 is in board 0, this.client2 is in board 1
-		// this.client1.sendReqAndCheckResponse(getCurrentBoardReq,
-		// "current_board_id 0");
-		// this.client2.sendReqAndCheckResponse(getCurrentBoardReq,
-		// "current_board_id 1");
+		this.client1.sendReqAndCheckResponse(getCurrentBoardReq,
+											 "current_board_id 0");
+		this.client2.sendReqAndCheckResponse(getCurrentBoardReq,
+											 "current_board_id 1");
 
 		// Move this.client1 to a new board
-		// this.client1.makeRequest(createBoardReq);
-		// this.client1.makeRequest(ClientSideMessageMaker
-		// .makeRequestStringJoinBoardID(2));
+		this.client1.makeRequest(createBoardReq);
+		this.client1.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(2));
 
 		// Check that this.client1 is in board 0, this.client2 is in board 1
-		// this.client1.sendReqAndCheckResponse(getCurrentBoardReq,
-		// "current_board_id 2");
-		// this.client2.sendReqAndCheckResponse(getCurrentBoardReq,
-		// "current_board_id 1");
+		this.client1.sendReqAndCheckResponse(getCurrentBoardReq,
+											 "current_board_id 2");
+		this.client2.sendReqAndCheckResponse(getCurrentBoardReq,
+											 "current_board_id 1");
 
 	}
 
@@ -179,6 +168,14 @@ public class Server_Client_protocolTests {
 		this.initialize(port = 4446);
 
 		// Make boards
+		this.client1.sendReqAndCheckResponse(createBoardReq, "board_ids 0");
+		this.client2.sendReqAndCheckResponse(createBoardReq, "board_ids 1");
+		
+		// client1 and client2 join board 0, and client3 joins board 1
+		this.client1.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
+		this.client2.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
+		this.client3.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(1));
+		
 	}
 
 	@Test(timeout = 1000)
@@ -200,6 +197,10 @@ public class Server_Client_protocolTests {
 	}
 
 }
+
+
+
+
 
 class SimpleClient {
 	String host;
@@ -230,15 +231,20 @@ class SimpleClient {
 	}
 
 	/**
-	 * @return The earliest response received that was not already returned from
-	 *         an earlier getResponse(). If no response was received, returns
-	 *         the String "No response yet."
+	 * @return The latest response received. Clears all earlier responses.
+	 * 		   If no response was received, returns the String "No response yet."
 	 */
 	public String getResponse() {
+		String latest = null;
 		try {
-			if ((serverResponse = in.readLine()) != null) {
-				return serverResponse;
-			} else {
+			while ((serverResponse = in.readLine()) != null) {
+				 latest = serverResponse;
+			}
+			if (latest != null) {
+				 return latest;
+			}
+			
+			else {
 				return "No response yet.";
 			}
 		} catch (IOException e) {

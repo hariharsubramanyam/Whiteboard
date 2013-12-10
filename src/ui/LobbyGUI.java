@@ -351,7 +351,6 @@ public class LobbyGUI extends JFrame implements Client {
 	private class JoinBoardListener extends MouseAdapter {
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			System.out.println(e.getButton());
 			if (e.getClickCount() == 2) {
 				int selectedIndex = lstBoards.getSelectedIndex();
 				for (BoardListItem boardListItem : boardListItems) {
