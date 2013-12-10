@@ -7,10 +7,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+/**
+ * Creates a Logger used for systematically enabling/disabling debug lines.
+ */
 public class BoardLogger {
 	static private FileHandler fileTxt;
 	static private SimpleFormatter formatterTxt;
 
+	/**
+	 * Attaches handlers to the LOGGER instance. Will also create the fileTxt
+	 * file and sets the level to ALL by default.
+	 * 
+	 * @throws IOException
+	 */
 	static public void setup() throws IOException {
 
 		// Get the global logger to configure it

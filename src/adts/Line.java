@@ -2,6 +2,13 @@ package adts;
 
 import java.awt.Color;
 
+/**
+ * Used to create Line objects which represent Canvas line segments. These
+ * describe the locational properties, width properties, and color properties.
+ * 
+ * @author Ezex
+ * 
+ */
 public class Line {
 
 	/**
@@ -60,14 +67,15 @@ public class Line {
 	 *            The second y coordinate
 	 * @param strokeThickness
 	 *            The stroke thickness
-	 * @param a
-	 *            The alpha value
+	 * 
 	 * @param r
 	 *            The red value
 	 * @param g
 	 *            The green value
 	 * @param b
 	 *            The blue value
+	 * @param a
+	 *            The alpha value
 	 */
 	public Line(int x1, int y1, int x2, int y2, float strokeThickness, int r,
 			int g, int b, int a) {
@@ -82,6 +90,9 @@ public class Line {
 		this.b = b;
 	}
 
+	/**
+	 * @return A color object represented by the RGBA parameters.
+	 */
 	public Color getColor() {
 		return new Color(r, g, b, a);
 	}
