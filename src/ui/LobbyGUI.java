@@ -27,7 +27,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
-import LOGGER.BoardLogger;
+import logger.BoardLogger;
 import protocol.BoardListItem;
 import protocol.Client;
 import protocol.ClientSideMessageMaker;
@@ -120,7 +120,7 @@ public class LobbyGUI extends JFrame implements Client {
 	private List<BoardListItem> boardListItems;
 
 	public LobbyGUI() {
-		
+
 		this.port = 4444;
 		setupLogger(Level.ALL);
 
@@ -280,7 +280,7 @@ public class LobbyGUI extends JFrame implements Client {
 		public void actionPerformed(ActionEvent e) {
 			String newUser = JOptionPane.showInputDialog("Enter new user name");
 			user.setName(newUser);
-			if(newUser == null){
+			if (newUser == null) {
 				LOGGER.warning("No username set on exit of JOptionPane");
 				return;
 			}
@@ -294,11 +294,11 @@ public class LobbyGUI extends JFrame implements Client {
 		public void actionPerformed(ActionEvent e) {
 			String newBoard = JOptionPane
 					.showInputDialog("Enter new Whiteboard name");
-			if(newBoard == null){
+			if (newBoard == null) {
 				LOGGER.warning("No canvas created on exit of JOptionPane");
 				return;
 			}
-			
+
 			String canvasName = newBoard;
 			if (canvasName.equals("")) {
 				canvasName = "[No name]";
