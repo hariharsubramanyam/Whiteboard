@@ -54,7 +54,7 @@ public class Server_Client_protocolTests {
 	 * possible combination. This include things like joining a board that
 	 * doesn't exist, joining one where users exist and have lines drawn/no
 	 * lines drawn, changing of usernames, creating boards and seeing them on
-	 * the lobbyGUI table, and more which are given in detail below.
+	 * the WhiteboardClient table, and more which are given in detail below.
 	 */
 
 	/*
@@ -75,8 +75,7 @@ public class Server_Client_protocolTests {
 	SimpleClient client4;
 
 	String createBoardReq = ClientSideMessageMaker
-			.makeRequestStringCreateBoard("BoardName");
-	
+			.makeRequestStringCreateBoard("BoardName");	
 	String getCurrentBoardReq = ClientSideMessageMaker
 			.makeRequestStringGetCurrentBoardID();
 	String getBoardIDSReq = ClientSideMessageMaker
@@ -86,8 +85,9 @@ public class Server_Client_protocolTests {
 	String getUsersInyMyBoardReq = ClientSideMessageMaker
 			.makeRequestStringGetUsersInMyBoard();
 
-	@Test(timeout = 1000)
-	// time out in 1 second, in case test does not complete
+	@Test(timeout = 1000)	// time out in 1 second, in case test does not complete
+	// Have client 1 create a board, join it, and then have client 2 create a board. 
+	// Check at all stages that the responses are as expected.
 	public void create_board_test() throws IOException {
 		System.out.println(createBoardReq);
 		this.initialize();
@@ -247,6 +247,12 @@ public class Server_Client_protocolTests {
 		this.client2 = new SimpleClient(testHost, port);
 		this.client3 = new SimpleClient(testHost, port);
 		this.client4 = new SimpleClient(testHost, port);
+		
+		// need to clear their incoming buffers; they currently have "welcome" as the latest response
+		this.client1.getResponse();
+		this.client2.getResponse();
+		this.client3.getResponse();
+		this.client4.getResponse();
 	}
 
 }
@@ -269,8 +275,7 @@ class SimpleClient {
 			this.out = new PrintWriter(socket.getOutputStream(), true);
 			this.in = new BufferedReader(new InputStreamReader(
 					socket.getInputStream()));
-		} catch (Exception ex) {
-		}
+		} catch (Exception ex) {}
 	}
 
 	public void disconnect() throws IOException {
@@ -279,13 +284,12 @@ class SimpleClient {
 		this.socket.close();
 	}
 
-	public void makeRequest(String req) {
-		
-		out.println(req);
+	public void makeRequest(String req) {	
 		System.out.println("Making request: " + req);
-		
+		out.println(req);
+
 		try {
-			Thread.sleep(10); // Sleep for 10 ms to give server time to respond.
+			Thread.sleep(1); // Wait for 1 ms to give server time to respond.
 		} catch (InterruptedException e) {
 			System.out.println("Error waiting in makeRequest.");
 		}
@@ -293,27 +297,20 @@ class SimpleClient {
 	}
 
 	/**
-	 * @return The latest response received. Clears all earlier responses.
+	 * @return The oldest response that was not returned by an earlier getResponse() call.
+	 * 		   Each call of getResponse() does an in.readLine() and therefore reads and
+	 * 		   discards the oldest response from the incoming messages buffer.
 	 * 		   If no response was received, returns the String "No response yet."
 	 */
 	public String getResponse() {
 		System.out.println("getting Response");
-		String latest = null;
+		String serverResponse;
 		try {
-			while (in.ready()) {
-				 latest = in.readLine();
+			if ((serverResponse = in.readLine()) != null) {
+				return serverResponse;
 			}
-			if (latest != null) {
-				 System.out.println("Response was " + latest);
-				 return latest;
-			}
-			
-			else {
-				System.out.println("No response yet.");
-				return "No response yet.";
-			}
+			else {return "No response yet.";}
 		} catch (IOException e) {
-			System.out.println("exception");
 			return "Error reading in.readLine() of SimpleClient.";
 		}
 	}
@@ -326,7 +323,6 @@ class SimpleClient {
 
 	public void sendReqAndCheckResponse(String req, String expectedResponse) {
 		this.makeRequest(req);
-		System.out.println("Checking response");
 		this.checkResponse(expectedResponse);
 	}
 
