@@ -92,7 +92,7 @@ public class LobbyModel {
         userIDsForBoardID = Collections
                 .synchronizedMap(new HashMap<Integer, Set<Integer>>());
         
-        this.boardForID.put(LOBBY_ID, new Whiteboard(LOBBY_ID, "Lobby", Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT));
+        this.boardForID.put(LOBBY_ID, new Whiteboard(LOBBY_ID, "Lobby"));
         this.userIDsForBoardID.put(LOBBY_ID, new HashSet<Integer>());
     }
 
@@ -249,9 +249,9 @@ public class LobbyModel {
      *            the height of the board
      * @return the id of the board that was added
      */
-    public synchronized int addBoard(String name, int width, int height) {
+    public synchronized int addBoard(String name) {
         int id = this.uniqueBoardID.getAndIncrement();
-        Whiteboard board = new Whiteboard(id, name, width, height);
+        Whiteboard board = new Whiteboard(id, name);
         this.userIDsForBoardID.put(id, new HashSet<Integer>());
         Set<String> userNames = new HashSet<String>();
         for(Whiteboard brd: this.boardForID.values()){
@@ -270,24 +270,13 @@ public class LobbyModel {
     }
 
     /**
-     * Adds a board to the lobby with a default height and width
-     * 
-     * @param name
-     *            the name of the board
-     * @return the id of the board that was added
-     */
-    public synchronized int addBoard(String name) {
-        return this.addBoard(name, Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT);
-    }
-
-    /**
      * Adds a board to the lobby with an automatically generated name and
      * default height and width
      * 
      * @return the id of the board that was added
      */
     public synchronized int addBoard() {
-        return this.addBoard("Board", Whiteboard.DEFAULT_WIDTH, Whiteboard.DEFAULT_HEIGHT);
+        return this.addBoard("Board");
     }
 
     /**

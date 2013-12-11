@@ -4,9 +4,9 @@ package adts;
  * Represents a user with a name and id
  * 
  * Concurrency argument:
- *      This class is completely immutable. Every field private, final, and an integer/String.
- *      Since a user cannot be changed at all after it's created, there's no fear of race
- *      conditions. Thus, it is threadsafe.
+ *      The id is a final private integer and the name is a string (immutable). 
+ *      The name is the only field that can be changed, so we synchronize the
+ *      getter and setter. Thus the class is threadsafe
  */
 public class User {
     /**
@@ -53,7 +53,7 @@ public class User {
     /**
      * @return the name of this user
      */
-    public String getName() {
+    public synchronized String getName() {
         return this.name;
     }
 
@@ -61,7 +61,7 @@ public class User {
      * @param name
      *            the name of this user
      */
-    public void setName(String name) {
+    public synchronized void setName(String name) {
         this.name = name;
     }
 
