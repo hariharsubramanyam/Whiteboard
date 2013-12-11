@@ -1,12 +1,19 @@
 package adts;
 
-import java.awt.Color;
-
 /**
  * Used to create Line objects which represent Canvas line segments. These
  * describe the locational properties, width properties, and color properties.
  * 
- * @author Ezex
+ * Specifically, it captures the following information:
+ *      The start point (x1,y1)
+ *      The end point (x2,y2)
+ *      The color (r,g,b,a)
+ *      The stroke thickness (strokeThickness)
+ * 
+ * Concurrency argument:
+ *      This class is completely immutable. Every field private, final, and an integer.
+ *      Since a line cannot be changed at all after it's created, there's no fear of race
+ *      conditions. Thus, it is threadsafe.
  * 
  */
 public class Line {
@@ -88,13 +95,6 @@ public class Line {
 		this.r = r;
 		this.g = g;
 		this.b = b;
-	}
-
-	/**
-	 * @return A color object represented by the RGBA parameters.
-	 */
-	public Color getColor() {
-		return new Color(r, g, b, a);
 	}
 
 	/**

@@ -5,11 +5,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import adts.LobbyModel;
 import protocol.MessageHandler;
+import protocol.OutgoingServerMessage;
+import protocol.OutgoingServerMessageQueue;
 
 public class UserThread extends Thread {
 
@@ -43,6 +47,12 @@ public class UserThread extends Thread {
 	 */
 	private final LobbyModel lobbyModel;
 
+	
+	/**
+	 * The queue of outgoing messages
+	 */
+	private final OutgoingServerMessageQueue outgoingServerMessageQueue; 
+	
 	/**
 	 * Create the user thread
 	 * 
@@ -56,6 +66,7 @@ public class UserThread extends Thread {
 	 */
 	public UserThread(Socket socket, int userID, List<UserThread> otherThreads,
 			LobbyModel lobbyModel) throws IOException {
+	    this.outgoingServerMessageQueue = new OutgoingServerMessageQueue();
 		this.socket = socket;
 		this.userID = userID;
 		this.otherThreads = otherThreads;
@@ -63,6 +74,7 @@ public class UserThread extends Thread {
 		this.in = new BufferedReader(new InputStreamReader(
 				socket.getInputStream()));
 		this.out = new PrintWriter(socket.getOutputStream(), true);
+		this.outgoingServerMessageQueue.start();
 	}
 
 	/**
@@ -72,7 +84,9 @@ public class UserThread extends Thread {
 	 *            the message to write
 	 */
 	public void output(String message) {
-		out.println(message);
+	    Collection<PrintWriter> outputStreams = new ArrayList<PrintWriter>();
+	    outputStreams.add(this.getOutputStream());
+        this.outgoingServerMessageQueue.addMessage(new OutgoingServerMessage(outputStreams, message));
 	}
 
 	/**
@@ -80,6 +94,13 @@ public class UserThread extends Thread {
 	 */
 	public int getUserID() {
 		return this.userID;
+	}
+	
+	/**
+	 * @return the output stream
+	 */
+	public PrintWriter getOutputStream(){
+	    return this.out;
 	}
 
 	/**
@@ -89,11 +110,13 @@ public class UserThread extends Thread {
 	 *            the message to output
 	 */
 	public void broadcast(String message) {
+	    Collection<PrintWriter> outputStreams = new ArrayList<PrintWriter>();
 		for (UserThread thread : this.otherThreads) {
 			if (thread.getUserID() == this.userID)
 				continue;
-			thread.output(message);
+			outputStreams.add(thread.getOutputStream());
 		}
+		this.outgoingServerMessageQueue.addMessage(new OutgoingServerMessage(outputStreams, message));
 	}
 
 	/**
@@ -105,13 +128,15 @@ public class UserThread extends Thread {
 	 *            the list of userIDs to output to
 	 */
 	public void broadcast(String message, Set<Integer> userIDs) {
+	    Collection<PrintWriter> outputStreams = new ArrayList<PrintWriter>();
 		for (UserThread thread : this.otherThreads) {
 			if (thread.getUserID() == this.userID)
 				continue;
 			if (userIDs.contains(thread.getUserID())) {
-				thread.output(message);
+			    outputStreams.add(thread.getOutputStream());
 			}
 		}
+		this.outgoingServerMessageQueue.addMessage(new OutgoingServerMessage(outputStreams, message));;
 	}
 	
 	public void cancel() { interrupt(); }
@@ -149,8 +174,7 @@ public class UserThread extends Thread {
 	 */
 	private void handleConnection() throws IOException {
 		try {
-			for (String line = in.readLine(); line != null; line = in
-					.readLine()) {
+			for (String line = in.readLine(); line != null; line = in.readLine()) {
 				MessageHandler.handleMessage(line, this, this.lobbyModel);
 			}
 		} finally {

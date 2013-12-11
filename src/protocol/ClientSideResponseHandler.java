@@ -18,8 +18,7 @@ import adts.LobbyModel;
  */
 public class ClientSideResponseHandler {
 
-	private final static Logger LOGGER = Logger
-			.getLogger(ClientSideResponseHandler.class.getName());
+	private final static Logger LOGGER = Logger.getLogger(ClientSideResponseHandler.class.getName());
 
 	public static void handleResponse(String input, LobbyGUI userGUI) {
 		LOGGER.finest("RESP: " + input);
