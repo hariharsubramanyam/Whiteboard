@@ -1,6 +1,5 @@
 package adts;
 
-import java.rmi.UnexpectedException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,6 +14,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * users into different parts of its code.
  * 
  * Rep Invariant: A user can only be in one board!
+ *      This is ensured that each time we add a user,
+ *      add a board, join a board, and leave a board.
+ *      These are the only ways the association between 
+ *      users and boards can change, so the rep invariant
+ *      is preserved
  * 
  */
 public class LobbyModel {
@@ -305,7 +309,7 @@ public class LobbyModel {
      * @param userID
      *            the id of the user to delete
      */
-    public void deleteUser(int userID) {
+    public synchronized void deleteUser(int userID) {
         this.userForID.remove(userID);
         for (int boardID : this.userIDsForBoardID.keySet()) {
             this.userIDsForBoardID.get(boardID).remove(userID);
@@ -320,7 +324,7 @@ public class LobbyModel {
      * @return the set of user ids of the users in the board with the given
      *         board id
      */
-    public Set<Integer> getUserIDsForBoardID(int boardID) {
+    public synchronized Set<Integer> getUserIDsForBoardID(int boardID) {
         return this.userIDsForBoardID.get(boardID);
     }
 
@@ -332,7 +336,7 @@ public class LobbyModel {
      * @param boardID
      *            the id of the board we should add the line to
      */
-    public void addLineToBoardID(Line l, int boardID) {
+    public synchronized void addLineToBoardID(Line l, int boardID) {
         if (!(this.boardForID.keySet().contains(boardID)))
             throw new IllegalArgumentException(String.format(
                     "boardID=%d does not exist!", boardID));
@@ -346,7 +350,7 @@ public class LobbyModel {
      *            the id of the board
      * @return the lines on that board
      */
-    public List<Line> getLinesForBoardID(int boardID) {
+    public synchronized List<Line> getLinesForBoardID(int boardID) {
         if (!(this.boardForID.keySet().contains(boardID)))
             throw new IllegalArgumentException(String.format(
                     "boardID=%d does not exist!", boardID));
@@ -357,14 +361,30 @@ public class LobbyModel {
      * Clears the board with the given ID
      * @param boardID the board to clear
      */
-    public void clearBoard(int boardID){
+    public synchronized void clearBoard(int boardID){
         this.boardForID.get(boardID).clearBoard();
     }
   
     /**
      * @return the whiteboards
      */
-    public Collection<Whiteboard> getWhiteboards(){
+    public synchronized Collection<Whiteboard> getWhiteboards(){
         return this.boardForID.values();
+    }
+
+    /**
+     * @return true if the rep invariant (i.e. each user is only in one board) is satisfied
+     */
+    public boolean checkRep(){
+        Set<Integer> userIDs = new HashSet<Integer>();
+        for(int boardID : this.boardForID.keySet()){
+            for(int userID : this.userIDsForBoardID.get(boardID)){
+                if(userIDs.contains(userID)){
+                    return false;
+                }
+                userIDs.add(userID);
+            }
+        }
+        return true;
     }
 }
