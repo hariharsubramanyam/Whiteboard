@@ -129,7 +129,7 @@ public class WhiteboardClient extends JFrame implements Client {
 	/**
 	 * Background thread to handle incoming messages
 	 */
-	private final LobbyGUIBackgroundThread serverMessagesThread;
+	private final WhiteboardClientBackgroundThread serverMessagesThread;
 
 	/**
 	 * canvas which allows drawing on whiteboard
@@ -234,7 +234,7 @@ public class WhiteboardClient extends JFrame implements Client {
 		this.self = this;
 
 		// launch a thread to listen for messages
-		this.serverMessagesThread = new LobbyGUIBackgroundThread(this, this.in);
+		this.serverMessagesThread = new WhiteboardClientBackgroundThread(this, this.in);
 		this.serverMessagesThread.start();
 
 		// create the UI to view and change the username and new whiteboards

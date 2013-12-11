@@ -12,10 +12,10 @@ import protocol.ClientSideResponseHandler;
  * LOGGER to track serverResponses when needed.
  * 
  */
-public class LobbyGUIBackgroundThread extends Thread {
+public class WhiteboardClientBackgroundThread extends Thread {
 
 	private final static Logger LOGGER = Logger
-			.getLogger(LobbyGUIBackgroundThread.class.getName());
+			.getLogger(WhiteboardClientBackgroundThread.class.getName());
 
 	private final WhiteboardClient gui;
 	private final BufferedReader in;
@@ -28,7 +28,7 @@ public class LobbyGUIBackgroundThread extends Thread {
 	 * @param in
 	 *            server response
 	 */
-	public LobbyGUIBackgroundThread(WhiteboardClient gui, BufferedReader in) {
+	public WhiteboardClientBackgroundThread(WhiteboardClient gui, BufferedReader in) {
 		this.gui = gui;
 		this.in = in;
 	}
