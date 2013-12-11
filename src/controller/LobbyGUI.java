@@ -1,4 +1,4 @@
-package ui;
+package controller;
 
 import java.awt.Container;
 import java.awt.event.ActionEvent;
@@ -36,10 +36,10 @@ import protocol.BoardListItem;
 import protocol.Client;
 import protocol.ClientSideMessageMaker;
 import protocol.MessageHandler;
+import view.Canvas;
 import adts.Line;
 import adts.LobbyModel;
 import adts.User;
-import canvas.Canvas;
 
 /**
  * 
@@ -54,7 +54,17 @@ import canvas.Canvas;
  * 
  * Thread-safety:
  * 
+ * We have one dedicated thread for receiving messages and updating the UI –
+ * other threads cannot do that. Each client is able to send Line drawing
+ * requests from their Canvas to the server and, given the Model is thread-safe,
+ * it will broadcast the action to every client in the same Whiteboard. Only now
+ * does anything get drawn. This way we eliminate concurrency bugs; ie. local
+ * Canvases are showing real-time images of the “master Canvas” in the
+ * thread-safe Model.
  * 
+ * The real measure of thread-safety are the rep-invariants. These include: no
+ * local drawing allowed, meaning that if there is no server connection, nothing
+ * should be getting drawn. Two, one Canvas per LobbyGUI.
  * 
  * Testing strategy:
  * 
@@ -86,7 +96,7 @@ public class LobbyGUI extends JFrame implements Client {
 
 	// use the classname for the logger, this way you can refactor
 	private final static Logger LOGGER = Logger.getLogger(LobbyGUI.class
-	        .getName());
+			.getName());
 
 	private static final long serialVersionUID = 1L;
 
@@ -131,7 +141,7 @@ public class LobbyGUI extends JFrame implements Client {
 	public LobbyGUI() {
 
 		this.port = 4444;
-		setupLogger(Level.ALL);
+		setupLogger(Level.OFF);
 
 		// get the hostname and create the socket
 		while (this.in == null) {
@@ -189,7 +199,7 @@ public class LobbyGUI extends JFrame implements Client {
 		contentPane.setLayout(this.layout);
 		this.layout.setAutoCreateGaps(true);
 		this.layout.setAutoCreateContainerGaps(true);
-		
+
 		this.layout
 				.setHorizontalGroup(this.layout
 						.createParallelGroup()
@@ -225,45 +235,13 @@ public class LobbyGUI extends JFrame implements Client {
 		this.setSize(500, 300);
 		this.setResizable(false);
 
-		
 		this.makeRequest(ClientSideMessageMaker.makeRequestStringGetBoardIDs());
-		this.makeRequest(ClientSideMessageMaker.makeRequestStringGetUsersForBoardID(LobbyModel.LOBBY_ID));
+		this.makeRequest(ClientSideMessageMaker
+				.makeRequestStringGetUsersForBoardID(LobbyModel.LOBBY_ID));
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLocationRelativeTo(null);
 		this.addWindowListener(new WindowListen());
 
-	}
-
-	private class WindowListen implements WindowListener {
-
-		@Override
-		public void windowActivated(WindowEvent e) {
-		}
-
-		@Override
-		public void windowClosing(WindowEvent e) {
-			LOGGER.warning("Active LobbyGUI closed");
-		}
-
-		@Override
-		public void windowClosed(WindowEvent e) {
-		}
-
-		@Override
-		public void windowDeactivated(WindowEvent e) {
-		}
-
-		@Override
-		public void windowDeiconified(WindowEvent e) {
-		}
-
-		@Override
-		public void windowIconified(WindowEvent e) {
-		}
-
-		@Override
-		public void windowOpened(WindowEvent e) {
-		}
 	}
 
 	private void setupLogger(Level level) {
@@ -343,11 +321,10 @@ public class LobbyGUI extends JFrame implements Client {
 				return;
 			}
 
-			if(newBoard.equals("")){
-			    newBoard = "Board" + (new Random()).nextInt(100000);
+			if (newBoard.equals("")) {
+				newBoard = "Board" + (new Random()).nextInt(100000);
 			}
-			canvas = new Canvas(1000, 1000, self, user.getName(), -1,
-					newBoard);
+			canvas = new Canvas(1000, 1000, self, user.getName(), -1, newBoard);
 			canvas.setVisible(true);
 			setVisible(false);
 			out.println(ClientSideMessageMaker
@@ -401,18 +378,18 @@ public class LobbyGUI extends JFrame implements Client {
 			canvas.onReceiveUsers(boardID, users);
 		final int finalBoardID = boardID;
 		final List<String> finalUsers = users;
-		SwingUtilities.invokeLater(new Thread(){
-		    @Override
-		    public void run() {
-		        if(finalBoardID == LobbyModel.LOBBY_ID){
-		            lstMdlUsers.clear();
-		            for(String user : finalUsers){
-		                lstMdlUsers.addElement(user);
-		            }
-		        }
-		    };
+		SwingUtilities.invokeLater(new Thread() {
+			@Override
+			public void run() {
+				if (finalBoardID == LobbyModel.LOBBY_ID) {
+					lstMdlUsers.clear();
+					for (String user : finalUsers) {
+						lstMdlUsers.addElement(user);
+					}
+				}
+			};
 		});
-		
+
 	}
 
 	@Override
@@ -441,6 +418,38 @@ public class LobbyGUI extends JFrame implements Client {
 				}
 			}
 		});
+	}
+
+	private class WindowListen implements WindowListener {
+
+		@Override
+		public void windowActivated(WindowEvent e) {
+		}
+
+		@Override
+		public void windowClosing(WindowEvent e) {
+			LOGGER.warning("Active LobbyGUI closed");
+		}
+
+		@Override
+		public void windowClosed(WindowEvent e) {
+		}
+
+		@Override
+		public void windowDeactivated(WindowEvent e) {
+		}
+
+		@Override
+		public void windowDeiconified(WindowEvent e) {
+		}
+
+		@Override
+		public void windowIconified(WindowEvent e) {
+		}
+
+		@Override
+		public void windowOpened(WindowEvent e) {
+		}
 	}
 
 	/**

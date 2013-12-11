@@ -76,6 +76,7 @@ public class Server_Client_protocolTests {
 
 	String createBoardReq = ClientSideMessageMaker
 			.makeRequestStringCreateBoard("BoardName");
+	
 	String getCurrentBoardReq = ClientSideMessageMaker
 			.makeRequestStringGetCurrentBoardID();
 	String getBoardIDSReq = ClientSideMessageMaker
@@ -88,6 +89,7 @@ public class Server_Client_protocolTests {
 	@Test(timeout = 1000)
 	// time out in 1 second, in case test does not complete
 	public void create_board_test() throws IOException {
+		System.out.println(createBoardReq);
 		this.initialize();
 
 		// DEBUGGING: first check that client2 doesn't have any responses (e.g. from earlier tests)

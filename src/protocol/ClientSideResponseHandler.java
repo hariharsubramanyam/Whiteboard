@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import ui.LobbyGUI;
+import controller.LobbyGUI;
 import adts.Line;
 import adts.LobbyModel;
 
