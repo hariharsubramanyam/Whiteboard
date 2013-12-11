@@ -10,16 +10,42 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * ADT that represents a Lobby. This is a waiting zone for servers to tunnel
- * users into different parts of its code.
+ * This is a system for managing users, boards, and the relationship 
+ * (i.e. a set of users are working on a board) between them. The "lobby" 
+ * itself is a waiting zone where users are put before they enter a board 
  * 
- * Rep Invariant: A user can only be in one board!
+ * Rep Invariant: 
+ * 
+ * A user can only be in one board!
  *      This is ensured that each time we add a user,
  *      add a board, join a board, and leave a board.
  *      These are the only ways the association between 
  *      users and boards can change, so the rep invariant
- *      is preserved
+ *      is preserved.
  * 
+ * No two users have the same ID. No two boards have the same ID
+ *      This is ensured by using two atomic integers. When we 
+ *      receive a new user, we increment the integer and assign
+ *      the value as the user's ID. When we receive a new board,
+ *      we increment the integer and assign the value as the board's ID.
+ * 
+ * No two users have the same userName. No two boards have the same boardName.
+ *      A name (String) is a meaningful string representation identifier of 
+ *      a user or board (it is NOT the same thing as the ID, which is an integer).
+ *      For instance, a boardName might be "6.005 brainstorming", and a userName
+ *      might be "Rob_Miller". We ensure that userNames and boardNames are unique
+ *      by checking if any other user has the same name. If so, we append an integer
+ *      to the name and increment it until the name is unique. So, if three people
+ *      tried to be "Rob_Miller", they will be "Rob_Miller", "Rob_Miller(2)", and 
+ *      "Rob_Miller(3)".
+ *      
+ * Concurrency argument:
+ *      All fields have been made final and atomic. 
+ *      Thread safe classes (ex. synchronizedMap, AtomicInteger) 
+ *      have been used everywhere possible. We have
+ *      synchronized all methods that access or
+ *      modify the state.
+ *      
  */
 public class LobbyModel {
     /**
@@ -48,8 +74,15 @@ public class LobbyModel {
      */
     private final Map<Integer, Set<Integer>> userIDsForBoardID;
 
+    /**
+     * The ID of the lobby, which is the "board" where users are put
+     * before entering a regular board
+     */
     public static final int LOBBY_ID = -1;
     
+    /**
+     * Construct the LobbyModel
+     */
     public LobbyModel() {
         uniqueUserID = new AtomicInteger(0);
         uniqueBoardID = new AtomicInteger(0);
@@ -118,6 +151,10 @@ public class LobbyModel {
         return LOBBY_ID;
     }
 
+    /**
+     * @param userID the id of the user
+     * @return the username for the user with the given id
+     */
     public synchronized String getUserNameForUserID(int userID) {
         return this.userForID.get(userID).getName();
     }
@@ -166,7 +203,7 @@ public class LobbyModel {
             this.userForID.get(userID).setName(newName);
             return newName;
         }
-        int incrementer = 1;
+        int incrementer = 2;
         String formattedName = "%s(%d)";
         while(names.contains(String.format(formattedName, newName,incrementer)))
             incrementer++;
@@ -373,18 +410,48 @@ public class LobbyModel {
     }
 
     /**
-     * @return true if the rep invariant (i.e. each user is only in one board) is satisfied
+     * @return true if the rep invariant is satisfied.
+     * 
+     * The rep invariant:
+     * 1) One user per board
+     * 2) All users have unique ids (satisfied because we use user IDs as keys)
+     * 3) All boards have unique ids (satisfied because we use board IDs as keys)
+     * 4) All users have unique names
+     * 5) All boards have unique names
+     * 
      */
     public boolean checkRep(){
-        Set<Integer> userIDs = new HashSet<Integer>();
+        
+        // 1) One user per board
+        Set<Integer> userIDsInBoard = new HashSet<Integer>();
         for(int boardID : this.boardForID.keySet()){
             for(int userID : this.userIDsForBoardID.get(boardID)){
-                if(userIDs.contains(userID)){
+                if(userIDsInBoard.contains(userIDsInBoard)){
                     return false;
                 }
-                userIDs.add(userID);
+                userIDsInBoard.add(userID);
             }
         }
+        
+        // 4) All users have unique names
+        Set<String> userNames = new HashSet<String>();
+        for(User user : this.userForID.values()){
+            if(userNames.contains(user.getName())){
+                return false;
+            }
+            userNames.add(user.getName());
+        }
+        
+        // 5) All boards have unique names
+        Set<String> boardNames = new HashSet<String>();
+        for(Whiteboard board : this.boardForID.values()){
+            if(boardNames.contains(board.getBoardName())){
+                return false;
+            }
+            boardNames.add(board.getBoardName());
+        }
+        
         return true;
+        
     }
 }
