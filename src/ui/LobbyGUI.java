@@ -13,8 +13,10 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -84,7 +86,7 @@ public class LobbyGUI extends JFrame implements Client {
 
 	// use the classname for the logger, this way you can refactor
 	private final static Logger LOGGER = Logger.getLogger(LobbyGUI.class
-			.getName());
+	        .getName());
 
 	private static final long serialVersionUID = 1L;
 
@@ -236,8 +238,6 @@ public class LobbyGUI extends JFrame implements Client {
 
 		@Override
 		public void windowActivated(WindowEvent e) {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
@@ -343,12 +343,11 @@ public class LobbyGUI extends JFrame implements Client {
 				return;
 			}
 
-			String canvasName = newBoard;
-			if (canvasName.equals("")) {
-				canvasName = "[No name]";
+			if(newBoard.equals("")){
+			    newBoard = "Board" + (new Random()).nextInt(100000);
 			}
 			canvas = new Canvas(1000, 1000, self, user.getName(), -1,
-					canvasName);
+					newBoard);
 			canvas.setVisible(true);
 			setVisible(false);
 			out.println(ClientSideMessageMaker

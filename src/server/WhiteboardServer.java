@@ -8,8 +8,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.Random;
-
 import adts.LobbyModel;
 
 /**
@@ -35,7 +33,6 @@ public class WhiteboardServer {
 	 */
 	public WhiteboardServer(int port) throws IOException {
 		this.serverSocket = new ServerSocket(port);
-
 		this.lobbyModel = new LobbyModel();
 		this.userThreads = new ArrayList<UserThread>();
 		this.thisServer = this;
