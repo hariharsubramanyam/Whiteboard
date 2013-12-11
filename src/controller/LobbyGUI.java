@@ -54,12 +54,12 @@ import adts.User;
  * 
  * Thread-safety:
  * 
- * We have one dedicated thread for receiving messages and updating the UI –
+ * We have one dedicated thread for receiving messages and updating the UI
  * other threads cannot do that. Each client is able to send Line drawing
  * requests from their Canvas to the server and, given the Model is thread-safe,
  * it will broadcast the action to every client in the same Whiteboard. Only now
  * does anything get drawn. This way we eliminate concurrency bugs; ie. local
- * Canvases are showing real-time images of the “master Canvas” in the
+ * Canvases are showing real-time images of the master Canvas in the
  * thread-safe Model.
  * 
  * The real measure of thread-safety are the rep-invariants. These include: no
