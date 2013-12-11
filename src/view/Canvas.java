@@ -34,11 +34,13 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import controller.LobbyGUI;
 import logger.BoardLogger;
 import protocol.Client;
 import protocol.ClientSideMessageMaker;
+import turtle.DrawableTurtle;
+import turtle.LineSegment;
 import adts.Line;
+import controller.LobbyGUI;
 
 /**
  * Canvas represents a drawing surface that allows the user to draw on it
@@ -237,7 +239,8 @@ public class Canvas extends JPanel implements Client {
 		 * add a conditional to match this string and you're done.
 		 */
 		this.buttonText = Arrays.asList("Eraser", "Pencil", "Stroke Small",
-				"Stroke Med", "Stroke Large", "Clear board", "LEAVE BOARD");
+				"Stroke Medium", "Stroke Large", "Draw turtle", "Clear board",
+				"LEAVE BOARD");
 
 		this.numOfButtons = buttonText.size();
 		// leave 1 margin on either side
@@ -683,6 +686,7 @@ public class Canvas extends JPanel implements Client {
 		 * segment from that last point to the point of the nextmouse event.
 		 */
 		private int[] lastPos = new int[2];
+		private List<LineSegment> turtleLines;
 
 		/*
 		 * When mouse button is pressed down, start drawing.
@@ -763,12 +767,29 @@ public class Canvas extends JPanel implements Client {
 				lineStroke = 1;
 			}
 
-			if (action.equals("Stroke Med")) {
+			if (action.equals("Stroke Medium")) {
 				lineStroke = 5;
 			}
 
 			if (action.equals("Stroke Large")) {
 				lineStroke = 11;
+			}
+
+			if (action.equals("Draw turtle")) {
+				DrawableTurtle turtle = new DrawableTurtle();
+				drawTurtle(turtle);
+				turtleLines = turtle.draw();
+				for (int i = 0; i < turtleLines.size(); i++) {
+					Line l = new Line((int) turtleLines.get(i).start.x,
+							(int) turtleLines.get(i).start.y,
+							(int) turtleLines.get(i).end.x,
+							(int) turtleLines.get(i).end.y, 1,
+							lineColor.getRed(), lineColor.getGreen(),
+							lineColor.getBlue(), lineColor.getAlpha());
+					lobby.makeRequest(ClientSideMessageMaker
+							.makeRequestStringDraw(l));
+				}
+
 			}
 
 			if (action.equals("Clear board")) {
@@ -792,6 +813,48 @@ public class Canvas extends JPanel implements Client {
 
 		}
 
+		/**
+		 * Creates random spirals on the screen given a turtle object to work
+		 * with by moving forward and turning at each step
+		 * 
+		 * @param turtle
+		 *            the drawableTurtle object
+		 */
+		private void drawTurtle(DrawableTurtle turtle) {
+
+			int resolution = 200; // number of turns to make
+
+			// these are angles which create spiral drawings
+			// change bounds to get even more random pictures. avoid angles
+			// smaller
+			// than 30 for maximal awesomeness
+			int lowerBound = 105;
+			int upperBound = 115;
+
+			// create three random angles between your lowerBound and upperBound
+			double rand1 = lowerBound + Math.random()
+					* (upperBound - lowerBound);
+			double rand2 = lowerBound + Math.random()
+					* (upperBound - lowerBound);
+			double rand3 = lowerBound + Math.random()
+					* (upperBound - lowerBound);
+
+			for (int i = 0; i < resolution; i++) { // now run through your
+													// resolution
+
+				// simply move forward with incremental length sides
+				turtle.forward(i);
+				// this will create three, randomly selected, drawings
+				// superimposed.
+				if (i < resolution / 3)
+					turtle.turn(rand1);
+				else if (i < 2 * resolution / 3)
+					turtle.turn(rand2);
+				else
+					turtle.turn(rand3);
+			}
+		}
+
 		public void mouseReleased(MouseEvent e) {
 		}
 
@@ -806,8 +869,6 @@ public class Canvas extends JPanel implements Client {
 
 		@Override
 		public void windowActivated(WindowEvent e) {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
