@@ -2,6 +2,11 @@ package adts;
 
 /**
  * Represents a user with a name and id
+ * 
+ * Concurrency argument:
+ *      This class is completely immutable. Every field private, final, and an integer/String.
+ *      Since a user cannot be changed at all after it's created, there's no fear of race
+ *      conditions. Thus, it is threadsafe.
  */
 public class User {
     /**
