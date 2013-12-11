@@ -108,10 +108,8 @@ public class MessageHandler {
 
         String response = MessageHandler.makeResponseUsersForBoardID(boardID,
                 userNames);
-        // userThread.broadcast(response, userIDsOfUsersInSameBoard);
         userThread.broadcast(response);
         userThread.output(MessageHandler.makeResponseUsernameChanged(newName));
-        userThread.output("" + boardID);
         if(boardID == LobbyModel.LOBBY_ID){
             notifyLobbyUsers(userThread, lobbyModel, true, boardID);
         }
@@ -178,7 +176,6 @@ public class MessageHandler {
             String response = MessageHandler.makeResponseUsersForBoardID(
                     boardID, userNames);
             List<Line> lines = lobbyModel.getLinesForBoardID(boardID);
-            //userThread.broadcast(response, userIDsOfUsersInSameBoard);
             userThread.broadcast(response);
             userThread.output(MessageHandler.makeResponseBoardLines(lines,userNames));
             notifyLobbyUsers(userThread, lobbyModel, true, boardID);
@@ -203,7 +200,6 @@ public class MessageHandler {
             String response = MessageHandler.makeResponseUsersForBoardID(
                     boardID, userNames);
             userThread.broadcast(response);
-            //userThread.broadcast(response, userIDsOfUsersInSameBoard);
         }
         notifyLobbyUsers(userThread, lobbyModel, true, boardID);
         userThread.output(MessageHandler.makeResponseLoggedOut());
@@ -242,7 +238,6 @@ public class MessageHandler {
             String response = MessageHandler.makeResponseUsersForBoardID(
                     boardID, userNames);
             userThread.broadcast(response);
-            //userThread.broadcast(response, userIDsOfUsersInSameBoard);
         }
         notifyLobbyUsers(userThread, lobbyModel, true, boardID);
         userThread.output(MessageHandler.makeResponseDone());

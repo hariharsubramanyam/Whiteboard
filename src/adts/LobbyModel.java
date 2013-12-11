@@ -299,7 +299,6 @@ public class LobbyModel {
         this.userJoinBoard(userID, LOBBY_ID);
     }
 
-
     /**
      * Delete user from set of users and remove the user from all the boards
      * 
