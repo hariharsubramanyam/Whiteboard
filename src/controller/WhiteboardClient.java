@@ -13,9 +13,11 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
@@ -83,7 +85,7 @@ import adts.User;
  *           Also make sure the tables auto-scroll by adding enough boards or
  *           users until there is an overflow.
  * @category test the username button by entering a string and watching it
- *           change the username lable.
+ *           change the username label.
  * @category test the create whiteboard button and expect to be automatically
  *           taken to a Canvas. Then leave the board and test that a new board
  *           is now listed in the table.
@@ -92,64 +94,126 @@ import adts.User;
  *           are reflected here.
  * 
  */
-public class LobbyGUI extends JFrame implements Client {
+public class WhiteboardClient extends JFrame implements Client {
 
-	// use the classname for the logger, this way you can refactor
-	private final static Logger LOGGER = Logger.getLogger(LobbyGUI.class
-			.getName());
+	/**
+	 * Use the classname for the logger, this way you can refactor
+	 */
+	private final static Logger LOGGER = Logger.getLogger(WhiteboardClient.class.getName());
 
+	/**
+	 * Needed for didit
+	 */
 	private static final long serialVersionUID = 1L;
 
-	// socket and its input and output streams
+	/**
+	 * The port that the server runs on
+	 */
 	private final int port;
+	
+	/**
+	 * The socket that the users connect to
+	 */
 	private Socket socket;
+	
+	/**
+	 * The output stream
+	 */
 	private PrintWriter out;
+	
+	/**
+	 * The input stream
+	 */
 	private BufferedReader in;
 
-	// background thread to handle incoming messages
+	/**
+	 * Background thread to handle incoming messages
+	 */
 	private final LobbyGUIBackgroundThread serverMessagesThread;
 
-	// canvas which allows drawing on whiteboard
+	/**
+	 * canvas which allows drawing on whiteboard
+	 */
 	private Canvas canvas;
 
-	// UI elements for changing username
+	/**
+	 * Label displaying current username
+	 */
 	private final JLabel labelUserName;
+	
+	/**
+	 * Button which allows setting of a new username
+	 */
 	private final JButton btnSetUserName;
+	
+	/**
+	 * Button which allows creating a new board
+	 */
 	private final JButton btnCreateBoard;
 
-	// list of current boards
+	/**
+	 * List of boards
+	 */
 	private final JList<String> lstBoards;
+	
+	/**
+	 * Allows scrolling list of boards
+	 */
 	private final JScrollPane scrollLstBoards;
+	
+	/**
+	 * List model for list of boards
+	 */
 	private final DefaultListModel<String> lstMdlBoards;
 
-	// list of all users
+	/**
+	 * List of user
+	 */
 	private final JList<String> lstUsers;
+	
+	/**
+	 * Allows scrolling list of users
+	 */
 	private final JScrollPane scrollLstUsers;
+	
+	/**
+	 * List model for list of users
+	 */
 	private final DefaultListModel<String> lstMdlUsers;
 
-	// layout manager
+	/**
+	 * Layout manager
+	 */
 	private final GroupLayout layout;
 
-	// self object
-	private final LobbyGUI self;
+	/**
+	 * We store this object as self, because it's needed for the action listeners
+	 */
+	private final WhiteboardClient self;
 
-	// this user object
+	/**
+	 * The user who is currently using the application
+	 */
 	private User user;
 
+	/**
+	 * The list of items in the boards list 
+	 * (a BoardListItem consists of a name, id, and index in the list)
+	 */
 	private List<BoardListItem> boardListItems;
-
-	public LobbyGUI() {
-
-		this.port = 4444;
+	
+	/**
+	 * Construct LobbyGUI with the given port and hostName
+	 * @param hostName the hostname
+	 * @param port the port number
+	 */
+	public WhiteboardClient(String hostName, int port) {
 		setupLogger(Level.OFF);
-
+		this.port = port;
 		// get the hostname and create the socket
 		while (this.in == null) {
 			try {
-				String hostName = JOptionPane.showInputDialog(
-						"Enter the hostname of the whiteboard server:",
-						"localhost");
-				if (hostName == null) {
+				if (hostName == null ) {
 					LOGGER.warning("Exiting Lobby");
 					System.exit(0);
 				}
@@ -191,9 +255,9 @@ public class LobbyGUI extends JFrame implements Client {
 		this.lstMdlUsers = new DefaultListModel<String>();
 		this.lstUsers = new JList<String>(this.lstMdlUsers);
 		this.lstUsers.setSelectedIndex(0);
-
 		this.scrollLstUsers = new JScrollPane(this.lstUsers);
 
+		// Create the content pane
 		Container contentPane = this.getContentPane();
 		this.layout = new GroupLayout(contentPane);
 		contentPane.setLayout(this.layout);
@@ -230,20 +294,24 @@ public class LobbyGUI extends JFrame implements Client {
 								.addComponent(this.scrollLstBoards)
 								.addComponent(this.scrollLstUsers)));
 
-		// Set title, size, and resizable
+		// Set properties of the frame
 		this.setTitle("Whiteboard Lobby");
 		this.setSize(500, 300);
 		this.setResizable(false);
-
-		this.makeRequest(ClientSideMessageMaker.makeRequestStringGetBoardIDs());
-		this.makeRequest(ClientSideMessageMaker
-				.makeRequestStringGetUsersForBoardID(LobbyModel.LOBBY_ID));
+		this.setVisible(true);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setLocationRelativeTo(null);
-		this.addWindowListener(new WindowListen());
-
+        this.setLocationRelativeTo(null);
+        this.addWindowListener(new WindowListen());
+		
+        // Make the necessary requests
+		this.makeRequest(ClientSideMessageMaker.makeRequestStringGetBoardIDs());
+		this.makeRequest(ClientSideMessageMaker.makeRequestStringGetUsersForBoardID(LobbyModel.LOBBY_ID));
 	}
 
+	/**
+	 * Set up the logger
+	 * @param level the level of the logger
+	 */
 	private void setupLogger(Level level) {
 		try {
 			BoardLogger.setup();
@@ -254,12 +322,21 @@ public class LobbyGUI extends JFrame implements Client {
 		}
 	}
 
+	/**
+	 * Makes a request to the server
+	 * @param req the request to make
+	 */
 	public void makeRequest(String req) {
 		out.println(req);
 		LOGGER.fine("REQ: " + req);
 	}
 
-	public void onReceiveUserIDs(List<String> rcvdNames) {
+	/**
+	 * When we receive a list of names for the lobby, 
+	 * populate the users list
+	 * @param rcvdNames the names of users currently in the lobby
+	 */
+	public void onReceiveUserNames(List<String> rcvdNames) {
 		final List<String> userNames = rcvdNames;
 		SwingUtilities.invokeLater(new Thread() {
 			@Override
@@ -273,6 +350,11 @@ public class LobbyGUI extends JFrame implements Client {
 		});
 	}
 
+	/**
+	 * When a user's name has been changed,
+	 * update the username to reflect this
+	 * @param rcvdName the new username
+	 */
 	public void onReceiveUsernameChanged(String rcvdName) {
 		final String newName = rcvdName;
 		SwingUtilities.invokeLater(new Thread() {
@@ -289,12 +371,14 @@ public class LobbyGUI extends JFrame implements Client {
 		});
 	}
 
+	/**
+	 * When we are welcomed to the server,
+	 * keep track of our id and default username
+	 */
 	public void onReceiveWelcome(int id) {
-
 		LOGGER.info("Successful connection to server");
-
 		this.user = new User(id);
-		labelUserName.setText("User: Guest_" + String.valueOf(id));
+		labelUserName.setText("User: User" + String.valueOf(id));
 	}
 
 	private class SetUserNameListener implements ActionListener {
@@ -458,12 +542,41 @@ public class LobbyGUI extends JFrame implements Client {
 	 * @param args
 	 */
 	public static void main(final String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				// the GUI needs to be instantiated with the Controller given ID
-				LobbyGUI main = new LobbyGUI();
-				main.setVisible(true);
-			}
-		});
+	    int port = 4444;
+        String hostName = "localhost";
+        Queue<String> arguments = new LinkedList<String>(Arrays.asList(args));
+        
+        try {
+            while ( ! arguments.isEmpty()) {
+                String flag = arguments.remove();
+                try {
+                    if (flag.equals("--port")) {
+                        port = Integer.parseInt(arguments.remove());
+                        if (port < 0 || port > 65535) {
+                            throw new IllegalArgumentException("port " + port + " out of range");
+                        }
+                    } else if (flag.equals("--ip")) {
+                        hostName = arguments.remove();
+                    } else {
+                        throw new IllegalArgumentException("unknown option: \"" + flag + "\"");
+                    }
+                } catch (NumberFormatException nfe) {
+                    throw new IllegalArgumentException("unable to parse number for " + flag);
+                }
+            }
+        } catch (IllegalArgumentException iae) {
+            System.err.println(iae.getMessage());
+            System.err.println("usage: WhiteboardClient [--port PORT] [--ip IP]");
+            return;
+        }
+        final String finalHostName = hostName;
+        final int finalPort = port;
+        SwingUtilities.invokeLater(new Thread(){
+            @Override
+            public void run() {
+                WhiteboardClient main = new WhiteboardClient(finalHostName,finalPort);
+            }
+        });
+
 	}
 }

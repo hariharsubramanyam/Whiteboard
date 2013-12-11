@@ -40,7 +40,7 @@ import protocol.ClientSideMessageMaker;
 import turtle.DrawableTurtle;
 import turtle.LineSegment;
 import adts.Line;
-import controller.LobbyGUI;
+import controller.WhiteboardClient;
 
 /**
  * Canvas represents a drawing surface that allows the user to draw on it
@@ -169,7 +169,7 @@ public class Canvas extends JPanel implements Client {
 	private Color boardColor;
 	private final List<Color> basicColors;
 
-	private final LobbyGUI lobby;
+	private final WhiteboardClient lobby;
 
 	private String user;
 	private int boardID;
@@ -192,7 +192,7 @@ public class Canvas extends JPanel implements Client {
 	 * @param boardName
 	 *            String name given to the Canvas
 	 */
-	public Canvas(int width, int height, LobbyGUI lobby, String user,
+	public Canvas(int width, int height, WhiteboardClient lobby, String user,
 			int boardID, String boardName) {
 
 		setupLogger(Level.ALL);

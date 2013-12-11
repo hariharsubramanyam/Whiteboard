@@ -17,7 +17,7 @@ public class LobbyGUIBackgroundThread extends Thread {
 	private final static Logger LOGGER = Logger
 			.getLogger(LobbyGUIBackgroundThread.class.getName());
 
-	private final LobbyGUI gui;
+	private final WhiteboardClient gui;
 	private final BufferedReader in;
 
 	/**
@@ -28,7 +28,7 @@ public class LobbyGUIBackgroundThread extends Thread {
 	 * @param in
 	 *            server response
 	 */
-	public LobbyGUIBackgroundThread(LobbyGUI gui, BufferedReader in) {
+	public LobbyGUIBackgroundThread(WhiteboardClient gui, BufferedReader in) {
 		this.gui = gui;
 		this.in = in;
 	}

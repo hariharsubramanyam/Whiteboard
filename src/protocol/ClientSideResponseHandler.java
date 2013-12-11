@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import controller.LobbyGUI;
+import controller.WhiteboardClient;
 import adts.Line;
 import adts.LobbyModel;
 
@@ -20,7 +20,7 @@ public class ClientSideResponseHandler {
 
 	private final static Logger LOGGER = Logger.getLogger(ClientSideResponseHandler.class.getName());
 
-	public static void handleResponse(String input, LobbyGUI userGUI) {
+	public static void handleResponse(String input, WhiteboardClient userGUI) {
 		LOGGER.finest("RESP: " + input);
 
 		String command = input.split(" ")[0];
@@ -44,12 +44,12 @@ public class ClientSideResponseHandler {
 		}
 	}
 
-	private static void handleCurrentBoardID(String[] tokens, LobbyGUI userGUI) {
+	private static void handleCurrentBoardID(String[] tokens, WhiteboardClient userGUI) {
 		int boardID = Integer.parseInt(tokens[0]);
 		userGUI.onReceiveCurrentBoardID(boardID);
 	}
 
-	private static void handlerUsersForBoard(String[] tokens, LobbyGUI userGUI) {
+	private static void handlerUsersForBoard(String[] tokens, WhiteboardClient userGUI) {
 		List<String> users = new ArrayList<String>();
 		int boardID = Integer.parseInt(tokens[0]);
 		for (int i = 1; i < tokens.length; i++)
@@ -57,11 +57,11 @@ public class ClientSideResponseHandler {
 		userGUI.onReceiveUsers(boardID, users);
 	}
 
-	private static void handleClear(String[] tokens, LobbyGUI userGUI) {
+	private static void handleClear(String[] tokens, WhiteboardClient userGUI) {
 		userGUI.onReceiveClear();
 	}
 
-	private static void handleBoardIDs(String[] tokens, LobbyGUI userGUI) {
+	private static void handleBoardIDs(String[] tokens, WhiteboardClient userGUI) {
 		if (tokens.length <= 1)
 			return;
 
@@ -76,15 +76,15 @@ public class ClientSideResponseHandler {
 		userGUI.onReceiveBoardIDs(boardNameForID);
 	}
 
-	private static void handleUsernameChanged(String[] tokens, LobbyGUI userGUI) {
+	private static void handleUsernameChanged(String[] tokens, WhiteboardClient userGUI) {
 		userGUI.onReceiveUsernameChanged(tokens[0]);
 	}
 
-	private static void handleWelcome(String[] tokens, LobbyGUI userGUI) {
+	private static void handleWelcome(String[] tokens, WhiteboardClient userGUI) {
 		userGUI.onReceiveWelcome(Integer.parseInt(tokens[0]));
 	}
 
-	private static void handleDraw(String[] tokens, LobbyGUI userGUI) {
+	private static void handleDraw(String[] tokens, WhiteboardClient userGUI) {
 		int x1 = Integer.parseInt(tokens[0]);
 		int y1 = Integer.parseInt(tokens[1]);
 		int x2 = Integer.parseInt(tokens[2]);
@@ -98,7 +98,7 @@ public class ClientSideResponseHandler {
 		userGUI.onReceiveDraw(l);
 	}
 
-	public static void handleBoardLines(String[] tokens, LobbyGUI userGUI) {
+	public static void handleBoardLines(String[] tokens, WhiteboardClient userGUI) {
 		List<Line> lines = new ArrayList<Line>();
 		Set<String> userNames = new HashSet<String>();
 		int numUsers = Integer.parseInt(tokens[0]);
