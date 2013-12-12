@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+
 import adts.LobbyModel;
 
 /**
@@ -77,16 +78,36 @@ public class WhiteboardServer {
 	 */
 	public static void main(String[] args) {
 		int port = 4444;
-		Queue<String> arguments = new LinkedList<String>(Arrays.asList(args));
-		while (!arguments.isEmpty()) {
-			return;
-		}
+        Queue<String> arguments = new LinkedList<String>(Arrays.asList(args));
+        
+        try {
+            while ( ! arguments.isEmpty()) {
+                String flag = arguments.remove();
+                try {
+                    if (flag.equals("--port")) {
+                        port = Integer.parseInt(arguments.remove());
+                        if (port < 0 || port > 65535) {
+                            throw new IllegalArgumentException("port " + port + " out of range");
+                        }
+                    } else {
+                        throw new IllegalArgumentException("unknown option: \"" + flag + "\"");
+                    }
+                    
+                } catch (NumberFormatException nfe) {
+                    throw new IllegalArgumentException("unable to parse number for " + flag);
+                } 
+            }
+            runWhiteboardServer(port);
 
-		try {
-			runWhiteboardServer(port);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+        } catch (IllegalArgumentException iae) {
+            System.err.println(iae.getMessage());
+            System.err.println("usage: WhiteboardServer [--port PORT]");
+            return;
+        } catch (IOException ioe) {
+            System.err.println(ioe.getMessage());
+            System.err.println("usage: WhiteboardServer [--port PORT]");
+            return;
+        }
 	}
 
 	/**

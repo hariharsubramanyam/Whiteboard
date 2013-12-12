@@ -211,8 +211,11 @@ public class WhiteboardClient extends JFrame implements Client {
 		setupLogger(Level.OFF);
 		this.port = port;
 		// get the hostname and create the socket
-		while (this.in == null) {
+		int attemptedConnections = 0;
+		int MAX_ALLOWED_CONNECTIONS = 10;
+		while (this.in == null && attemptedConnections < MAX_ALLOWED_CONNECTIONS) {
 			try {
+			    attemptedConnections++;
 				if (hostName == null ) {
 					LOGGER.warning("Exiting Lobby");
 					System.exit(0);
@@ -228,6 +231,11 @@ public class WhiteboardClient extends JFrame implements Client {
 				JOptionPane.showMessageDialog(this,
 						"Could not connect to given hostname. Try again.");
 			}
+		} 
+		
+		if(attemptedConnections >= MAX_ALLOWED_CONNECTIONS){
+		    JOptionPane.showMessageDialog(null, "You've tried connecting too many times!");
+		    System.exit(0);
 		}
 
 		// sets this current object
@@ -574,7 +582,7 @@ public class WhiteboardClient extends JFrame implements Client {
         SwingUtilities.invokeLater(new Thread(){
             @Override
             public void run() {
-                WhiteboardClient main = new WhiteboardClient(finalHostName,finalPort);
+                new WhiteboardClient(finalHostName,finalPort);
             }
         });
 

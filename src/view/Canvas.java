@@ -566,6 +566,8 @@ public class Canvas extends JPanel implements Client {
 		g.drawRect(xPos, yPos, tableWidth, tableHeight);
 
 		// the user header
+		int MAX_CHARS_FOR_FIRST_USER = 9;
+		int MAX_CHARS_FOR_OTHER_USERS = 15;
 		g.drawRect(xPos, yPos, tableWidth, tableHeight / 10);
 		int xStringPos = 3 * margins;
 		int yStringPos = yPos + tableHeight / 15;
@@ -577,11 +579,11 @@ public class Canvas extends JPanel implements Client {
 		int heightOfString = tableHeight / 15;
 		Collections.sort(userNames);
 		userNames.remove(this.user);
-		String tableEntry = String.valueOf(1) + ". " + this.user;
+		String tableEntry = "1. " + (this.user.length() < MAX_CHARS_FOR_FIRST_USER ? this.user : this.user.substring(0, MAX_CHARS_FOR_FIRST_USER)+"...");
 		createText(g, tableEntry, xStringPos, startingY + heightOfString * (1),
 				Color.YELLOW, 1, 20);
 		for (int i = 0; i < userNames.size(); i++) {
-			tableEntry = String.valueOf(i + 2) + ". " + userNames.get(i);
+			tableEntry = String.valueOf(i + 2) + ". " + (userNames.get(i).length() < MAX_CHARS_FOR_OTHER_USERS ? userNames.get(i) : userNames.get(i).substring(0, MAX_CHARS_FOR_OTHER_USERS)+"...");
 			createText(g, tableEntry, xStringPos, startingY + heightOfString
 					* (i + 2), Color.WHITE, 1, 13);
 		}
