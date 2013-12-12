@@ -72,25 +72,4 @@ public class User {
     public String toString() {
         return this.name;
     }
-
-    /**
-     * @return the hashcode of the id concatenated with the name of the user
-     */
-    @Override
-    public int hashCode() {
-        return ("" + this.getID() + " " + this.name).hashCode();
-    }
-
-    /**
-     * @param obj
-     *            the object to check equality against
-     * @return true if both objects have the same id and name
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof User))
-            return false;
-        User other = (User) obj;
-        return (other.getID() == this.id && other.getName().equals(this.name));
-    }
 }
