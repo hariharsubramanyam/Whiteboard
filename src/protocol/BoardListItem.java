@@ -1,5 +1,10 @@
 package protocol;
 
+/**
+ * This class is helpful for displaying boards in lists
+ * It groups the board id, name, and index in the list
+ *
+ */
 public class BoardListItem {
     
     /**

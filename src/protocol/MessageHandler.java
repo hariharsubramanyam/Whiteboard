@@ -84,7 +84,8 @@ public class MessageHandler {
     }
 
     /**
-     * Req: get_board_ids Resp: board_ids [id1] [id2] [id3]
+     * Req: get_board_ids 
+     * Resp: board_ids [id1] [userName1] [id2] [userName2] [id3] [userName3]
      */
     private static void handleRequestGetBoardIDs(String input,
             UserThread userThread, LobbyModel lobbyModel) {
@@ -92,9 +93,10 @@ public class MessageHandler {
     }
 
     /**
-     * Req: set_username [newUserName] Resp (to all users):
-     * users_for_board [boardID] [userName1] [userName2]... Resp (to user who
-     * made request): done
+     * Req: set_username [newUserName]
+     * Resp (to all users in board): users_for_board_id [boardID] [userName1] [userName2]...
+     * Resp (to user who made request): changed_username [newUserName]
+     * Resp (to all the users in the lobby, if the user who changed his name is in the lobby): users_for_board -1 [userName1] [userName2]
      */
     private static void handleRequestSetUsername(String input,
             UserThread userThread, LobbyModel lobbyModel) {
@@ -124,13 +126,12 @@ public class MessageHandler {
     }
 
     /**
-     * Req: create_board [boardName] 
-     * 
+     * Req: create_board [boardName]
      * Resp (to all other users): board_ids [id1] [userName1] [id2] [userName2] [id3] [userName3]
      * Resp (to user who made request): board_ids [id1] [userName1] [id2] [userName2] [id3] [userName3]
      * AND
      * current_board_id [currentBoardID]
-     * Resp (to all users in the lobby, if the user who changed his name is in the lobby): users_for_board -1 [userName1] [userName2]
+     * Resp (to all the users in the lobby, if the user who changed his name is in the lobby): users_for_board -1 [userName1] [userName2]
      */
     private static void handleRequestCreateBoard(String input,
             UserThread userThread, LobbyModel lobbyModel) {
@@ -148,7 +149,8 @@ public class MessageHandler {
     }
 
     /**
-     * Req: get_current_board_id Resp: current_board_id [boardID]
+     * Req: get_current_board_id
+     * Resp: current_board_id [boardID]
      */
     private static void handleRequestGetCurrentBoard(String input,
             UserThread userThread, LobbyModel lobbyModel) {
@@ -158,8 +160,8 @@ public class MessageHandler {
     }
 
     /**
-     * Req: get_users_for_board_id [boardID] Resp: users_for_board [boardID]
-     * [userName1] [userName2]...
+     * Req: get_users_for_board_id [boardID]
+     * Resp: users_for_board [boardID] [userName1] [userName2]...
      */
     private static void handleRequestGetUsersForBoardID(String input,
             UserThread userThread, LobbyModel lobbyModel) {
@@ -170,12 +172,10 @@ public class MessageHandler {
     }
 
     /**
-     * Req: join_board_id [boardID] Resp (to all users):
-     * users_for_board [boardID] [userName1] [userName2]... Resp (to user who
-     * made request): board_lines [x1] [y1] [x2] [y2] [strokeThickness] [r] [g]
-     * [b] [a] [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1]
-     * [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1] [x2] [y2]
-     * [strokeThickness] [r] [g] [b] [a]...
+     * Req: join_board_id [boardID]
+     * Resp (to all users in board): users_for_board_id [boardID] [userName1] [userName2]...
+     * Resp (to user who made request): board_lines [numberOfUserNames] [numberOfLines] [userName1] [userName2] ... [userName_N] [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a] [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a]...
+     * Resp (to all the users in the lobby, if the user who changed his name is in the lobby): users_for_board -1 [userName1] [userName2]
      */
     private static void handleRequestJoinBoardID(String input,
             UserThread userThread, LobbyModel lobbyModel) {
@@ -195,8 +195,10 @@ public class MessageHandler {
     }
 
     /**
-     * Req: logout Resp (to all users): users_for_board [boardID]
-     * [userName1] [userName2]... Resp (to user who made request): logged_out
+     * Req: logout
+     * Resp (to all users in board): users_for_board [boardID] [userName1] [userName2]...
+     * Resp (to user who made request): logged_out
+     * Resp (to all the users in the lobby, if the user who changed his name is in the lobby): users_for_board -1 [userName1] [userName2]
      */
     private static void handleRequestLogout(String input,
             UserThread userThread, LobbyModel lobbyModel) {
@@ -215,8 +217,9 @@ public class MessageHandler {
     }
 
     /**
-     * Req: get_users_in_my_board Resp: users_for_board [boardID] [userName1]
-     * [userName2]... (if not in a board): failed
+     * Req: get_users_in_my_board
+     * Resp: users_for_board_id [boardID] [userName1] [userName2]...
+     * (if not in a board): failed
      */
     private static void handleRequestGetUsersInMyBoard(String input,
             UserThread userThread, LobbyModel lobbyModel) {
@@ -231,8 +234,10 @@ public class MessageHandler {
     }
 
     /**
-     * Req: leave_board Resp (to all users): users_for_board [boardID]
-     * [userName1] [userName2]... Resp (to user who made request): done
+     * Req: leave_board
+     * Resp (to all users in board): users_for_board [boardID] [userName1] [userName2]...
+     * Resp (to user who made request): done
+     * Resp (to all the users in the lobby, if the user who changed his name is in the lobby): users_for_board -1 [userName1] [userName2]
      */
     private static void handleRequestLeaveBoard(String input,
             UserThread userThread, LobbyModel lobbyModel) {
@@ -250,10 +255,9 @@ public class MessageHandler {
     }
 
     /**
-     * Req: req_draw [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a] Resp
-     * (to all users in board): draw [x1] [y1] [x2] [y2] [strokeThickness] [r]
-     * [g] [b] [a] Resp (to user who made request): done (if not in a board):
-     * failed
+     * Req: req_draw [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a]
+     * Resp (to all users in board including user who made request): draw [x1] [y1] [x2] [y2] [strokeThickness] [r] [g] [b] [a]
+     * (if not in a board): failed
      */
     private static void handleRequestDraw(String input, UserThread userThread,
             LobbyModel lobbyModel) {
@@ -289,10 +293,8 @@ public class MessageHandler {
     }
 
     /**
-     * Req: req_clear
-     * Resp (to all users in board):clear
-     * Resp (to user who made request): done (if not in a board):
-     * failed
+     * Req: req_clear_board
+     * Resp (to all users in board including user who made request): clear_board
      */
     private static void handleRequestClear(String input, UserThread userThread,
             LobbyModel lobbyModel) {

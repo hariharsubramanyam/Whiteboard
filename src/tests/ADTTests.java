@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import adts.Line;
 import adts.User;
+import adts.Whiteboard;
 
 /**
  * Tests that the adts have the proper behavior
@@ -75,6 +76,30 @@ public class ADTTests {
         assertEquals("final name", user.getName());
     }
     
+    /**
+     * Test Whiteboard getters
+     */
+    @Test
+    public void test_whiteboard_getters(){
+        Whiteboard board = new Whiteboard(1);
+        assertEquals(board.getBoardID(), 1);
+        assertEquals(board.getBoardName(), "Board1");
+        
+        Whiteboard anotherBoard = new Whiteboard(3, "Other board");
+        assertEquals(anotherBoard.getBoardID(), 3);
+        assertEquals("Other board", anotherBoard.getBoardName());
+    }
+    
+    /**
+     * Test whiteboard name changing
+     */
+    @Test
+    public void test_whiteboard_name_change(){
+        Whiteboard board = new Whiteboard(1, "Some name");
+        assertEquals("Some name", board.getBoardName());
+        board.setBoardName("other name");
+        assertEquals(board.getBoardName(), "other name");
+    }    
     
 
 }
