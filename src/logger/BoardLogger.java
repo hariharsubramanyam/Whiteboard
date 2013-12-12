@@ -25,13 +25,6 @@ public class BoardLogger {
 		// Get the global logger to configure it
 		Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
-		fileTxt = new FileHandler("Logging.txt");
-		fileTxt.setLevel(Level.ALL);
-		// create txt Formatter
-		formatterTxt = new SimpleFormatter();
-		fileTxt.setFormatter(formatterTxt);
-		LOGGER.addHandler(fileTxt);
-
 		// create the conosole handler
 		ConsoleHandler handler = new ConsoleHandler();
 		handler.setLevel(Level.ALL);
