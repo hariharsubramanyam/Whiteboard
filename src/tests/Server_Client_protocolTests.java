@@ -4,20 +4,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.junit.Test;
 
 import adts.Line;
-import static org.junit.Assert.*;
-import protocol.Client;
 import protocol.ClientSideMessageMaker;
 import server.WhiteboardServer;
 
@@ -26,6 +21,10 @@ import server.WhiteboardServer;
  * The full protocol messaging supported can be found in the Requests PDF.
  * Server/client interactions are the heart of how this collaborative whiteboard
  * system works so it is key that it is thoroughly tested.
+ * 
+ * It looks like Didit gets mad when we create servers
+ * and access ports and create clients. So, we don't run the tests
+ * on Didit.
  * @category no_didit
  */
 public class Server_Client_protocolTests {
