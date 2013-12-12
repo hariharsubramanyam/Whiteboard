@@ -206,16 +206,23 @@ public class WhiteboardClient extends JFrame implements Client {
 	 * Construct LobbyGUI with the given port and hostName
 	 * @param hostName the hostname
 	 * @param port the port number
+	 * @param noCommandLineArgs false if we haven't gotten command line args and need to prompt for them
 	 */
-	public WhiteboardClient(String hostName, int port) {
+	public WhiteboardClient(String hostName, int port, boolean noCommandLineArgs) {
 		setupLogger(Level.OFF);
 		this.port = port;
+		String portName = "" + port;
 		// get the hostname and create the socket
 		int attemptedConnections = 0;
 		int MAX_ALLOWED_CONNECTIONS = 10;
 		while (this.in == null && attemptedConnections < MAX_ALLOWED_CONNECTIONS) {
 			try {
 			    attemptedConnections++;
+			    if(noCommandLineArgs){
+			        hostName = JOptionPane.showInputDialog(null, "What is the hostname?", "localhost");
+			        portName = JOptionPane.showInputDialog(null, "What is the port number", "4444");
+			        port = Integer.parseInt(portName);
+			    }
 				if (hostName == null ) {
 					LOGGER.warning("Exiting Lobby");
 					System.exit(0);
@@ -553,7 +560,7 @@ public class WhiteboardClient extends JFrame implements Client {
 	    int port = 4444;
         String hostName = "localhost";
         Queue<String> arguments = new LinkedList<String>(Arrays.asList(args));
-        
+        boolean noCommandLineArgs = arguments.isEmpty() ? true : false;
         try {
             while ( ! arguments.isEmpty()) {
                 String flag = arguments.remove();
@@ -579,10 +586,11 @@ public class WhiteboardClient extends JFrame implements Client {
         }
         final String finalHostName = hostName;
         final int finalPort = port;
+        final boolean finalNoCommandLineArgs = noCommandLineArgs;
         SwingUtilities.invokeLater(new Thread(){
             @Override
             public void run() {
-                new WhiteboardClient(finalHostName,finalPort);
+                new WhiteboardClient(finalHostName,finalPort, finalNoCommandLineArgs);
             }
         });
 
