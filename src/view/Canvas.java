@@ -267,7 +267,7 @@ public class Canvas extends JPanel implements Client {
 		this.user = user;
 		this.boardID = boardID;
 
-		window = new JFrame(boardName);
+		window = new JFrame("Collaborative Whiteboard: " + boardName);
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		window.setLayout(new BorderLayout());
 
