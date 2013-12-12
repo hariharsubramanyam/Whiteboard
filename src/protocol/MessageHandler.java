@@ -169,9 +169,6 @@ public class MessageHandler {
         int boardID = Integer.parseInt(input.split(" ")[1]);
         try {
             lobbyModel.userJoinBoard(userThread.getUserID(), boardID);
-            Set<Integer> userIDsOfUsersInSameBoard = lobbyModel
-                    .getUserIDsOfUsersInSameBoardAsGivenUserID(userThread
-                            .getUserID());
             Set<String> userNames = lobbyModel.getUserNamesForBoardID(boardID);
             String response = MessageHandler.makeResponseUsersForBoardID(
                     boardID, userNames);
@@ -194,8 +191,6 @@ public class MessageHandler {
                 .getUserID());
         lobbyModel.deleteUser(userThread.getUserID());
         if (boardID != -1) {
-            Set<Integer> userIDsOfUsersInSameBoard = lobbyModel
-                    .getUserIDsForBoardID(boardID);
             Set<String> userNames = lobbyModel.getUserNamesForBoardID(boardID);
             String response = MessageHandler.makeResponseUsersForBoardID(
                     boardID, userNames);
@@ -232,8 +227,6 @@ public class MessageHandler {
                 .getUserID());
         if (boardID != -1) {
             lobbyModel.userLeaveBoard(userThread.getUserID(), boardID);
-            Set<Integer> userIDsOfUsersInSameBoard = lobbyModel
-                    .getUserIDsForBoardID(boardID);
             Set<String> userNames = lobbyModel.getUserNamesForBoardID(boardID);
             String response = MessageHandler.makeResponseUsersForBoardID(
                     boardID, userNames);

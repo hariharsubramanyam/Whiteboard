@@ -2,17 +2,13 @@ package logger;
 
 import java.io.IOException;
 import java.util.logging.ConsoleHandler;
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 /**
  * Creates a Logger used for systematically enabling/disabling debug lines.
  */
 public class BoardLogger {
-	static private FileHandler fileTxt;
-	static private SimpleFormatter formatterTxt;
 
 	/**
 	 * Attaches handlers to the LOGGER instance. Will also create the fileTxt
