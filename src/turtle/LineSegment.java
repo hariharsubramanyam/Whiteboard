@@ -7,7 +7,7 @@ public class LineSegment {
 	public final Point start;
 	public final Point end;
 
-	/*
+	/**
 	 * Constructor that takes in 4 integers for the coordinates.
 	 * 
 	 * @param startx x-coordinate of start point
@@ -23,7 +23,7 @@ public class LineSegment {
 		this.end = new Point(endx, endy);
 	}
 
-	/*
+	/**
 	 * Constructor that takes in the start point and end point.
 	 * 
 	 * @param start one end of the line segment
@@ -35,8 +35,8 @@ public class LineSegment {
 		this.end = end;
 	}
 
-	/*
-	 * Calculate the length of this segment.
+	/**
+	 * Calculates the length of this segment.
 	 * 
 	 * @return the length of the line segment
 	 */
@@ -45,6 +45,9 @@ public class LineSegment {
 				+ Math.pow(this.start.y - this.end.y, 2.0));
 	}
 
+	/**
+	 * Returns a String representation of this LineSegment.
+	 */
 	public String toString() {
 		return String.format("%d %d %d %d", (int) this.start.x, (int) this.start.y,
 				(int) this.end.x, (int) this.end.y);
