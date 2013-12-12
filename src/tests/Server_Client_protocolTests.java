@@ -1,16 +1,16 @@
 package tests;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.Random;
 
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 import protocol.ClientSideMessageMaker;
 import server.WhiteboardServer;
@@ -86,81 +86,36 @@ public class Server_Client_protocolTests {
 			.makeRequestStringGetUsersInMyBoard();
 
 	@Test(timeout = 1000)	// time out in 1 second, in case test does not complete
-	// Have client 1 create a board, join it, and then have client 2 create a board. 
-	// Check at all stages that the responses are as expected.
+	/*
+	 * Strategy:
+	 * Have client1 create a board and check the response received at client1 and client2.
+	 */
 	public void create_board_test() throws IOException {
-		System.out.println(createBoardReq);
 		this.initialize();
-
-		// DEBUGGING: first check that client2 doesn't have any responses (e.g. from earlier tests)
-		//            its latest response should be "welcome 1" from connecting to the server.
-		System.out.println(this.client2.getResponse());
+		System.out.println("Started create_board_test");
+		client1.makeRequest(createBoardReq);
+		client1.compareRespWith("users_for_board_id -1 User3 User0 User2 User1");
+		client2.compareRespWith("board_ids -1 2 3 4"); // the IDs of the users in lobby
+		client1.compareRespWith("s");
+		System.out.println("Passed assertions");
+		client1.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
 		
-		// make the first board
-		this.client1.sendReqAndCheckResponse(createBoardReq,"current_board_id 0");
-		this.client2.checkResponse("board_ids 0");
-
-		System.out.println("This won't get printed because client2's checkResponse fails");
-		// END DEBUGGING
 		
-		// make the second board
-		this.client2.sendReqAndCheckResponse(createBoardReq,"board_ids 0 1");
-		this.client1.checkResponse("board_ids 0 1");
+		client2.makeRequest(createBoardReq);
+		
 	}
 
 	@Test (timeout = 1000)
 	// time out in 1 second, in case test does not complete
 	public void get_current_board_id_test() throws IOException {
-		this.initialize();
-
-		// this.client1 makes the first board and joins it
-		this.client1.makeRequest(createBoardReq);
-
-		this.client1.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
-		System.out.println("JOINEEEEEEEDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDd");
-		// Check that this.client1 is in board 0, this.client2 is not in a
-		// board.
-		this.client1.sendReqAndCheckResponse(getCurrentBoardReq,
-											 "current_board_id 0");
-		System.out.println("CHECKEDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
-		this.client2.sendReqAndCheckResponse(getCurrentBoardReq,
-											 "current_board_id -1");
-
-		// this.client2 makes the second board and joins it
-		this.client2.makeRequest(createBoardReq);
-		this.client2.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(1));
-		
-		// Check that this.client1 is in board 0, this.client2 is in board 1
-		this.client1.sendReqAndCheckResponse(getCurrentBoardReq,
-											 "current_board_id 0");
-		this.client2.sendReqAndCheckResponse(getCurrentBoardReq,
-											 "current_board_id 1");
-
-		// Move this.client1 to a new board
-		this.client1.makeRequest(createBoardReq);
-		this.client1.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(2));
-
-		// Check that this.client1 is in board 0, this.client2 is in board 1
-		this.client1.sendReqAndCheckResponse(getCurrentBoardReq,
-											 "current_board_id 2");
-		this.client2.sendReqAndCheckResponse(getCurrentBoardReq,
-											 "current_board_id 1");
+		// this.initialize();
 
 	}
 
 	@Test(timeout = 1000)
 	// time out in 1 second, in case test does not complete
 	public void get_users_for_board_id_test() throws IOException {
-		this.initialize();
-
-		// Make boards
-		this.client1.sendReqAndCheckResponse(createBoardReq, "board_ids 0");
-		this.client2.sendReqAndCheckResponse(createBoardReq, "board_ids 1");
-		
-		// client1 and client2 join board 0, and client3 joins board 1
-		this.client1.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
-		this.client2.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
-		this.client3.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(1));
+		// this.initialize();
 		
 	}
 
@@ -247,12 +202,12 @@ public class Server_Client_protocolTests {
 		this.client2 = new SimpleClient(testHost, port);
 		this.client3 = new SimpleClient(testHost, port);
 		this.client4 = new SimpleClient(testHost, port);
-		
 		// need to clear their incoming buffers; they currently have "welcome" as the latest response
-		this.client1.getResponse();
-		this.client2.getResponse();
-		this.client3.getResponse();
-		this.client4.getResponse();
+		this.client1.in.readLine();
+		this.client2.in.readLine();
+		this.client3.in.readLine();
+		this.client4.in.readLine();
+		System.out.println("Done initializing");
 	}
 
 }
@@ -295,35 +250,39 @@ class SimpleClient {
 		}
 
 	}
-
+	
 	/**
-	 * @return The oldest response that was not returned by an earlier getResponse() call.
-	 * 		   Each call of getResponse() does an in.readLine() and therefore reads and
-	 * 		   discards the oldest response from the incoming messages buffer.
-	 * 		   If no response was received, returns the String "No response yet."
+	 * Simply calls this client's in.readLine()
+	 * @return a response from the server
 	 */
-	public String getResponse() {
-		System.out.println("getting Response");
-		String serverResponse;
+	public String read() {
 		try {
-			if ((serverResponse = in.readLine()) != null) {
-				return serverResponse;
-			}
-			else {return "No response yet.";}
+			return in.readLine();
 		} catch (IOException e) {
-			return "Error reading in.readLine() of SimpleClient.";
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return "Error in in.readLine()";
 		}
 	}
-
-	public void checkResponse(String expected) {
-		String resp = this.getResponse();
-		System.out.println("checkResponse is comparing " + expected + " with the actual response: " + resp);
-		assertEquals(expected, resp);
+	
+	/**
+	 * Checks that the response and expected are the same strings, up to ordering of words.
+	 * @param expected
+	 */
+	public void compareRespWith(String expected) {
+		String resp= this.read();
+		resp.replace("\n","");
+		System.out.println("Expected: " + expected + "; got " + resp);
+		String[] respArray = resp.split(" ");
+		String[] expArray  = expected.split(" ");
+		//System.out.println("resp");
+		//for (String s: respArray) {System.out.println(s);}
+		//System.out.println("exp");
+		//for (String s: expArray) {System.out.println(s);}
+		Arrays.sort(respArray);
+		Arrays.sort(expArray);
+		assertArrayEquals(respArray, expArray);
+		
 	}
-
-	public void sendReqAndCheckResponse(String req, String expectedResponse) {
-		this.makeRequest(req);
-		this.checkResponse(expectedResponse);
-	}
-
+	
 }
