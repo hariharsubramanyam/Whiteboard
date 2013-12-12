@@ -4,14 +4,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
 
+import adts.Line;
+import static org.junit.Assert.*;
+import protocol.Client;
 import protocol.ClientSideMessageMaker;
 import server.WhiteboardServer;
 
@@ -58,10 +64,6 @@ public class Server_Client_protocolTests {
 	 */
 
 	/*
-	 * Test TODO objects for the equals methods by TODO
-	 */
-
-	/*
 	 * For the purpose of testing, one server and four clinets are used per
 	 * test. Each request string is evaluated beforehand.
 	 */
@@ -72,71 +74,290 @@ public class Server_Client_protocolTests {
 	SimpleClient client1;
 	SimpleClient client2;
 	SimpleClient client3;
-	SimpleClient client4;
+	
+	/**
+     * Client 1 and Client 3 make two boards, and Client 2 ensures that 
+     * it receives a message indicating that the boards have been made
+     * @throws IOException
+     */
+    @Test(timeout = 2000)
+    public void create_board_test() throws IOException{
+        this.initialize();
+        // Client 1 creates a board
+        client1.makeRequest(ClientSideMessageMaker.makeRequestStringCreateBoard("BoardName1"));
+        
+        // Client 1 ensures that the board has been created
+        pollQueueForMessage(client1.getQueue(), "board_ids -1 Lobby 0 BoardName1", false);
+        
+        // Client 3 creates a board
+        client3.makeRequest(ClientSideMessageMaker.makeRequestStringCreateBoard("BoardName2"));
+        
+        // Client 2 ensures that the board has been created
+        pollQueueForMessage(client2.getQueue(), "board_ids -1 Lobby 0 BoardName1 1 BoardName2", false);
+    }
+    
+    /**
+     * Client 1 changes his username, and Client 2 will observe that
+     * @throws IOException
+     */
+    @Test(timeout = 2000)
+    public void set_username_test() throws IOException{
+        this.initialize();
+        // Client 1 changes his username
+        client1.makeRequest(ClientSideMessageMaker.makeRequestStringSetUsername("SomeUserName"));
+        
+        // Client 2 recieves a message indicating that the username has been changed
+        pollQueueForMessage(client2.getQueue(), "users_for_board_id -1 User2 User1 SomeUserName", false);
+    }
+    
+    /**
+     * Client 1 and Client 3 make two boards, and Client 2 makes a get_board_ids
+     * request and ensures that it gets the right response
+     * @throws IOException
+     */
+    @Test(timeout = 2000)
+    public void get_boards_request() throws IOException{
+        this.initialize();
+        
+        // Client 1 creates a board
+        client1.makeRequest(ClientSideMessageMaker.makeRequestStringCreateBoard("BoardName1"));
+        
+        // Client 2 checks if the board has been created
+        pollQueueForMessage(client2.getQueue(), "board_ids -1 Lobby 0 BoardName1", false);
+        
+        // Client 3 creates a board
+        client3.makeRequest(ClientSideMessageMaker.makeRequestStringCreateBoard("BoardName2"));
+        
+        // Client 2 checks if the board is created
+        pollQueueForMessage(client2.getQueue(), "board_ids -1 Lobby 0 BoardName1 1 BoardName2", false);
+        
+        // Client 2 asks for the current board ids
+        client2.makeRequest(ClientSideMessageMaker.makeRequestStringGetBoardIDs());
+        
+        // Client 2 checks that the current board ids are right
+        pollQueueForMessage(client2.getQueue(), "board_ids -1 Lobby 0 BoardName1 1 BoardName2", false);
+    }
+    
+    /**
+     * Client 1 creates a board, Client 2 joins the board,
+     * Client 2 gets the current board id
+     * @throws IOException
+     */
+    @Test(timeout = 2000)
+    public void get_current_board_ids() throws IOException{
+        this.initialize();
+        
+        // Client 1 creates a board
+        client1.makeRequest(ClientSideMessageMaker.makeRequestStringCreateBoard("BoardName1"));
+        
+        // Client 1 checks that the board has been created
+        pollQueueForMessage(client1.getQueue(), "board_ids -1 Lobby 0 BoardName1", false);
+        
+        // Client 2 joins the board
+        client2.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
+        
+        // Client 1 checks that Client 2 has joined
+        pollQueueForMessage(client1.getQueue(), "users_for_board_id 0 User0 User1", false);
+        
+        // Client 2 asks for the current board id
+        client2.makeRequest(ClientSideMessageMaker.makeRequestStringGetCurrentBoardID());
+        
+        // Client 2 checks that the current board id is correct
+        pollQueueForMessage(client2.getQueue(), "current_board_id 0", false);
+    }
+    
+    /**
+     * Client 1 creates a board, Client 2 joins the board, Client 1 checks if
+     * it receives a message which tells it that Client 2 has joined
+     * @throws IOException 
+     */
+    @Test(timeout = 2000)
+    public void join_board_test() throws IOException{
+        this.initialize();
+        
+        // Client 1 creates a board
+        client1.makeRequest(ClientSideMessageMaker.makeRequestStringCreateBoard("BoardName1"));
+        
+        // Client 1 checks that the board has been created
+        pollQueueForMessage(client1.getQueue(), "board_ids -1 Lobby 0 BoardName1", false);
+        
+        // Client 2 asks to join the board
+        client2.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
+        
+        // Client 1 checks that Client 2 has joined
+        pollQueueForMessage(client1.getQueue(), "users_for_board_id 0 User0 User1", false);
+    }
+    
+    /**
+     * Client 1 creates a board, Client 2 joins the board, 
+     * Client 3 joins the board, Client 2 gets the
+     * users for the current board id and ensures
+     * that all the users are there
+     * @throws IOException 
+     */
+    @Test(timeout = 2000)
+    public void get_users_for_board_id_test() throws IOException{
+        this.initialize();
+        
+        // Client 1 creates a board
+        client1.makeRequest(ClientSideMessageMaker.makeRequestStringCreateBoard("BoardName1"));
+        
+        // Client 1 checks that the board has been created
+        pollQueueForMessage(client1.getQueue(), "board_ids -1 Lobby 0 BoardName1", false);
+        
+        // Client 3 asks to create a board
+        client3.makeRequest(ClientSideMessageMaker.makeRequestStringCreateBoard("BoardName2"));
+        
+        // Client 3 checks that the board has been created
+        pollQueueForMessage(client3.getQueue(), "board_ids -1 Lobby 0 BoardName1 1 BoardName2", false);
+        
+        // Client 2 joins the board that Client 3 made
+        client2.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(1));
+        
+        // Client 3 checks that Client 2 has joined the board 
+        pollQueueForMessage(client3.getQueue(), "users_for_board_id 1 User2 User1", false);
+        
+        // Client 2 asks for the current board id
+        client2.makeRequest(ClientSideMessageMaker.makeRequestStringGetCurrentBoardID());
+        
+        // Client 2 checks that the board id is correct
+        pollQueueForMessage(client2.getQueue(), "current_board_id 1", false);
+    }
+    
+    /**
+     * Client 1 creates a board, Client 1 draws a line
+     * @throws IOException
+     */
+    @Test(timeout = 2000)
+    public void req_draw_test() throws IOException{
+        this.initialize();
+        // Client 1 creates a board
+        client1.makeRequest(ClientSideMessageMaker.makeRequestStringCreateBoard("BoardName1"));
+        
+        // Client 1 checks that the board has been created
+        pollQueueForMessage(client1.getQueue(), "board_ids -1 Lobby 0 BoardName1", false);
+        
+        // Client 1 draws a line
+        client1.makeRequest(ClientSideMessageMaker.makeRequestStringDraw(new Line(0, 1, 2, 3, 4, 5, 6, 7, 8)));
+        
+        // Client 1 checks that the line has been drawn
+        pollQueueForMessage(client1.getQueue(), "draw 0 1 2 3 4.000000 5 6 7 8", false);
+        
+    }
+    
+    @Test(timeout = 2000)
+    public void req_clear_board_test() throws IOException{
+        this.initialize();
+        // Client 1 creates a board
+        client1.makeRequest(ClientSideMessageMaker.makeRequestStringCreateBoard("BoardName1"));
+        
+        // Client 1 checks that the board has been created
+        pollQueueForMessage(client1.getQueue(), "board_ids -1 Lobby 0 BoardName1", false);
+        
+        // Client 1 draws a line
+        client1.makeRequest(ClientSideMessageMaker.makeRequestStringDraw(new Line(0, 1, 2, 3, 4, 5, 6, 7, 8)));
+        
+        // Client 1 checks that the line has been drawn
+        pollQueueForMessage(client1.getQueue(), "draw 0 1 2 3 4.000000 5 6 7 8", false);
+        
+        // Client 2 joins the board that Client 3 made
+        client2.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
+        
+        // Client 2 checks that it has joined and that the board lines are correct 
+        pollQueueForMessage(client2.getQueue(), "board_lines 2 1 User0 User1 0 1 2 3 4.000000 5 6 7 8", false);
+        
+        // Client 2 tries to clear the board
+        client2.makeRequest(ClientSideMessageMaker.makeRequestStringClear());
+        
+        
+        // Client 3 checks if the clear message is there
+        pollQueueForMessage(client1.getQueue(), "clear_board", false);
+        
+    }
+    
+    /**
+     * Client 2 logs out
+     * @throws IOException
+     */
+    @Test(timeout = 2000)
+    public void logout_test() throws IOException{
+        this.initialize();
+        
+        // Client 2 logs out
+        client2.makeRequest(ClientSideMessageMaker.makeRequestStringLogout());
+        
+        // Client 1 observes that Client 2 has logged out
+        pollQueueForMessage(client1.getQueue(), "users_for_board_id -1 User0 User2", false);
+        
+    }
+    
+    
+    /**
+     * Client 1 creates a board,
+     * Client 3 joins the board,
+     * Client 2 joins the board,
+     * Client 2 asks for the users in the current board
+     * @throws IOException
+     */
+    @Test(timeout = 2000)
+    public void get_users_in_my_board_test() throws IOException{
+        this.initialize();
+        
+        // Client 1 creates a board
+        client1.makeRequest(ClientSideMessageMaker.makeRequestStringCreateBoard("BoardName1"));
+        
+        // Client 1 checks that the board has been created
+        pollQueueForMessage(client1.getQueue(), "board_ids -1 Lobby 0 BoardName1", false);
+        
+        // Client 3 joins the board
+        client3.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
+        
+        // Client 1 checks that Client 3 has joined the board 
+        pollQueueForMessage(client1.getQueue(), "users_for_board_id 0 User0 User2", false);
 
-	String createBoardReq = ClientSideMessageMaker
-			.makeRequestStringCreateBoard("BoardName");	
-	String getCurrentBoardReq = ClientSideMessageMaker
-			.makeRequestStringGetCurrentBoardID();
-	String getBoardIDSReq = ClientSideMessageMaker
-			.makeRequestStringGetBoardIDs();
-	String logoutReq = ClientSideMessageMaker.makeRequestStringLogout();
-	String leaveBoardReq = ClientSideMessageMaker.makeRequestStringLeaveBoard();
-	String getUsersInyMyBoardReq = ClientSideMessageMaker
-			.makeRequestStringGetUsersInMyBoard();
+        // Client 2 joins the board
+        client2.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
+        
+        // Client 3 checks that Client 2 has joined the board 
+        pollQueueForMessage(client3.getQueue(), "users_for_board_id 0 User2 User1 User0", false);
+        
+        // Client 2 asks for the users in the current board
+        client2.makeRequest(ClientSideMessageMaker.makeRequestStringGetUsersInMyBoard());
+        
+        // Client 2 checks that the users in the board are correct
+        pollQueueForMessage(client2.getQueue(), "users_for_board_id 0 User0 User1 User2", false);
+        
+    }
+    
+    /**
+     * Client 1 creates a board,
+     * Client 3 joins the board,
+     * Client 1 leaves the board
+     * @throws IOException
+     */
+    @Test(timeout = 2000)
+    public void leave_board_test() throws IOException{
+        this.initialize();
+        
+        // Client 1 creates a board
+        client1.makeRequest(ClientSideMessageMaker.makeRequestStringCreateBoard("BoardName1"));
+        
+        // Client 1 checks that the board has been created
+        pollQueueForMessage(client1.getQueue(), "board_ids -1 Lobby 0 BoardName1", false);
+        
+        // Client 3 joins the board
+        client3.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
+        
+        // Client 1 checks that Client 3 has joined the board 
+        pollQueueForMessage(client1.getQueue(), "users_for_board_id 0 User0 User2", false);
 
-	@Test(timeout = 1000)	// time out in 1 second, in case test does not complete
-	/*
-	 * Strategy:
-	 * Have client1 create a board and check the response received at client1 and client2.
-	 */
-	public void create_board_test() throws IOException {
-		this.initialize();
-		System.out.println("Started create_board_test");
-		client1.makeRequest(createBoardReq);
-		client1.compareRespWith("users_for_board_id -1 User3 User0 User2 User1");
-		client2.compareRespWith("board_ids -1 2 3 4"); // the IDs of the users in lobby
-		client1.compareRespWith("s");
-		System.out.println("Passed assertions");
-		client1.makeRequest(ClientSideMessageMaker.makeRequestStringJoinBoardID(0));
-		
-		
-		client2.makeRequest(createBoardReq);
-		
-	}
-
-	@Test (timeout = 1000)
-	// time out in 1 second, in case test does not complete
-	public void get_current_board_id_test() throws IOException {
-		// this.initialize();
-
-	}
-
-	@Test(timeout = 1000)
-	// time out in 1 second, in case test does not complete
-	public void get_users_for_board_id_test() throws IOException {
-		// this.initialize();
-		
-	}
-
-	@Test(timeout = 1000)
-	// time out in 1 second, in case test does not complete
-	public void multiple_clients_test3() throws IOException {
-
-	}
-
-	@Test(timeout = 1000)
-	// time out in 1 second, in case test does not complete
-	public void multiple_clients_test4() throws IOException {
-
-	}
-
-	@Test(timeout = 1000)
-	// time out in 1 second, in case test does not complete
-	public void multiple_clients_test5() throws IOException {
-
-	}
-
+        // Client 1 leaves the board
+        client1.makeRequest(ClientSideMessageMaker.makeRequestStringLeaveBoard());
+        
+        // Client 3 checks that Client 1 is now back in the lobby
+        pollQueueForMessage(client2.getQueue(), "users_for_board_id -1 User1 User0", false);
+    }
+    
 	/**
 	 * Randomly finds an open port and returns it if it is available.
 	 */
@@ -199,22 +420,73 @@ public class Server_Client_protocolTests {
 		this.server.serve();
 		
 		this.client1 = new SimpleClient(testHost, port);
+		pollQueueForMessage(client1.getQueue(), "welcome 0", false);
 		this.client2 = new SimpleClient(testHost, port);
+		pollQueueForMessage(client2.getQueue(), "welcome 1", false);
 		this.client3 = new SimpleClient(testHost, port);
-		this.client4 = new SimpleClient(testHost, port);
-		// need to clear their incoming buffers; they currently have "welcome" as the latest response
-		this.client1.in.readLine();
-		this.client2.in.readLine();
-		this.client3.in.readLine();
-		this.client4.in.readLine();
-		System.out.println("Done initializing");
+		pollQueueForMessage(client3.getQueue(), "welcome 2", false);
+	}
+	
+	private boolean correctMessage(String expected, String actual){
+	    if(actual == null){
+	        return false;
+	    }
+	    String[] splitExpected = expected.split(" ");
+	    String[] splitActual = actual.split(" ");
+	    if(splitActual.length != splitExpected.length){
+            return false;
+        }
+	    Arrays.sort(splitActual);
+	    Arrays.sort(splitExpected);
+	    for(int i = 0; i < splitActual.length; i++){
+	        if(!splitActual[i].equals(splitExpected[i])){
+	            return false;
+	        }
+	    }
+	    return true;
+	    
 	}
 
+	private void pollQueueForMessage(ConcurrentLinkedQueue<String> queue, String expectedMessage, boolean verbose){
+	    String input;
+	    while(true){
+            if(!queue.isEmpty()){
+                input = queue.remove();
+                if(verbose)
+                    System.out.println(input);
+                if(correctMessage(input, expectedMessage)){
+                    queue.clear();
+                    return;
+                }
+            }
+        }
+	}
+	
 }
 
 
-
-
+class SimpleClientIncomingMessageThread extends Thread{
+    private final ConcurrentLinkedQueue<String> queue;
+    private final BufferedReader in;
+    public SimpleClientIncomingMessageThread(ConcurrentLinkedQueue<String> queue, BufferedReader in) {
+        this.queue = queue;
+        this.in = in;
+    }
+    @Override
+    public void run() {
+        String input;
+        while(true){
+            try {
+                input = in.readLine();
+                if(input != null){
+                    queue.add(input);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
 
 class SimpleClient {
 	String host;
@@ -222,14 +494,15 @@ class SimpleClient {
 	PrintWriter out;
 	BufferedReader in;
 	String serverResponse;
-
+	ConcurrentLinkedQueue<String> queue;
 	public SimpleClient(String host, int port) {
 		try {
 			this.host = host;
 			this.socket = new Socket(host, port);
 			this.out = new PrintWriter(socket.getOutputStream(), true);
-			this.in = new BufferedReader(new InputStreamReader(
-					socket.getInputStream()));
+			this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			this.queue = new ConcurrentLinkedQueue<String>();
+			new SimpleClientIncomingMessageThread(queue, in).start();
 		} catch (Exception ex) {}
 	}
 
@@ -240,49 +513,16 @@ class SimpleClient {
 	}
 
 	public void makeRequest(String req) {	
-		System.out.println("Making request: " + req);
 		out.println(req);
-
 		try {
 			Thread.sleep(1); // Wait for 1 ms to give server time to respond.
 		} catch (InterruptedException e) {
 			System.out.println("Error waiting in makeRequest.");
 		}
-
 	}
 	
-	/**
-	 * Simply calls this client's in.readLine()
-	 * @return a response from the server
-	 */
-	public String read() {
-		try {
-			return in.readLine();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return "Error in in.readLine()";
-		}
-	}
-	
-	/**
-	 * Checks that the response and expected are the same strings, up to ordering of words.
-	 * @param expected
-	 */
-	public void compareRespWith(String expected) {
-		String resp= this.read();
-		resp.replace("\n","");
-		System.out.println("Expected: " + expected + "; got " + resp);
-		String[] respArray = resp.split(" ");
-		String[] expArray  = expected.split(" ");
-		//System.out.println("resp");
-		//for (String s: respArray) {System.out.println(s);}
-		//System.out.println("exp");
-		//for (String s: expArray) {System.out.println(s);}
-		Arrays.sort(respArray);
-		Arrays.sort(expArray);
-		assertArrayEquals(respArray, expArray);
-		
+	public ConcurrentLinkedQueue<String> getQueue(){
+	    return queue;
 	}
 	
 }

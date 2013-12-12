@@ -124,8 +124,13 @@ public class MessageHandler {
     }
 
     /**
-     * Req: create_board [boardName] Resp (to all other users): board_ids [id1]
-     * [id2] [id3] Resp (to user who made request): done
+     * Req: create_board [boardName] 
+     * 
+     * Resp (to all other users): board_ids [id1] [userName1] [id2] [userName2] [id3] [userName3]
+     * Resp (to user who made request): board_ids [id1] [userName1] [id2] [userName2] [id3] [userName3]
+     * AND
+     * current_board_id [currentBoardID]
+     * Resp (to all users in the lobby, if the user who changed his name is in the lobby): users_for_board -1 [userName1] [userName2]
      */
     private static void handleRequestCreateBoard(String input,
             UserThread userThread, LobbyModel lobbyModel) {

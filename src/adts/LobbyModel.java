@@ -139,10 +139,6 @@ public class LobbyModel {
      *         in, or -1 if the user is not in any board
      */
     public synchronized int getBoardIDThatUserIDIsIn(int userID) {
-        if(!this.userForID.keySet().contains(userID)){
-            throw new IllegalArgumentException(String.format(
-                    "userID=%d does not exist!", userID));
-        }
         for (int boardID : this.boardForID.keySet()) {
             if (this.userIDsForBoardID.get(boardID).contains(userID)) {
                 return boardID;
