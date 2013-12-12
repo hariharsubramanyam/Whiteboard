@@ -26,6 +26,7 @@ import server.WhiteboardServer;
  * The full protocol messaging supported can be found in the Requests PDF.
  * Server/client interactions are the heart of how this collaborative whiteboard
  * system works so it is key that it is thoroughly tested.
+ * @category no_didit
  */
 public class Server_Client_protocolTests {
 
