@@ -45,6 +45,71 @@ import controller.WhiteboardClient;
 /**
  * Canvas represents a drawing surface that allows the user to draw on it
  * freehand, with the mouse.
+ * 
+ * Functionality: draw with three sizes of stroke, 12 different colors, erase,
+ * draw a random spiral, clear the board, leave the board and go back to lobby,
+ * see who's currently collaborating on the board.
+ * 
+ * Thread-safety:
+ * 
+ * All changes to the board are performed by repainting the entire Canvas and
+ * since this is the only operation, and since it is thread-safe itself, the
+ * pane is free of these types of concurrency bugs. The second argument is that
+ * the user never draws locally. This means that any action is first sent to the
+ * server which is then broadcasted to all members of the board. Only then do
+ * any changes appear. This blackboxes the server/client interaction and allows
+ * for each Canvas connected to the same Lobby Model to have the lastest,
+ * "master" copy of the board on the server.
+ * 
+ * Testing:
+ * 
+ * @category general aesthetics are the first thing to notice. Do the buttons
+ *           appear where they're supposed to and if they do, are they firing
+ *           the right listeners:
+ * 
+ *           1. The eraser must be setting the pen to white color and large
+ *           stroke width.
+ * 
+ *           2. The pencil should change the stroke width to 1 and the color
+ *           back to black if previously white. Test by pressing multiple colors
+ *           and always getting white for eraser and anything else for pencil.
+ * 
+ *           3. The three stroke sizes are tested by looking at the size of a
+ *           freehand stroke in any color. Even with eraser mode on, the stroke
+ *           can be modified for finer erasing resolution
+ * 
+ *           4. Draw turtle draws a random spiral with the given color and
+ *           stroke witdh 1 somewhere inside the white space. Test it by
+ *           clicking it several times and trying different colors to make sure
+ *           they all work and that the window layout is not drawn over.
+ * 
+ *           5. Clear board will clear anything on the board. Draw something and
+ *           watch it dissapear once we press the button.
+ * 
+ *           6. LEAVE BOARD should close the Canvas and reopen the lobby.
+ * 
+ *           7. The color palate can be tested by clicking on each color and
+ *           making sure the boundaries are set correctly (the correct color
+ *           should be selected at each boundary of each square). It must also
+ *           be tested with combination of all other buttons. The only one that
+ *           should change the color is eraser and pencil.
+ * 
+ *           8. The current color label should always change the square color to
+ *           the current color therefore try clicking every button previously
+ *           tested, changing colors and making sure what is drawn at each step
+ *           is the color displayed in this square.
+ * 
+ *           9. The Active Users table has no functionality other than
+ *           displaying all other users collaborating in a white font color
+ *           while the current user is in large font and yello.
+ * 
+ * @category The next part is testing that a Canvas is initialized correctly if
+ *           given a set of lines which is done by creating a table by another
+ *           user, having them draw for a while, then connecting this user to
+ *           the same board and expecting all lines to be pre-loaded.
+ * 
+ * @category Testing the user list, it's crucial to see that no name can extend
+ *           beyond the layout window.
  */
 public class Canvas extends JPanel implements Client {
 	/**
