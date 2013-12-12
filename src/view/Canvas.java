@@ -5,11 +5,14 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -142,39 +145,39 @@ public class Canvas extends JPanel implements Client {
 	/**
 	 * Width of entire Canvas.
 	 */
-	private final int canvasW;
+	private int canvasW;
 	/**
 	 * Height of entire Canvas.
 	 */
-	private final int canvasH;
+	private int canvasH;
 
 	/**
 	 * Width of drawable part of the Canvas.
 	 */
-	private final int drawableCanvasW;
+	private int drawableCanvasW;
 	/**
 	 * Height of drawable part of the Canvas.
 	 */
-	private final int drawableCanvasH;
+	private int drawableCanvasH;
 
 	/**
 	 * Height of the button window layout
 	 */
-	private final int windowW;
+	private int windowW;
 	/**
 	 * Width of the button window layout
 	 */
-	private final int windowH;
+	private int windowH;
 
 	/**
 	 * Width of each individual button. Set to width of button window layout
 	 * minus 2 margins.
 	 */
-	private final int buttonW;
+	private int buttonW;
 	/**
 	 * Height of each individual button. Set to the height of the Canvas.
 	 */
-	private final int buttonH;
+	private int buttonH;
 	/**
 	 * In degrees, the radius of the square corners
 	 */
@@ -195,7 +198,7 @@ public class Canvas extends JPanel implements Client {
 	 * A Map from button text (used as the identifier) to the x,y coordinates of
 	 * the button.
 	 */
-	final HashMap<String, List<Integer>> buttonBoundaries;
+	HashMap<String, List<Integer>> buttonBoundaries;
 	/**
 	 * A Map from Color button (used as the identifier) to the x,y coordinates
 	 * of the button.
@@ -242,10 +245,6 @@ public class Canvas extends JPanel implements Client {
 	/**
 	 * Make a canvas.
 	 * 
-	 * @param width
-	 *            width in pixels
-	 * @param height
-	 *            height in pixels
 	 * @param lobby
 	 *            the instance of the LobbyGUI Controller which handles the data
 	 *            traffic
@@ -257,7 +256,7 @@ public class Canvas extends JPanel implements Client {
 	 * @param boardName
 	 *            String name given to the Canvas
 	 */
-	public Canvas(int width, int height, WhiteboardClient lobby, String user,
+	public Canvas(WhiteboardClient lobby, String user,
 			int boardID, String boardName) {
 
 		setupLogger(Level.ALL);
@@ -271,7 +270,8 @@ public class Canvas extends JPanel implements Client {
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		window.setLayout(new BorderLayout());
 
-		this.setPreferredSize(new Dimension(width, height));
+		window.setExtendedState(window.getExtendedState()|JFrame.MAXIMIZED_BOTH );
+		window.setMinimumSize(new Dimension(800, 600));
 		this.lineStroke = 1; // default to 1 pixel
 
 		addDrawingController();
@@ -280,18 +280,18 @@ public class Canvas extends JPanel implements Client {
 		// wait until paintComponent() is first called.
 
 		// set the size of the canvas
-		this.canvasW = width;
-		this.canvasH = height;
+		this.canvasW = window.getWidth();
+		this.canvasH = window.getHeight();
 
 		// set default values of components in the canvas
 		this.windowStroke = 0; // no border on button window
 		this.margins = 3; // a margin size of 3 applied evenly throughout
-		this.windowW = width / 5; // always 1/5th of the width
-		this.windowH = height;
+		this.windowW = this.canvasW > 500 ? 200 : this.canvasW / 5;
+		this.windowH = this.canvasH;
 
 		// set the size of the canvas
-		this.drawableCanvasW = width - 2 * margins - windowW;
-		this.drawableCanvasH = height - 2 * margins;
+		this.drawableCanvasW = this.canvasW - 2 * margins - windowW;
+		this.drawableCanvasH = this.canvasH - 2 * margins;
 
 		/*
 		 * Button properties: text, boundaries, color, margins
@@ -346,7 +346,54 @@ public class Canvas extends JPanel implements Client {
 		window.setVisible(true);
 		// Add windowListener
 		window.addWindowListener(new WindowListen());
+		// Add a listener for resizing events
+		window.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				resetSizes();
+			}
+		});
 
+	}
+
+	/**
+	 * When the user resizes the window, all the drawable components get resized
+	 * and redrawn.
+	 */
+	private void resetSizes() {
+
+		// set the size of the canvas
+		this.canvasW = window.getWidth();
+		this.canvasH = window.getHeight();
+
+		// set default values of components in the canvas
+		this.windowW = this.canvasW > 500 ? 200 : this.canvasW / 5;
+		this.windowH = this.canvasH;
+
+		// set the size of the canvas
+		this.drawableCanvasW = this.canvasW - 2 * margins - windowW;
+		this.drawableCanvasH = this.canvasH - 2 * margins;
+
+		// leave 1 margin on either side
+		this.buttonW = windowW - 2 * margins;
+		// we use only a third the height to leave space for colors
+		this.buttonH = (int) ((windowH / 3.0) / numOfButtons);
+		// for the color palate
+		this.sizeColorSquare = (int) ((windowW - 2 * margins) / 4f);
+
+		// define boundaries of buttons
+		this.buttonBoundaries = new HashMap<String, List<Integer>>();
+		for (int i = 0; i < numOfButtons; ++i) {
+			int xPos1 = margins;
+			int yPos1 = margins + i * buttonH;
+			int xPos2 = buttonW - margins;
+			int yPos2 = (i + 1) * buttonH - margins;
+
+			buttonBoundaries.put(buttonText.get(i),
+					Arrays.asList(xPos1, yPos1, xPos2, yPos2));
+		}
+
+		makeDrawingBuffer();
 	}
 
 	/**
@@ -486,6 +533,7 @@ public class Canvas extends JPanel implements Client {
 			Color textColor, int option, int size) {
 		g.setColor(textColor);
 		Font font = new Font("Verdana", option, size);
+
 		g.setFont(font);
 		g.drawString(text, x, y);
 	}
@@ -549,8 +597,23 @@ public class Canvas extends JPanel implements Client {
 			int xStringPos = 5 * margins;
 			int yStringPos = yPos1 + buttonH / 2 + margins;
 
+			int textSize = 15;
+
+			FontMetrics metric = g.getFontMetrics();
+			int textHeight = metric.getHeight();
+			int textWidth = textSize * buttonText.get(i).length();
+
+			int safetyBreak = 0;
+			while (textHeight > 1 && safetyBreak < 100
+					&& (textWidth > this.windowW - 2 * margins || textHeight > this.buttonH)) {
+				textSize--;
+				safetyBreak++;
+				textHeight--;
+				textWidth = textSize * buttonText.get(i).length();
+			}
+
 			createText(g, buttonText.get(i), xStringPos, yStringPos, textColor,
-					1, 15);
+					1, textSize);
 
 		}
 	}
@@ -596,8 +659,22 @@ public class Canvas extends JPanel implements Client {
 		int yStringPos = windowH / 3 + margins + 3 * this.sizeColorSquare
 				+ this.sizeColorSquare / 2;
 		int xStringPos = 3 * margins;
-		createText(g, "Current color: ", xStringPos, yStringPos, textColor, 1,
-				15);
+		
+		String currentColorString = "Current color:";
+		int textSize = 25;
+
+		int textWidth = textSize * currentColorString.length();
+
+		int safetyBreak = 0;
+		while (safetyBreak < 20
+				&& (textWidth > this.windowW)) {
+			textSize--;
+			safetyBreak++;
+			textWidth = textSize * currentColorString.length();
+		}
+		
+		createText(g, currentColorString, xStringPos, yStringPos, textColor, 1,
+				textSize);
 
 		this.currentColorSquareY = yStringPos - this.sizeColorSquare * 2 / 3;
 		int ySquarePos = this.currentColorSquareY + this.sizeColorSquare / 3;
@@ -637,18 +714,26 @@ public class Canvas extends JPanel implements Client {
 		int xStringPos = 3 * margins;
 		int yStringPos = yPos + tableHeight / 15;
 		createText(g, "Active Users", xStringPos, yStringPos, Color.WHITE, 1,
-				15);
+				13);
 
 		// insert the active users supplied by the controller
 		int startingY = yPos + tableHeight / 15 + 3 * margins;
 		int heightOfString = tableHeight / 15;
 		Collections.sort(userNames);
 		userNames.remove(this.user);
-		String tableEntry = "1. " + (this.user.length() < MAX_CHARS_FOR_FIRST_USER ? this.user : this.user.substring(0, MAX_CHARS_FOR_FIRST_USER)+"...");
+		String tableEntry = "1. "
+				+ (this.user.length() < MAX_CHARS_FOR_FIRST_USER ? this.user
+						: this.user.substring(0, MAX_CHARS_FOR_FIRST_USER)
+								+ "...");
 		createText(g, tableEntry, xStringPos, startingY + heightOfString * (1),
-				Color.YELLOW, 1, 20);
+				Color.YELLOW, 1, 18);
 		for (int i = 0; i < userNames.size(); i++) {
-			tableEntry = String.valueOf(i + 2) + ". " + (userNames.get(i).length() < MAX_CHARS_FOR_OTHER_USERS ? userNames.get(i) : userNames.get(i).substring(0, MAX_CHARS_FOR_OTHER_USERS)+"...");
+			tableEntry = String.valueOf(i + 2)
+					+ ". "
+					+ (userNames.get(i).length() < MAX_CHARS_FOR_OTHER_USERS ? userNames
+							.get(i) : userNames.get(i).substring(0,
+							MAX_CHARS_FOR_OTHER_USERS)
+							+ "...");
 			createText(g, tableEntry, xStringPos, startingY + heightOfString
 					* (i + 2), Color.WHITE, 1, 13);
 		}

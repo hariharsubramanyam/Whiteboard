@@ -216,6 +216,9 @@ public class WhiteboardClient extends JFrame implements Client {
 		while (this.in == null && attemptedConnections < MAX_ALLOWED_CONNECTIONS) {
 			try {
 			    attemptedConnections++;
+				hostName = JOptionPane.showInputDialog(
+						"Enter the hostname of the whiteboard server:",
+						"localhost");
 				if (hostName == null ) {
 					LOGGER.warning("Exiting Lobby");
 					System.exit(0);
@@ -416,7 +419,7 @@ public class WhiteboardClient extends JFrame implements Client {
 			if (newBoard.equals("")) {
 				newBoard = "Board" + (new Random()).nextInt(100000);
 			}
-			canvas = new Canvas(1000, 1000, self, user.getName(), -1, newBoard);
+			canvas = new Canvas(self, user.getName(), -1, newBoard);
 			canvas.setVisible(true);
 			setVisible(false);
 			out.println(ClientSideMessageMaker
@@ -431,7 +434,7 @@ public class WhiteboardClient extends JFrame implements Client {
 				int selectedIndex = lstBoards.getSelectedIndex();
 				for (BoardListItem boardListItem : boardListItems) {
 					if (boardListItem.getBoardIndex() == selectedIndex) {
-						canvas = new Canvas(1000, 1000, self, user.getName(),
+						canvas = new Canvas(self, user.getName(),
 								boardListItem.getBoardID(),
 								boardListItem.getBoardName());
 						canvas.setVisible(true);
