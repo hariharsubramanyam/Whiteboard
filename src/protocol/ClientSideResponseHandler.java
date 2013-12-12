@@ -38,7 +38,7 @@ public class ClientSideResponseHandler {
 		} else if (command.equals(MessageHandler.RESP_CLEAR)) {
 			handleClear(tokens, userGUI);
 		} else if (command.equals(MessageHandler.RESP_USERS_FOR_BOARD)) {
-			handlerUsersForBoard(tokens, userGUI);
+			handleUsersForBoard(tokens, userGUI);
 		} else if (command.equals(MessageHandler.RESP_CURRENT_BOARD_ID)) {
 			handleCurrentBoardID(tokens, userGUI);
 		}
@@ -49,7 +49,7 @@ public class ClientSideResponseHandler {
 		userGUI.onReceiveCurrentBoardID(boardID);
 	}
 
-	private static void handlerUsersForBoard(String[] tokens, WhiteboardClient userGUI) {
+	private static void handleUsersForBoard(String[] tokens, WhiteboardClient userGUI) {
 		List<String> users = new ArrayList<String>();
 		int boardID = Integer.parseInt(tokens[0]);
 		for (int i = 1; i < tokens.length; i++)

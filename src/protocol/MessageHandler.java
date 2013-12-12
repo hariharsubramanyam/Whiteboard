@@ -38,6 +38,14 @@ public class MessageHandler {
     public static final String RESP_CLEAR = "clear_board";
     public static final String RESP_WELCOME = "welcome";
 
+    /**
+     * Is used on the server's side.
+     * Handles the input String and updates the input lobbyModel appropriately.
+     * Also sends the appropriate response back to the input UserThread.
+     * @param input
+     * @param userThread
+     * @param lobbyModel
+     */
     public static void handleMessage(String input, UserThread userThread,
             LobbyModel lobbyModel) {
         String command = input.split(" ")[0];

@@ -123,7 +123,7 @@ public class UserThread extends Thread {
 	 * Output a message to selected set of users (except this one)
 	 * 
 	 * @param message
-	 *            the message to outpu
+	 *            the message to output
 	 * @param userIDs
 	 *            the list of userIDs to output to
 	 */
