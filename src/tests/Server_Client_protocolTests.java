@@ -25,6 +25,19 @@ import server.WhiteboardServer;
  * It looks like Didit gets mad when we create servers
  * and access ports and create clients. So, we don't run the tests
  * on Didit.
+ * 
+ * 
+ * WHERE ARE THE ASSERT STATEMENTS?
+ * 
+ *
+ * We're creating servers and clients, and since messages arrive out of order, 
+ * we implement the following technique for tests.
+ * 
+ * Every test has a two second timeout
+ * 
+ * A test fails when it calls pollQueueForMessage and gets caught in an infinite loop
+ * 
+ * A test passes when it finishes all the lines of codes in its body within 2 seconds
  * @category no_didit
  */
 public class Server_Client_protocolTests {
@@ -427,6 +440,15 @@ public class Server_Client_protocolTests {
 		pollQueueForMessage(client3.getQueue(), "welcome 2", false);
 	}
 	
+	/**
+	 * Takes a expected message and actual message,
+	 * splits them,
+	 * sorts them,
+	 * and checks that corresponding elements are equal
+	 * @param expected the expected message
+	 * @param actual the actual message
+	 * @return
+	 */
 	private boolean correctMessage(String expected, String actual){
 	    if(actual == null){
 	        return false;
@@ -447,6 +469,22 @@ public class Server_Client_protocolTests {
 	    
 	}
 
+	/**
+	 * Keep popping elements off the message queue until we find an input such that
+	 * correctMessage(input, expectedMessage) is true
+	 * 
+	 * Since we have a while(true) loop here, the function will never terminate 
+	 * if the queue does not have the desired message.
+	 * 
+	 * Why do we use an infinite loop? Because all our tests have a 2 second timeout.
+	 * 
+	 * A test fails when it calls pollQueueForMessage and gets caught in a loop
+	 * 
+	 * A test passes when it finishes all the lines of codes in its body
+	 * @param queue the queue of a client (contains all the messages that the client has received)
+	 * @param expectedMessage the expected message
+	 * @param verbose if true, we print out all the messages we pop off the queue
+	 */
 	private void pollQueueForMessage(ConcurrentLinkedQueue<String> queue, String expectedMessage, boolean verbose){
 	    String input;
 	    while(true){
@@ -465,13 +503,34 @@ public class Server_Client_protocolTests {
 }
 
 
+/**
+ * Class that reads from an input stream and puts the messages on a queue
+ */
 class SimpleClientIncomingMessageThread extends Thread{
+    
+    /**
+     * The queue that contains all the messages that have been received so far
+     */
     private final ConcurrentLinkedQueue<String> queue;
+    
+    /**
+     * The input stream
+     */
     private final BufferedReader in;
+    
+    /**
+     * Construct SimpleClientIncomingMessageThread
+     * @param queue the queue which will contain all the messages that have been received so far
+     * @param in the input stream
+     */
     public SimpleClientIncomingMessageThread(ConcurrentLinkedQueue<String> queue, BufferedReader in) {
         this.queue = queue;
         this.in = in;
     }
+    
+    /**
+     * Runs the thread - simply reads messages and pushes them onto the queue
+     */
     @Override
     public void run() {
         String input;
@@ -488,13 +547,46 @@ class SimpleClientIncomingMessageThread extends Thread{
     }
 }
 
+/**
+ * A client that handles a connection to a server
+ */
 class SimpleClient {
+    
+    /**
+     * The hostname to connect to
+     */
 	String host;
+	
+	/**
+	 * The socket that we use for connection
+	 */
 	Socket socket;
+	
+	/**
+	 * The output stream
+	 */
 	PrintWriter out;
+	
+	/**
+	 * The input stream
+	 */
 	BufferedReader in;
+	
+	/**
+	 * The string we receive from the server
+	 */
 	String serverResponse;
+	
+	/**
+	 * A queue that contains the messages we've received from the server
+	 */
 	ConcurrentLinkedQueue<String> queue;
+	
+	/**
+	 * Constructs a simple client
+	 * @param host the hostname
+	 * @param port the port number
+	 */
 	public SimpleClient(String host, int port) {
 		try {
 			this.host = host;
@@ -505,13 +597,21 @@ class SimpleClient {
 			new SimpleClientIncomingMessageThread(queue, in).start();
 		} catch (Exception ex) {}
 	}
-
+	
+	/**
+	 * Closes the streams and the socket
+	 * @throws IOException
+	 */
 	public void disconnect() throws IOException {
 		this.out.close();
 		this.in.close();
 		this.socket.close();
 	}
 
+	/**
+	 * Writes a message to the output stream
+	 * @param req the message to put on the output stream
+	 */
 	public void makeRequest(String req) {	
 		out.println(req);
 		try {
@@ -521,6 +621,9 @@ class SimpleClient {
 		}
 	}
 	
+	/**
+	 * @return A queue that contains the messages we've received from the server
+	 */
 	public ConcurrentLinkedQueue<String> getQueue(){
 	    return queue;
 	}
