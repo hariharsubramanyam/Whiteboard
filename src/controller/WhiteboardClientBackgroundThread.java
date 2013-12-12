@@ -34,6 +34,9 @@ public class WhiteboardClientBackgroundThread extends Thread {
 	}
 
 	@Override
+	/**
+	 * This client background thread listens for responses from the server and handles them.
+	 */
 	public void run() {
 		String serverResponse;
 		try {

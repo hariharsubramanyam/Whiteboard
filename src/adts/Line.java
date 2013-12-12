@@ -161,6 +161,9 @@ public class Line {
 	}
 
 	@Override
+	/**
+	 * @returns a String representation of this line
+	 */
 	public String toString() {
 		return String.format("%d %d %d %d %f %d %d %d %d", this.getX1(),
 				this.getY1(), this.getX2(), this.getY2(),
