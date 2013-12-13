@@ -415,6 +415,15 @@ public class WhiteboardClient extends JFrame implements Client {
 				LOGGER.warning("No canvas created on exit of JOptionPane");
 				return;
 			}
+			newBoard = newBoard.replace(" ", "_");
+			if(lstMdlBoards != null){
+			    for(int i = 0; i < lstMdlBoards.size(); i++){
+			        if(lstMdlBoards.get(i).equals(newBoard)){
+			            JOptionPane.showMessageDialog(null, "That board already exists!");
+			            return;
+			        }
+			    }
+			}
 
 			if (newBoard.equals("")) {
 				newBoard = "Board" + (new Random()).nextInt(100000);
